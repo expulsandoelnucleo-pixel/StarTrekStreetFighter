@@ -1,0 +1,4230 @@
+'use strict';
+
+// ============================================================
+// STAR TREK: EXPULSANDO EL NÚCLEO
+// ============================================================
+
+const canvas = document.getElementById('gameCanvas');
+if (!canvas) throw new Error('Falta el canvas gameCanvas.');
+
+const ctx = canvas.getContext('2d');
+if (!ctx) throw new Error('No se pudo crear el contexto 2D.');
+
+if (canvas.width < 1) canvas.width = 800;
+if (canvas.height < 1) canvas.height = 450;
+
+
+function nextArena() {
+  currentArena = currentArena >= TOTAL_ARENAS
+    ? 1
+    : currentArena + 1;
+  setArenaCombatants(currentArena);
+}
+
+function previousArena() {
+  currentArena = currentArena <= 1
+    ? TOTAL_ARENAS
+    : currentArena - 1;
+  setArenaCombatants(currentArena);
+}
+
+
+// ------------------------------------------------------------
+// JUGADORES Y ESTADO
+// ------------------------------------------------------------
+
+const floorY = 60;
+const BASE_HEIGHT = 600;
+const keys = Object.create(null);
+
+function makePlayer(x, charIndex, facing) {
+  return {
+    x,
+    y: floorY,
+    width: 340,
+    height: 600,
+    speed: 5,
+    vy: 0,
+    jumpForce: -12,
+    gravity: 0.6,
+    health: 100,
+    maxHealth: 100,
+    energy: 100,
+    maxEnergy: 100,
+    isAttacking: false,
+    attackTimer: 0,
+    attackCooldown: 0,
+    attackStyle: 'normal',
+    activeAttackDuration: 0,
+    hasHitThisAttack: false,
+    charIndex,
+    name: availableCharacters[charIndex].name,
+    facing,
+    stunTimer: 0,
+    hitFlashTimer: 0,
+    hitReactTimer: 0,
+    hitReactDirection: 0,
+    hitReactStep: 0,
+    invulnerabilityTimer: 0,
+    comboCount: 0,
+    comboTimer: 0,
+    comboDisplayTimer: 0
+  };
+}
+
+const player1 = makePlayer(100, 0, 1);
+const player2 = makePlayer(460, 1, -1);
+
+let gameState = 'MENU';
+
+// Easter eggs secretos del menú principal.
+const TRIBBLES_SECRET_SEQUENCE = [
+  'ArrowUp', 'ArrowUp', 'ArrowDown', 'ArrowDown',
+  'ArrowLeft', 'ArrowRight', 'ArrowLeft', 'ArrowRight', 'b', 'a'
+];
+let easterEggKeySequence = [];
+let easterEggLetterBuffer = '';
+
+
+let gameOver = false;
+// Mostrar al personaje derrotado en el suelo durante 5 segundos antes del rótulo de resultado.
+let gameOverFrame = 0;
+const GAME_OVER_PAUSE_FRAMES = 5 * 60;
+
+let frameCount = 0;
+let screenShakeTimer = 0;
+let impactEffects = [];
+let currentArena = 1;
+let matchTimeLeft = 120;
+let timeText = '02:00';
+let roundWinnerMessage = '';
+let picardVictory = false;
+
+// Juicio final de Q: desafío táctico para expulsar el núcleo a tiempo.
+let qTrialTimer = 60;
+let qTrialPower = 3;
+let qTrialStability = 0;
+let qTrialStep = 0;
+let qTrialMessage = '';
+let qTrialOutcome = '';
+let qTrialFrame = 0;
+
+let isStoryMode = false;
+let isVsMachine = false;
+let humanPlayerIndex = 1;
+let machineDifficulty = 'NORMAL';
+let machineAttackCooldown = 0;
+let machineJumpCooldown = 0;
+let storyPhase = 1;
+
+let campaignAttempts = 3;
+let campaignCompleted = false;
+let campaignFailed = false;
+// Final alternativo de historia: solo para quien complete la campaña como Picard.
+let picardNexusStep = 0;
+
+// Modo historia: 10 segundos para decidir si reintentar inmediatamente tras perder.
+let storyDefeatCountdownStart = 0;
+const STORY_DEFEAT_COUNTDOWN_FRAMES = 10 * 60;
+let storyDefeatAttemptCounted = false;
+
+// Cada misión de historia se decide al mejor de tres combates.
+let storySeriesHumanWins = 0;
+let storySeriesMachineWins = 0;
+let storySeriesRoundsPlayed = 0;
+let storySeriesHumanHealthTotal = 0;
+let storySeriesMachineHealthTotal = 0;
+let storyRoundRecorded = false;
+
+// Minijuego arcade de destrucción de lanzadera cada cuatro misiones.
+let shuttleMaxHealth = 300;
+let shuttleHealth = 300;
+let shuttleTimer = 60 * 60;
+let shuttleHits = 0;
+let shuttlePlayerPunchTimer = 0;
+// Posición independiente del personaje seleccionado durante el minijuego.
+let shuttlePlayerX = 64;
+let shuttlePlayerY = null;
+let shuttleResult = '';
+let shuttleResultTimer = 0;
+let shuttleSparks = [];
+let shuttleBonus = 0;
+
+// Modo entrenamiento: puente, combate espacial, holodeck, razonamiento y Preguntas Trekkies.
+let starshipGame = null;
+let trainingRangeGame = null;
+let starshipRaceGame = null;
+let trainingDialogueIndex = 0;
+const trainingDialogue = [
+  { speaker: 'PUENTE DEL ENTERPRISE', text: 'Cadete, bienvenido al puente. La Flota Estelar ha asignado una simulación de preparación táctica.' },
+  { speaker: 'MANDO DE LA FLOTA ESTELAR', text: 'Antes de pilotar, demuestra tu puntería en la galería de tiro. Después neutralizarás naves no identificadas con los phasers.' },
+  { speaker: 'MANDO DE LA FLOTA ESTELAR', text: 'Tras la galería de tiro, completa el pilotaje espacial, la carrera, los cuatro circuitos Borg del holodeck, la prueba de inteligencia, Preguntas Trekkies y la simulación Kobayashi Maru.' }
+];
+let holodeckGame = null;
+
+// Bancos de preguntas: cada sesión mantiene el formato original de cinco preguntas,
+// pero selecciona una muestra aleatoria sin repetir dentro de esa sesión.
+const intelligenceQuestionBank = [
+  { question: 'La secuencia de energía es 2, 4, 8, 16... ¿qué valor sigue?', options: ['20', '24', '32', '36'], answer: 2, explanation: 'Cada número se multiplica por dos: el siguiente es 32.' },
+  { question: 'Todos los drones de prueba emiten luz roja. El dron Delta es de prueba. ¿Qué sabemos?', options: ['Emite luz azul', 'Emite luz roja', 'No tiene luces', 'No se puede saber'], answer: 1, explanation: 'Si todos los drones de prueba emiten luz roja y Delta es uno de ellos, Delta emite luz roja.' },
+  { question: '¿Qué número sigue en la secuencia 1, 1, 2, 3, 5, ...?', options: ['6', '7', '8', '10'], answer: 2, explanation: 'Cada término es la suma de los dos anteriores: 3 + 5 = 8.' },
+  { question: 'Hay 3 lanzaderas y cada una necesita 2 técnicos. ¿Cuántos técnicos hacen falta en total?', options: ['5', '6', '8', '9'], answer: 1, explanation: 'Tres lanzaderas por dos técnicos cada una son seis técnicos.' },
+  { question: 'La nave apunta al norte. Gira a la derecha dos veces. ¿Hacia dónde apunta?', options: ['Este', 'Oeste', 'Sur', 'Norte'], answer: 2, explanation: 'Norte → este → sur.' },
+  { question: 'La secuencia de códigos es 5, 10, 15, 20... ¿qué sigue?', options: ['22', '24', '25', '30'], answer: 2, explanation: 'La secuencia aumenta de cinco en cinco: 20 + 5 = 25.' },
+  { question: 'Si 4 técnicos reparan 4 paneles en 4 minutos, ¿cuánto tardan 8 técnicos en reparar 8 paneles al mismo ritmo?', options: ['4 minutos', '8 minutos', '2 minutos', '16 minutos'], answer: 0, explanation: 'Cada técnico repara un panel en cuatro minutos; al duplicar técnicos y paneles, el tiempo no cambia.' },
+  { question: 'Un código alterna círculo, cuadrado, círculo, cuadrado... ¿qué figura sigue?', options: ['Triángulo', 'Círculo', 'Estrella', 'Cuadrado'], answer: 1, explanation: 'El patrón alterna círculo y cuadrado; toca círculo.' },
+  { question: 'La nave viaja 60 unidades en 3 minutos a velocidad constante. ¿Cuánto recorrerá en 5 minutos?', options: ['90', '100', '120', '150'], answer: 1, explanation: 'La velocidad es 20 unidades por minuto; en cinco minutos recorre 100.' },
+  { question: 'Todos los oficiales del turno Alfa llevan insignia azul. Mira es del turno Alfa. ¿Qué lleva?', options: ['Insignia roja', 'Insignia azul', 'Un casco dorado', 'No se sabe'], answer: 1, explanation: 'La regla dice que todos los oficiales de ese turno llevan insignia azul.' },
+  { question: '¿Qué número falta? 3, 6, 12, 24, __', options: ['30', '36', '42', '48'], answer: 3, explanation: 'Cada término duplica el anterior: 24 × 2 = 48.' },
+  { question: 'Una puerta se abre solo si se activan A y B. A está activado, pero B no. ¿Qué ocurre?', options: ['Se abre', 'Se abre a medias', 'Permanece cerrada', 'Se activa la alarma siempre'], answer: 2, explanation: 'Se necesitan ambas condiciones; falta B, así que sigue cerrada.' },
+  { question: 'En una sala hay 5 cadetes. Cada uno saluda una vez a todos los demás. ¿Cuántos saludos distintos hay?', options: ['5', '10', '15', '20'], answer: 1, explanation: 'Cada pareja se cuenta una sola vez: 5 × 4 ÷ 2 = 10.' },
+  { question: 'Si ayer fue martes, ¿qué día será pasado mañana?', options: ['Miércoles', 'Jueves', 'Viernes', 'Sábado'], answer: 2, explanation: 'Si ayer fue martes, hoy es miércoles; mañana jueves y pasado mañana viernes.' },
+  { question: 'Un depósito está lleno al 50 %. Se añade agua equivalente al 25 % de su capacidad total. ¿Qué porcentaje queda lleno?', options: ['25 %', '50 %', '75 %', '100 %'], answer: 2, explanation: '50 % + 25 % = 75 % de la capacidad.' },
+  { question: '¿Qué valor continúa? 2, 5, 8, 11, __', options: ['12', '13', '14', '15'], answer: 2, explanation: 'La secuencia aumenta de tres en tres: 11 + 3 = 14.' },
+  { question: 'La nave A es más rápida que B. B es más rápida que C. ¿Cuál es la más lenta?', options: ['A', 'B', 'C', 'No se puede saber'], answer: 2, explanation: 'El orden es A > B > C en velocidad; C es la más lenta.' },
+  { question: 'Un técnico necesita 6 minutos para revisar cada motor. ¿Cuánto tardará en revisar 5 motores uno tras otro?', options: ['11 minutos', '25 minutos', '30 minutos', '36 minutos'], answer: 2, explanation: '5 × 6 = 30 minutos.' },
+  { question: 'Completa el patrón: norte, este, sur, oeste, norte, ...', options: ['Norte', 'Este', 'Sur', 'Oeste'], answer: 1, explanation: 'Las direcciones giran en orden; después de norte viene este.' },
+  { question: 'Una señal se repite cada 7 segundos. Si acaba de aparecer, ¿cuándo aparecerá de nuevo por quinta vez?', options: ['14 segundos', '21 segundos', '28 segundos', '35 segundos'], answer: 3, explanation: 'La primera repetición llega a los 7 segundos; la quinta repetición, a los 35 segundos.' }
+];
+let intelligenceQuestions = [];
+
+// Banco de 50 preguntas de Star Trek, con una única respuesta correcta por pregunta.
+const starTrekTriviaQuestionBank = [
+  { question: '¿Cómo se llama la nave comandada por Kirk en la serie original?', options: ['Voyager', 'Defiant', 'Enterprise', 'Discovery'], answer: 2, explanation: 'James T. Kirk comanda la USS Enterprise en la serie original.' },
+  { question: '¿De qué dos especies es Spock?', options: ['Klingon y humano', 'Vulcano y humano', 'Romulano y humano', 'Andoriano y vulcano'], answer: 1, explanation: 'Spock es mitad humano y mitad vulcano.' },
+  { question: '¿Quién es el capitán de la Enterprise-D en The Next Generation?', options: ['Benjamin Sisko', 'James T. Kirk', 'Kathryn Janeway', 'Jean-Luc Picard'], answer: 3, explanation: 'Jean-Luc Picard está al mando de la Enterprise-D.' },
+  { question: '¿Qué tecnología permite transportar personas instantáneamente entre lugares?', options: ['El transportador', 'El replicador', 'El holodeck', 'El deflector'], answer: 0, explanation: 'El transportador desmaterializa y rematerializa personas y objetos.' },
+  { question: '¿Qué es Data, oficial de la Enterprise-D?', options: ['Un klingon', 'Un holograma recreativo', 'Un androide', 'Un vulcano'], answer: 2, explanation: 'Data es un androide que sirve como oficial de operaciones de la Enterprise-D.' },
+  { question: '¿A qué especie pertenece Worf?', options: ['Vulcano', 'Klingon', 'Ferengi', 'Borg'], answer: 1, explanation: 'Worf es un klingon criado en parte por una familia humana.' },
+  { question: '¿Quién capitanea la USS Voyager al comienzo de la serie Voyager?', options: ['Kathryn Janeway', 'Beverly Crusher', 'Kira Nerys', 'Tasha Yar'], answer: 0, explanation: 'La capitana Kathryn Janeway dirige la Voyager.' },
+  { question: '¿Quién está al mando de la estación Deep Space Nine al inicio de la serie?', options: ['Jean-Luc Picard', 'Montgomery Scott', 'Jonathan Archer', 'Benjamin Sisko'], answer: 3, explanation: 'Benjamin Sisko asume el mando de Deep Space Nine.' },
+  { question: '¿Qué dicen habitualmente los Borg antes de asimilar a alguien?', options: ['Viva mucho y prospere', 'La resistencia es inútil', 'Energía a máxima potencia', 'Todos a sus puestos'], answer: 1, explanation: 'La frase característica de los Borg es “La resistencia es inútil”.' },
+  { question: '¿Qué antigua drona Borg se une a la tripulación de Voyager?', options: ['Tasha Yar', 'Kes', 'Seven of Nine', 'Ro Laren'], answer: 2, explanation: 'Seven of Nine fue separada del Colectivo Borg y se incorpora a Voyager.' },
+  { question: '¿Cuál es el nombre del planeta natal klingon, escrito habitualmente Qo’noS?', options: ['Qo’noS', 'Vulcano', 'Romulus', 'Bajor'], answer: 0, explanation: 'Qo’noS es el mundo natal de los klingon.' },
+  { question: '¿Por qué se conoce especialmente a los ferengi en la Federación?', options: ['Por la telepatía', 'Por la agricultura', 'Por su neutralidad absoluta', 'Por el comercio y el beneficio'], answer: 3, explanation: 'La cultura ferengi concede gran importancia al comercio y a la obtención de beneficios.' },
+  { question: '¿Qué gesto acompaña el saludo vulcano “Larga vida y prosperidad”?', options: ['Puño cerrado', 'La mano levantada con los dedos separados en forma de V', 'Saludo militar', 'Dos dedos sobre la frente'], answer: 1, explanation: 'El saludo vulcano presenta la palma hacia delante y separa los dedos centrales de los exteriores.' },
+  { question: '¿A qué clase pertenece la Enterprise-D?', options: ['Intrepid', 'Defiant', 'Galaxy', 'Constitution'], answer: 2, explanation: 'La Enterprise-D es una nave de clase Galaxy.' },
+  { question: '¿Qué oficial es el primer oficial de Picard en The Next Generation?', options: ['William Riker', 'Data', 'Worf', 'Geordi La Forge'], answer: 0, explanation: 'William Riker es el primer oficial de la Enterprise-D.' },
+  { question: '¿Qué puesto ocupa Geordi La Forge durante buena parte de The Next Generation?', options: ['Consejero', 'Médico jefe', 'Oficial científico', 'Ingeniero jefe'], answer: 3, explanation: 'Geordi La Forge dirige ingeniería en la Enterprise-D.' },
+  { question: '¿Quién es la doctora principal de la Enterprise-D durante las primeras temporadas de TNG?', options: ['Katherine Pulaski', 'Beverly Crusher', 'Deanna Troi', 'Kira Nerys'], answer: 1, explanation: 'Beverly Crusher es la directora médica de la Enterprise-D durante la mayor parte de la serie.' },
+  { question: '¿Cómo se llama el gato de Data?', options: ['Moriarty', 'Porthos', 'Spot', 'Tiberius'], answer: 2, explanation: 'Data tiene un gato llamado Spot.' },
+  { question: '¿Qué función cumple Deanna Troi en la Enterprise-D?', options: ['Consejera', 'Ingeniera jefe', 'Jefa de seguridad', 'Piloto principal'], answer: 0, explanation: 'Deanna Troi es la consejera de la nave y tiene habilidades empáticas.' },
+  { question: '¿Cómo se llama la famosa arma tradicional klingon parecida a una hoja curva?', options: ['Bat’leth', 'Phaser', 'Tricorder', 'PADD'], answer: 0, explanation: 'El bat’leth es una conocida arma de combate klingon.' },
+  { question: '¿Qué es un phaser?', options: ['Una clase de nave', 'Un arma de energía', 'Un dispositivo médico', 'Un idioma'], answer: 1, explanation: 'Los phasers son armas de energía usadas por la Flota Estelar.' },
+  { question: '¿Para qué sirve principalmente el holodeck?', options: ['Reparar motores', 'Viajar a velocidad warp', 'Crear simulaciones holográficas inmersivas', 'Traducir idiomas automáticamente'], answer: 2, explanation: 'El holodeck crea entornos y personajes holográficos con los que interactuar.' },
+  { question: '¿Qué dispositivo puede producir comida y muchos objetos a partir de materia?', options: ['Replicador', 'Transportador', 'Tricorder', 'Deflector'], answer: 0, explanation: 'Los replicadores sintetizan alimentos y diversos objetos.' },
+  { question: '¿Qué permite hacer el motor warp?', options: ['Viajar bajo el agua', 'Volverse invisible siempre', 'Viajar más rápido que la luz mediante una burbuja warp', 'Viajar al pasado a voluntad'], answer: 2, explanation: 'La propulsión warp permite recorrer grandes distancias interestelares.' },
+  { question: '¿Qué principio de la Federación limita la interferencia en otras civilizaciones?', options: ['Tratado de Bajor', 'Directiva Principal', 'Regla de las Reglas de Adquisición', 'Protocolo Omega'], answer: 1, explanation: 'La Directiva Principal restringe la interferencia de la Federación en el desarrollo de otras culturas.' },
+  { question: '¿Qué especie es Odo en Deep Space Nine?', options: ['Bajoran', 'Cardassiano', 'Trill', 'Cambiaformas'], answer: 3, explanation: 'Odo es un cambiaformas relacionado con los Fundadores del Dominio.' },
+  { question: '¿De qué especie es Jadzia Dax?', options: ['Trill', 'Vulcana', 'Betazoide', 'Andoriana'], answer: 0, explanation: 'Jadzia Dax es una Trill unida al simbionte Dax.' },
+  { question: '¿Qué especie ocupó Bajor durante años antes de los acontecimientos de DS9?', options: ['Borg', 'Klingon', 'Cardassianos', 'Ferengi'], answer: 2, explanation: 'La ocupación cardassiana de Bajor es parte central del trasfondo de DS9.' },
+  { question: '¿Qué grupo de poder está relacionado con los Fundadores y el Dominio?', options: ['El Alto Consejo Vulcano', 'Los Fundadores cambiaformas', 'Los Maquis', 'Los Q'], answer: 1, explanation: 'Los Fundadores son cambiaformas que dirigen el Dominio.' },
+  { question: '¿Cómo se llamaba Deep Space Nine durante la ocupación cardassiana?', options: ['Terok Nor', 'Empok Nor II', 'Starbase 1', 'Regula One'], answer: 0, explanation: 'La estación se llamaba Terok Nor bajo control cardassiano.' },
+  { question: '¿En qué cuadrante queda varada la USS Voyager?', options: ['Alfa', 'Beta', 'Gamma', 'Delta'], answer: 3, explanation: 'Voyager queda atrapada a gran distancia en el cuadrante Delta.' },
+  { question: '¿Quién es el primer oficial de la Voyager?', options: ['Tom Paris', 'Chakotay', 'Harry Kim', 'Tuvok'], answer: 1, explanation: 'Chakotay, antiguo miembro de los Maquis, sirve como primer oficial.' },
+  { question: '¿Qué tipo de programa es el Doctor de la Voyager?', options: ['Un androide positrónico', 'Un cambiaformas', 'Un holograma médico de emergencia', 'Un Borg separado del Colectivo'], answer: 2, explanation: 'El Doctor comienza como un holograma médico de emergencia.' },
+  { question: '¿Quién capitanea la Enterprise NX-01 en Star Trek: Enterprise?', options: ['Jonathan Archer', 'Christopher Pike', 'James T. Kirk', 'Gabriel Lorca'], answer: 0, explanation: 'Jonathan Archer es el capitán de la Enterprise NX-01.' },
+  { question: '¿Qué oficial vulcana acompaña a Archer en la Enterprise NX-01?', options: ['T’Pau', 'T’Pring', 'T’Pol', 'Saowin'], answer: 2, explanation: 'T’Pol sirve como oficial científica vulcana en la NX-01.' },
+  { question: '¿Cuál es la segunda película de la serie cinematográfica original?', options: ['La búsqueda de Spock', 'La ira de Khan', 'Misión: salvar la Tierra', 'La última frontera'], answer: 1, explanation: 'Star Trek II: La ira de Khan es la segunda película de la serie original.' },
+  { question: '¿Qué hace Spock en La ira de Khan para salvar a la nave?', options: ['Abandona el Enterprise en una lanzadera', 'Desactiva el transportador', 'Se entrega a los klingon', 'Se expone a radiación para reparar el núcleo warp'], answer: 3, explanation: 'Spock entra en la cámara de ingeniería para restaurar la energía, recibe una dosis letal de radiación y salva la nave.' },
+  { question: '¿Cuál es el segundo nombre de James T. Kirk?', options: ['Tiberius', 'Alexander', 'Christopher', 'Robert'], answer: 0, explanation: 'El segundo nombre de James T. Kirk es Tiberius.' },
+  { question: '¿Qué nave aparece como centro de la serie Star Trek: Discovery?', options: ['Enterprise-B', 'Voyager-A', 'USS Discovery', 'Deep Space Nine'], answer: 2, explanation: 'La USS Discovery es la nave principal de Star Trek: Discovery.' },
+  { question: '¿Qué método de propulsión experimental usa la Discovery para saltos de gran distancia?', options: ['Motor de transwarp Borg', 'Propulsión por esporas', 'Vela solar', 'Motor de singularidad romulana'], answer: 1, explanation: 'La Discovery usa un sistema de propulsión basado en una red de esporas.' },
+  { question: '¿Qué nave protagoniza la serie animada Lower Decks?', options: ['USS Protostar', 'USS Cerritos', 'USS Voyager', 'USS Shenzhou'], answer: 1, explanation: 'Lower Decks sigue a la tripulación de la USS Cerritos.' },
+  { question: '¿Cuál es el rango de Beckett Mariner al comienzo de Lower Decks?', options: ['Almirante', 'Capitana', 'Teniente comandante', 'Alférez'], answer: 3, explanation: 'Mariner comienza como alférez asignada a la cubierta inferior.' },
+  { question: '¿Qué nave es central en Star Trek: Prodigy?', options: ['USS Protostar', 'USS Defiant', 'USS Enterprise-C', 'USS Saratoga'], answer: 0, explanation: 'Los jóvenes protagonistas descubren y utilizan la USS Protostar.' },
+  { question: '¿Cuál es el planeta natal de los bajoranos?', options: ['Cardassia Prime', 'Bajor', 'Qo’noS', 'Vulcano'], answer: 1, explanation: 'Los bajoranos son el pueblo nativo del planeta Bajor.' },
+  { question: '¿Qué dispositivo usa habitualmente un oficial para analizar el entorno?', options: ['PADD', 'Bat’leth', 'Tricorder', 'Holomatriz'], answer: 2, explanation: 'El tricorder sirve para escanear y analizar datos científicos o médicos.' },
+  { question: '¿Qué es un PADD?', options: ['Una pequeña tableta electrónica portátil', 'Un tipo de torpedo fotónico', 'Una clase de escudo', 'Una nave de reconocimiento'], answer: 0, explanation: 'PADD es el dispositivo portátil de acceso a datos utilizado por la Flota Estelar.' },
+  { question: '¿Qué especie es conocida por sus naves con tecnología de camuflaje?', options: ['Bajoranos exclusivamente', 'Horta', 'Ocampa', 'Romulanos y klingon'], answer: 3, explanation: 'El camuflaje aparece asociado especialmente a naves romulanas y klingon.' },
+  { question: '¿Qué es Q en The Next Generation?', options: ['Un androide de la Flota', 'Un miembro de una especie casi omnipotente', 'Un comandante klingon', 'Un médico holográfico'], answer: 1, explanation: 'Q pertenece al Continuum Q y posee capacidades que parecen casi omnipotentes.' },
+  { question: '¿Quién es el padre vulcano de Spock?', options: ['Sarek', 'T’Pau', 'Surak', 'Tuvok'], answer: 0, explanation: 'Sarek es el padre de Spock y un destacado embajador vulcano.' },
+  { question: '¿Qué personaje es jefe de seguridad klingon en la Enterprise-D antes de servir en DS9?', options: ['Martok', 'Kurn', 'Worf', 'Kang'], answer: 2, explanation: 'Worf sirve como jefe de seguridad en la Enterprise-D y después en Deep Space Nine.' },
+];
+let starTrekTriviaQuestions = [];
+
+function pickRandomQuestions(bank, count) {
+  const shuffled = bank.slice();
+  for (let i = shuffled.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
+  }
+  return shuffled.slice(0, Math.min(count, shuffled.length));
+}
+
+let intelligenceQuestionIndex = 0;
+let intelligenceScore = 0;
+let intelligenceFeedback = null;
+let triviaQuestionIndex = 0;
+let triviaScore = 0;
+let triviaFeedback = null;
+
+// Fase final del entrenamiento: simulación de mando Kobayashi Maru.
+// Es un homenaje jugable con texto original y gráficos generados con canvas.
+let kobayashiMaruStage = 0; // 0: alerta, 1: decisión, 2: crisis, 3: análisis
+let kobayashiMaruChoice = -1;
+let kobayashiMaruOutcome = '';
+const kobayashiMaruChoices = [
+  { title: 'ENTRAR EN LA ZONA NEUTRAL', detail: 'Intentar rescatar directamente a la tripulación civil.' },
+  { title: 'MANTENER DISTANCIA Y NEGOCIAR', detail: 'Solicitar apoyo de la Flota y abrir un canal diplomático.' },
+  { title: 'DESPLEGAR SONDAS DE RESCATE', detail: 'Intentar evacuar a los civiles con recursos remotos.' }
+];
+
+// Personaje elegido solo para el circuito del holodeck; no cambia la selección
+// de los modos de combate ni el personaje que usa la historia.
+let trainingCharacterIndex = 0;
+const trainingScoreTarget = 500;
+let trainingCircuitIndex = 0;
+const holodeckCourses = [
+  {
+    name: 'PRADO DE INSIGNIAS', theme: 'classic', worldWidth: 2650,
+    ground: [[0, 350], [415, 330], [810, 370], [1245, 405], [1715, 365], [2145, 505]],
+    upper: [[175, 105, 100], [495, 140, 100], [660, 86, 110], [885, 122, 112], [1065, 172, 115], [1325, 115, 106], [1515, 155, 120], [1775, 105, 100], [1935, 172, 110], [2225, 125, 112]],
+    coins: [[215, 139], [535, 176], [703, 122], [929, 159], [1118, 209], [1377, 151], [1576, 193], [1826, 142], [1989, 211], [2278, 161]],
+    enemies: [[275, 245, 325, 1.1], [555, 510, 700, 1.2], [940, 860, 1120, 1.35], [1455, 1280, 1600, 1.25], [1870, 1740, 2020, 1.35], [2320, 2210, 2500, 1.5]]
+  },
+  {
+    name: 'CORREDOR DE ASTEROIDES', theme: 'space', worldWidth: 2850,
+    ground: [[0, 310], [385, 300], [760, 315], [1135, 310], [1510, 330], [1905, 300], [2280, 310], [2660, 190]],
+    upper: [[130, 92, 90], [470, 138, 95], [650, 85, 95], [860, 124, 105], [1100, 160, 100], [1285, 108, 110], [1555, 145, 100], [1770, 90, 100], [1980, 158, 105], [2215, 118, 105], [2480, 147, 105]],
+    coins: [[170, 130], [510, 176], [695, 123], [910, 161], [1145, 198], [1335, 146], [1595, 183], [1815, 128], [2020, 196], [2255, 156], [2520, 185]],
+    enemies: [[245, 210, 290, 1.3], [540, 430, 640, 1.45], [900, 820, 1060, 1.5], [1360, 1190, 1480, 1.55], [1690, 1570, 1830, 1.6], [2075, 1950, 2200, 1.65], [2430, 2340, 2600, 1.8], [2760, 2700, 2815, 1.7]]
+  },
+  {
+    name: 'SECTOR VOLCÁNICO', theme: 'volcano', worldWidth: 3020,
+    ground: [[0, 280], [350, 300], [715, 290], [1070, 300], [1435, 300], [1800, 300], [2165, 300], [2530, 490]],
+    upper: [[90, 82, 85], [405, 132, 95], [590, 92, 90], [785, 155, 100], [990, 105, 95], [1160, 170, 105], [1370, 118, 95], [1580, 145, 105], [1770, 95, 100], [1980, 160, 95], [2195, 110, 105], [2420, 148, 100], [2730, 105, 95]],
+    coins: [[125, 121], [445, 169], [630, 128], [825, 191], [1030, 141], [1200, 206], [1410, 154], [1620, 181], [1810, 131], [2020, 196], [2235, 146], [2460, 184], [2765, 141]],
+    enemies: [[215, 190, 250, 1.45], [490, 420, 600, 1.55], [855, 790, 1000, 1.65], [1230, 1150, 1360, 1.65], [1515, 1460, 1720, 1.7], [1900, 1840, 2070, 1.8], [2290, 2220, 2470, 1.9], [2780, 2650, 2925, 1.95]]
+  },
+  {
+    name: 'LABORATORIO DE CRIOGÉNESIS', theme: 'ice', worldWidth: 3200,
+    ground: [[0, 330], [405, 290], [760, 285], [1110, 285], [1460, 285], [1810, 290], [2170, 300], [2540, 290], [2900, 300]],
+    upper: [[140, 98, 95], [445, 145, 90], [635, 88, 100], [820, 132, 95], [1015, 174, 95], [1180, 105, 105], [1395, 146, 100], [1590, 95, 100], [1795, 164, 95], [1985, 120, 105], [2215, 153, 100], [2425, 96, 95], [2630, 145, 100], [2960, 112, 95]],
+    coins: [[180, 136], [480, 182], [675, 126], [860, 169], [1055, 212], [1220, 143], [1435, 184], [1630, 133], [1835, 202], [2025, 158], [2255, 191], [2465, 134], [2670, 183], [3000, 150]],
+    enemies: [[245, 215, 295, 1.5], [525, 455, 640, 1.6], [870, 800, 1020, 1.65], [1220, 1150, 1355, 1.75], [1535, 1480, 1715, 1.8], [1870, 1840, 2070, 1.9], [2260, 2200, 2450, 1.95], [2640, 2580, 2820, 2.0], [3040, 2940, 3160, 2.1]]
+  }
+];
+
+function beginTrainingMode() {
+  trainingCircuitIndex = 0;
+  trainingDialogueIndex = 0;
+  intelligenceQuestionIndex = 0; intelligenceScore = 0; intelligenceFeedback = null;
+  triviaQuestionIndex = 0; triviaScore = 0; triviaFeedback = null;
+  kobayashiMaruStage = 0; kobayashiMaruChoice = -1; kobayashiMaruOutcome = '';
+  // Parte del personaje que ya tenía seleccionado el jugador 1. Se puede
+  // cambiar desde el puente con A/D o las flechas.
+  trainingCharacterIndex = clamp(player1.charIndex, 0, availableCharacters.length - 1);
+  starshipGame = null;
+  trainingRangeGame = null;
+  starshipRaceGame = null;
+  holodeckGame = null;
+  for (const k in keys) keys[k] = false;
+  gameState = 'TRAINING_BRIDGE';
+}
+
+function changeTrainingCharacter(direction) {
+  trainingCharacterIndex = (trainingCharacterIndex + direction + availableCharacters.length) % availableCharacters.length;
+}
+
+function beginStarshipMode() {
+  const w = canvas.width, h = canvas.height;
+  starshipGame = {
+    frame: 0,
+    score: 0,
+    lives: 3,
+    over: false,
+    player: { x: w / 2, y: h - 66, radius: 13, speed: 4.4, invulnerable: 0 },
+    playerShots: [],
+    enemyShips: [],
+    enemyShots: [],
+    particles: [],
+    stars: Array.from({ length: 90 }, () => ({
+      x: Math.random() * w, y: Math.random() * h,
+      speed: 0.5 + Math.random() * 2.4, size: Math.random() < 0.82 ? 1 : 2
+    })),
+    spawnTimer: 24,
+    fireCooldown: 0
+  };
+  for (const k in keys) keys[k] = false;
+  gameState = 'STARSHIP';
+}
+
+function addStarshipExplosion(x, y, color = '#ffb347', amount = 15) {
+  if (!starshipGame) return;
+  for (let i = 0; i < amount; i++) {
+    const angle = Math.random() * Math.PI * 2;
+    const speed = 1 + Math.random() * 3.6;
+    starshipGame.particles.push({
+      x, y, vx: Math.cos(angle) * speed, vy: Math.sin(angle) * speed,
+      life: 18 + Math.floor(Math.random() * 18), maxLife: 36,
+      size: 1.5 + Math.random() * 2.5, color
+    });
+  }
+}
+
+function fireStarshipWeapons() {
+  const g = starshipGame;
+  if (!g || g.over || g.fireCooldown > 0) return;
+  const p = g.player;
+  // Doble phaser, estilo arcade clásico.
+  g.playerShots.push({ x: p.x - 7, y: p.y - 19, vx: 0, vy: -8.5, radius: 3, damage: 1 });
+  g.playerShots.push({ x: p.x + 7, y: p.y - 19, vx: 0, vy: -8.5, radius: 3, damage: 1 });
+  g.fireCooldown = 8;
+}
+
+function damageStarshipPlayer() {
+  const g = starshipGame;
+  if (!g || g.over || g.player.invulnerable > 0) return;
+  g.lives--;
+  g.player.invulnerable = 85;
+  addStarshipExplosion(g.player.x, g.player.y, '#ff6655', 22);
+  if (g.lives <= 0) {
+    g.lives = 0;
+    g.over = true;
+  }
+}
+
+function updateStarshipMode() {
+  const g = starshipGame;
+  if (gameState !== 'STARSHIP' || !g || g.over) return;
+  const w = canvas.width, h = canvas.height, p = g.player;
+  g.frame++;
+  if (p.invulnerable > 0) p.invulnerable--;
+  if (g.fireCooldown > 0) g.fireCooldown--;
+
+  let dx = 0, dy = 0;
+  if (keys.ArrowLeft || keys.a || keys.A) dx--;
+  if (keys.ArrowRight || keys.d || keys.D) dx++;
+  if (keys.ArrowUp || keys.w || keys.W) dy--;
+  if (keys.ArrowDown || keys.s || keys.S) dy++;
+  // Diagonal movement is normalized, so it is not faster than straight movement.
+  if (dx && dy) { dx *= 0.7071; dy *= 0.7071; }
+  p.x = clamp(p.x + dx * p.speed, 22, w - 22);
+  p.y = clamp(p.y + dy * p.speed, 62, h - 28);
+  if (keys[' '] || keys.Enter) fireStarshipWeapons();
+
+  for (const star of g.stars) {
+    star.y += star.speed;
+    if (star.y > h) { star.y = 0; star.x = Math.random() * w; }
+  }
+
+  g.spawnTimer--;
+  if (g.spawnTimer <= 0) {
+    const tough = g.score >= 800 && Math.random() < 0.32;
+    g.enemyShips.push({
+      x: 30 + Math.random() * (w - 60), y: -28,
+      vx: (Math.random() - 0.5) * (tough ? 2.2 : 1.3),
+      vy: (tough ? 1.5 : 1.1) + Math.random() * 1.1,
+      hp: tough ? 2 : 1, radius: tough ? 17 : 13,
+      shootTimer: 45 + Math.floor(Math.random() * 65),
+      phase: Math.random() * Math.PI * 2, variant: Math.floor(Math.random() * 4), tough
+    });
+    g.spawnTimer = Math.max(18, 43 - Math.floor(g.score / 350));
+  }
+
+  // Phaser beams from the player.
+  for (const shot of g.playerShots) { shot.x += shot.vx; shot.y += shot.vy; }
+  g.playerShots = g.playerShots.filter(s => s.y > -20);
+
+  // Enemy movement, aimed disruptor shots, and collision against the Enterprise.
+  for (const enemy of g.enemyShips) {
+    enemy.phase += 0.035;
+    enemy.x += enemy.vx + Math.sin(enemy.phase) * 0.65;
+    enemy.y += enemy.vy;
+    if (enemy.x < 20 || enemy.x > w - 20) enemy.vx *= -1;
+    enemy.x = clamp(enemy.x, 20, w - 20);
+    enemy.shootTimer--;
+    if (enemy.shootTimer <= 0 && enemy.y > 0 && enemy.y < h * 0.78) {
+      const vx = p.x - enemy.x, vy = p.y - enemy.y;
+      const len = Math.max(1, Math.hypot(vx, vy));
+      const speed = enemy.tough ? 3.2 : 2.7;
+      g.enemyShots.push({ x: enemy.x, y: enemy.y + 13, vx: vx / len * speed, vy: vy / len * speed, radius: 4 });
+      enemy.shootTimer = 78 + Math.floor(Math.random() * 48);
+    }
+    if (Math.hypot(p.x - enemy.x, p.y - enemy.y) < p.radius + enemy.radius) {
+      addStarshipExplosion(enemy.x, enemy.y, '#ff8059', 17);
+      enemy.y = h + 80;
+      damageStarshipPlayer();
+    }
+  }
+  g.enemyShips = g.enemyShips.filter(e => e.y < h + 35);
+
+  // Each hit is counted once per laser-enemy pair.
+  for (const shot of g.playerShots) {
+    if (shot.used) continue;
+    for (const enemy of g.enemyShips) {
+      if (enemy.y > h + 25) continue;
+      if (Math.hypot(shot.x - enemy.x, shot.y - enemy.y) < shot.radius + enemy.radius) {
+        shot.used = true;
+        enemy.hp -= shot.damage;
+        addStarshipExplosion(shot.x, shot.y, '#6ffcff', 4);
+        if (enemy.hp <= 0) {
+          g.score += enemy.tough ? 200 : 100;
+          addStarshipExplosion(enemy.x, enemy.y, enemy.tough ? '#ffcf6e' : '#ff775e', enemy.tough ? 24 : 17);
+          enemy.y = h + 80;
+          if (g.score >= trainingScoreTarget) {
+            g.missionComplete = true;
+            g.over = true;
+          }
+        }
+        break;
+      }
+    }
+  }
+  g.playerShots = g.playerShots.filter(s => !s.used);
+  g.enemyShips = g.enemyShips.filter(e => e.y < h + 35);
+
+  for (const shot of g.enemyShots) {
+    shot.x += shot.vx; shot.y += shot.vy;
+    if (Math.hypot(shot.x - p.x, shot.y - p.y) < shot.radius + p.radius - 2) {
+      shot.used = true;
+      damageStarshipPlayer();
+    }
+  }
+  g.enemyShots = g.enemyShots.filter(s => !s.used && s.x > -15 && s.x < w + 15 && s.y > -15 && s.y < h + 15);
+
+  for (const particle of g.particles) {
+    particle.x += particle.vx; particle.y += particle.vy;
+    particle.vx *= 0.98; particle.vy *= 0.98; particle.life--;
+  }
+  g.particles = g.particles.filter(particle => particle.life > 0);
+}
+
+function drawEnterpriseArcadeShip(x, y, invulnerable = 0) {
+  // Si existe el asset personalizado, lo usamos; si no, mantenemos el dibujo clásico.
+  ctx.save();
+  if (invulnerable > 0 && Math.floor(invulnerable / 5) % 2 === 0) ctx.globalAlpha = 0.38;
+  if (enterprisePilotImage.complete && enterprisePilotImage.naturalWidth > 0) {
+    const aspect = enterprisePilotImage.naturalWidth / enterprisePilotImage.naturalHeight;
+    const maxW = 78, maxH = 58;
+    const dw = Math.min(maxW, maxH * aspect);
+    const dh = dw / aspect;
+    ctx.shadowColor = '#67eaff'; ctx.shadowBlur = 10;
+    ctx.drawImage(enterprisePilotImage, x - dw / 2, y - dh / 2, dw, dh);
+  } else {
+    ctx.translate(x, y);
+    ctx.shadowColor = '#67eaff'; ctx.shadowBlur = 12;
+    // Dibujo alternativo hasta que se cargue enterprise_pilot.png o si falta el archivo.
+    ctx.fillStyle = '#b6f6ff';
+    ctx.fillRect(-19, -1, 6, 23);
+    ctx.fillRect(13, -1, 6, 23);
+    ctx.fillStyle = '#39a8de';
+    ctx.fillRect(-18, 3, 4, 16);
+    ctx.fillRect(14, 3, 4, 16);
+    ctx.fillStyle = '#9eabbc';
+    ctx.strokeStyle = '#e5fbff'; ctx.lineWidth = 1.5;
+    ctx.beginPath(); ctx.moveTo(0, -25); ctx.lineTo(8, -8); ctx.lineTo(7, 11);
+    ctx.lineTo(0, 19); ctx.lineTo(-7, 11); ctx.lineTo(-8, -8); ctx.closePath();
+    ctx.fill(); ctx.stroke();
+    ctx.fillStyle = '#dce8ef'; ctx.beginPath(); ctx.ellipse(0, -12, 14, 8.5, 0, 0, Math.PI * 2); ctx.fill(); ctx.stroke();
+    ctx.fillStyle = '#3faad0'; ctx.beginPath(); ctx.ellipse(0, -12, 5, 3, 0, 0, Math.PI * 2); ctx.fill();
+    ctx.shadowBlur = 7; ctx.fillStyle = '#40e9ff'; ctx.fillRect(-3, 14, 6, 6);
+  }
+  ctx.restore();
+}
+
+function drawArcadeEnemyShip(enemy) {
+  ctx.save();
+  const image = starshipAttackersImage;
+  if (image.complete && image.naturalWidth > 0) {
+    // Los atacantes deben mirar hacia abajo, hacia la nave del jugador.
+    // El asset estaba orientado al revés: giramos cada sprite 180 grados
+    // alrededor de su propio centro. El recorte de hojas de sprites se conserva.
+    ctx.translate(enemy.x, enemy.y);
+    ctx.rotate(Math.PI);
+    const ratio = image.naturalWidth / image.naturalHeight;
+    if (ratio >= 2.4) {
+      const columns = clamp(Math.round(ratio), 2, 5);
+      const cellW = image.naturalWidth / columns;
+      const variant = enemy.tough ? columns - 1 : (enemy.variant || 0) % Math.max(1, columns - 1);
+      const sx = variant * cellW;
+      const sw = cellW;
+      const maxW = enemy.tough ? 66 : 48;
+      const maxH = enemy.tough ? 56 : 42;
+      const aspect = sw / image.naturalHeight;
+      const dw = Math.min(maxW, maxH * aspect);
+      const dh = dw / aspect;
+      ctx.shadowColor = enemy.tough ? '#ffbd59' : '#ff433d';
+      ctx.shadowBlur = enemy.tough ? 10 : 7;
+      ctx.drawImage(image, sx, 0, sw, image.naturalHeight, -dw / 2, -dh / 2, dw, dh);
+    } else {
+      const maxW = enemy.tough ? 66 : 48;
+      const maxH = enemy.tough ? 56 : 42;
+      const aspect = image.naturalWidth / image.naturalHeight;
+      const dw = Math.min(maxW, maxH * aspect);
+      const dh = dw / aspect;
+      ctx.shadowColor = enemy.tough ? '#ffbd59' : '#ff433d';
+      ctx.shadowBlur = enemy.tough ? 10 : 7;
+      ctx.drawImage(image, -dw / 2, -dh / 2, dw, dh);
+    }
+  } else {
+    // Dibujo alternativo si aún no se ha cargado atacantes.png o si falta el archivo.
+    // Este dibujo ya apunta hacia abajo y por eso no se gira.
+    ctx.translate(enemy.x, enemy.y);
+    ctx.shadowColor = enemy.tough ? '#ffbd59' : '#ff433d'; ctx.shadowBlur = 9;
+    ctx.fillStyle = enemy.tough ? '#b56b32' : '#852c3f';
+    ctx.strokeStyle = enemy.tough ? '#ffe2a1' : '#ff8c8c'; ctx.lineWidth = 1.5;
+    ctx.beginPath();
+    ctx.moveTo(0, 18); ctx.lineTo(8, 3); ctx.lineTo(21, -5); ctx.lineTo(12, -7);
+    ctx.lineTo(7, -15); ctx.lineTo(0, -10); ctx.lineTo(-7, -15); ctx.lineTo(-12, -7);
+    ctx.lineTo(-21, -5); ctx.lineTo(-8, 3); ctx.closePath();
+    ctx.fill(); ctx.stroke();
+    ctx.fillStyle = '#ffc4bd'; ctx.fillRect(-3, -5, 6, 10);
+    if (enemy.tough) { ctx.fillStyle = '#ffcf6e'; ctx.fillRect(-15, 0, 30, 2); }
+  }
+  ctx.restore();
+}
+
+function drawStarshipMode() {
+  const g = starshipGame;
+  const w = canvas.width, h = canvas.height;
+  const bg = ctx.createLinearGradient(0, 0, 0, h);
+  bg.addColorStop(0, '#030716'); bg.addColorStop(1, '#0b2645');
+  ctx.fillStyle = bg; ctx.fillRect(0, 0, w, h);
+  if (!g) return;
+  for (const star of g.stars) {
+    ctx.globalAlpha = 0.45 + star.speed / 4;
+    ctx.fillStyle = '#c8f3ff'; ctx.fillRect(star.x, star.y, star.size, star.size * (star.speed > 2 ? 2 : 1));
+  }
+  ctx.globalAlpha = 1;
+  // Soft nebula bands.
+  ctx.fillStyle = 'rgba(32, 103, 170, 0.10)';
+  ctx.beginPath(); ctx.ellipse(w * 0.76, h * 0.36, w * 0.3, h * 0.18, -0.4, 0, Math.PI * 2); ctx.fill();
+
+  for (const shot of g.playerShots) {
+    ctx.save(); ctx.shadowColor = '#53f8ff'; ctx.shadowBlur = 12;
+    ctx.strokeStyle = '#a4ffff'; ctx.lineWidth = 3;
+    ctx.beginPath(); ctx.moveTo(shot.x, shot.y + 7); ctx.lineTo(shot.x, shot.y - 5); ctx.stroke(); ctx.restore();
+  }
+  for (const shot of g.enemyShots) {
+    ctx.save(); ctx.shadowColor = '#ff4c54'; ctx.shadowBlur = 9;
+    ctx.fillStyle = '#ff5c65'; ctx.beginPath(); ctx.ellipse(shot.x, shot.y, 3.5, 5, 0, 0, Math.PI * 2); ctx.fill(); ctx.restore();
+  }
+  for (const enemy of g.enemyShips) drawArcadeEnemyShip(enemy);
+  for (const particle of g.particles) {
+    ctx.globalAlpha = Math.max(0, particle.life / particle.maxLife);
+    ctx.fillStyle = particle.color; ctx.fillRect(particle.x, particle.y, particle.size, particle.size);
+  }
+  ctx.globalAlpha = 1;
+  if (!g.over) drawEnterpriseArcadeShip(g.player.x, g.player.y, g.player.invulnerable);
+
+  // HUD.
+  ctx.fillStyle = 'rgba(0, 8, 20, 0.7)'; ctx.fillRect(0, 0, w, 43);
+  text('STARFLEET: PILOTAJE', 150, 27, 16, '#7eeeff', true);
+  text(`PUNTOS ${String(g.score).padStart(6, '0')}`, w / 2, 27, 15, '#ffffff', true);
+  text(`VIDAS ${'◆ '.repeat(g.lives).trim()}`, w - 88, 27, 15, '#ffcf70', true);
+  text('MOVER: WASD / FLECHAS     PHASERS: MANTENER ESPACIO O INTRO     X/ESC: MENÚ', w / 2, h - 10, 10, '#b4d7e8', true);
+
+  if (g.over) {
+    ctx.fillStyle = 'rgba(0, 4, 14, 0.80)'; ctx.fillRect(0, 0, w, h);
+    if (g.missionComplete) {
+      text('¡MISIÓN ESPACIAL SUPERADA!', w / 2, h / 2 - 40, 25, '#ffdf70', true);
+      text(`PUNTUACIÓN: ${g.score} · OBJETIVO CUMPLIDO`, w / 2, h / 2 - 5, 16, '#ffffff', true);
+      text('ESPACIO / INTRO: SIGUIENTE PRUEBA · CARRERA DE NAVES', w / 2, h / 2 + 32, 13, '#78f7ff', true);
+    } else {
+      text('NAVE DESTRUIDA', w / 2, h / 2 - 36, 29, '#ff625b', true);
+      text(`PUNTUACIÓN FINAL: ${g.score}`, w / 2, h / 2 + 2, 18, '#ffffff', true);
+      text('ESPACIO / INTRO: REPETIR MISIÓN', w / 2, h / 2 + 36, 14, '#78f7ff', true);
+    }
+    text('X / ESC: MENÚ DE MODOS', w / 2, h / 2 + 63, 12, '#c8dbe8');
+  }
+}
+
+// ------------------------------------------------------------
+// SEGUNDA PRUEBA DE PILOTAJE: CARRERA DE NAVES
+// Carrera arcade vista desde arriba. El personaje corre con la Enterprise
+// contra tres rivales; salirse del trazado o golpear boyas resta distancia.
+// ------------------------------------------------------------
+
+const RACE_SCREEN_SCALE = 0.34;
+const RACE_FINISH_DISTANCE = 8200;
+const RACE_TRACK_WIDTH = () => Math.min(canvas.width * 0.68, 500);
+
+function raceTrackCenterAt(distance) {
+  const w = canvas.width;
+  return w / 2 + Math.sin(distance / 610) * w * 0.145 + Math.sin(distance / 245) * w * 0.038;
+}
+
+function beginStarshipRace() {
+  const w = canvas.width, h = canvas.height;
+  starshipRaceGame = {
+    frame: 0,
+    progress: 0,
+    finishDistance: RACE_FINISH_DISTANCE,
+    over: false,
+    won: false,
+    player: { x: w / 2, y: h * 0.70, speed: 5.1, hitTimer: 0 },
+    rivals: [
+      { name: 'PHOENIX', progress: 185, lane: -0.27, speed: 4.88, variant: 0, phase: 0 },
+      { name: 'DEFIANT', progress: 55, lane: 0.27, speed: 4.69, variant: 1, phase: 2.1 },
+      { name: 'VOYAGER', progress: -125, lane: -0.03, speed: 4.57, variant: 2, phase: 4.2 }
+    ],
+    hazards: Array.from({ length: 8 }, (_, i) => ({
+      progress: 690 + i * 910 + Math.random() * 210,
+      lane: (Math.random() * 1.35) - 0.675,
+      hit: false,
+      spin: Math.random() * Math.PI * 2
+    })),
+    stars: Array.from({ length: 100 }, () => ({
+      x: Math.random() * w, y: Math.random() * h,
+      speed: 0.5 + Math.random() * 2.5,
+      size: Math.random() < 0.85 ? 1 : 2
+    })),
+    sparks: [],
+    offTrack: false,
+    lastImpact: ''
+  };
+  for (const k in keys) keys[k] = false;
+  gameState = 'STARSHIP_RACE';
+}
+
+function raceRivalScreenY(rival, g = starshipRaceGame) {
+  return g.player.y - (rival.progress - g.progress) * RACE_SCREEN_SCALE;
+}
+
+function raceRivalX(rival) {
+  return raceTrackCenterAt(rival.progress) + rival.lane * RACE_TRACK_WIDTH();
+}
+
+function updateStarshipRace() {
+  const g = starshipRaceGame;
+  if (gameState !== 'STARSHIP_RACE' || !g || g.over) return;
+  const w = canvas.width, h = canvas.height, p = g.player;
+  g.frame++;
+  if (p.hitTimer > 0) p.hitTimer--;
+
+  let dx = 0;
+  if (keys.ArrowLeft || keys.a || keys.A) dx--;
+  if (keys.ArrowRight || keys.d || keys.D) dx++;
+  p.x = clamp(p.x + dx * 5.0, 18, w - 18);
+
+  const trackWidth = RACE_TRACK_WIDTH();
+  const trackCenter = raceTrackCenterAt(g.progress);
+  const lateral = Math.abs(p.x - trackCenter);
+  g.offTrack = lateral > trackWidth / 2 - 24;
+  const speed = g.offTrack ? 2.2 : p.speed;
+  g.progress += speed;
+
+  for (const star of g.stars) {
+    star.y += star.speed + speed * 0.65;
+    if (star.y > h) { star.y = 0; star.x = Math.random() * w; }
+  }
+
+  // Los rivales mantienen su propia velocidad y avanzan hacia la meta.
+  for (const rival of g.rivals) {
+    rival.phase += 0.025;
+    rival.progress += rival.speed + Math.sin(g.frame / 85 + rival.phase) * 0.035;
+    // Cambios suaves de carril; todos permanecen dentro de los límites.
+    rival.lane = clamp(rival.lane + Math.sin(g.frame / 90 + rival.phase) * 0.0009, -0.31, 0.31);
+  }
+
+  // Boyas energéticas que el cadete debe esquivar.
+  for (const hazard of g.hazards) {
+    if (hazard.hit) continue;
+    const y = p.y - (hazard.progress - g.progress) * RACE_SCREEN_SCALE;
+    const x = raceTrackCenterAt(hazard.progress) + hazard.lane * trackWidth;
+    if (Math.abs(y - p.y) < 27 && Math.abs(x - p.x) < 31) {
+      hazard.hit = true;
+      g.progress = Math.max(0, g.progress - 125);
+      p.x += p.x < x ? -22 : 22;
+      p.hitTimer = 35;
+      g.lastImpact = '¡IMPACTO CON UNA BOYA!';
+      for (let i = 0; i < 14; i++) {
+        const a = Math.random() * Math.PI * 2, v = 1 + Math.random() * 3;
+        g.sparks.push({ x, y, vx: Math.cos(a) * v, vy: Math.sin(a) * v, life: 22, color: '#ffbe62' });
+      }
+    }
+  }
+
+  // Contacto entre naves: pequeño empujón y pérdida de distancia.
+  if (p.hitTimer === 0) {
+    for (const rival of g.rivals) {
+      const ry = raceRivalScreenY(rival, g), rx = raceRivalX(rival);
+      if (Math.abs(ry - p.y) < 28 && Math.abs(rx - p.x) < 32) {
+        g.progress = Math.max(0, g.progress - 75);
+        p.x += p.x < rx ? -25 : 25;
+        p.hitTimer = 32;
+        g.lastImpact = '¡CONTACTO CON OTRA NAVE!';
+        break;
+      }
+    }
+  }
+
+  for (const spark of g.sparks) {
+    spark.x += spark.vx; spark.y += spark.vy; spark.vx *= 0.97; spark.vy *= 0.97; spark.life--;
+  }
+  g.sparks = g.sparks.filter(s => s.life > 0);
+
+  // La carrera termina cuando cualquiera cruza la línea de meta.
+  const fastestRival = Math.max(...g.rivals.map(r => r.progress));
+  if (g.progress >= g.finishDistance || fastestRival >= g.finishDistance) {
+    g.over = true;
+    g.won = g.progress >= g.finishDistance && g.progress >= fastestRival;
+    for (const k in keys) keys[k] = false;
+  }
+}
+
+function drawRaceRival(rival, x, y) {
+  ctx.save();
+  ctx.translate(x, y);
+  const image = starshipAttackersImage;
+  if (image.complete && image.naturalWidth > 0) {
+    const ratio = image.naturalWidth / image.naturalHeight;
+    if (ratio >= 2.4) {
+      const columns = clamp(Math.round(ratio), 2, 5);
+      const cellW = image.naturalWidth / columns;
+      const index = rival.variant % columns;
+      const aspect = cellW / image.naturalHeight;
+      const dw = Math.min(47, 42 * aspect), dh = dw / aspect;
+      ctx.shadowColor = '#ff624f'; ctx.shadowBlur = 7;
+      // El sprite original apunta hacia arriba, la misma dirección que la carrera.
+      ctx.drawImage(image, index * cellW, 0, cellW, image.naturalHeight, -dw / 2, -dh / 2, dw, dh);
+    } else {
+      const aspect = image.naturalWidth / image.naturalHeight;
+      const dw = Math.min(47, 42 * aspect), dh = dw / aspect;
+      ctx.shadowColor = '#ff624f'; ctx.shadowBlur = 7;
+      ctx.drawImage(image, -dw / 2, -dh / 2, dw, dh);
+    }
+  } else {
+    ctx.shadowColor = '#ff665e'; ctx.shadowBlur = 8;
+    ctx.fillStyle = ['#a33d46', '#8c5e36', '#6e4c9c'][rival.variant % 3];
+    ctx.strokeStyle = '#ffd3ba'; ctx.lineWidth = 1.5;
+    ctx.beginPath(); ctx.moveTo(0, -21); ctx.lineTo(15, -5); ctx.lineTo(9, 13); ctx.lineTo(0, 8); ctx.lineTo(-9, 13); ctx.lineTo(-15, -5); ctx.closePath(); ctx.fill(); ctx.stroke();
+    ctx.fillStyle = '#ffb65e'; ctx.fillRect(-3, -5, 6, 12);
+  }
+  ctx.restore();
+}
+
+function drawStarshipRace() {
+  const g = starshipRaceGame, w = canvas.width, h = canvas.height;
+  const bg = ctx.createLinearGradient(0, 0, 0, h);
+  bg.addColorStop(0, '#030716'); bg.addColorStop(1, '#071b31');
+  ctx.fillStyle = bg; ctx.fillRect(0, 0, w, h);
+  if (!g) return;
+  for (const star of g.stars) {
+    ctx.globalAlpha = 0.45 + star.speed / 4;
+    ctx.fillStyle = '#c8f3ff'; ctx.fillRect(star.x, star.y, star.size, star.size * (star.speed > 2 ? 2 : 1));
+  }
+  ctx.globalAlpha = 1;
+  const trackWidth = RACE_TRACK_WIDTH();
+  const playerY = g.player.y;
+  // El trazado se dibuja por tramos, de modo que los virajes se desplacen bajo la nave.
+  for (let y = 45; y < h + 8; y += 8) {
+    const d1 = g.progress + (playerY - y) / RACE_SCREEN_SCALE;
+    const d2 = g.progress + (playerY - (y + 8)) / RACE_SCREEN_SCALE;
+    const c1 = raceTrackCenterAt(d1), c2 = raceTrackCenterAt(d2);
+    ctx.fillStyle = '#122e43';
+    ctx.beginPath(); ctx.moveTo(c1 - trackWidth / 2, y); ctx.lineTo(c1 + trackWidth / 2, y); ctx.lineTo(c2 + trackWidth / 2, y + 8); ctx.lineTo(c2 - trackWidth / 2, y + 8); ctx.closePath(); ctx.fill();
+    ctx.strokeStyle = 'rgba(66, 207, 240, 0.55)'; ctx.lineWidth = 3;
+    ctx.beginPath(); ctx.moveTo(c1 - trackWidth / 2, y); ctx.lineTo(c2 - trackWidth / 2, y + 8); ctx.moveTo(c1 + trackWidth / 2, y); ctx.lineTo(c2 + trackWidth / 2, y + 8); ctx.stroke();
+    // Bordes de seguridad luminosos.
+    ctx.strokeStyle = 'rgba(255, 178, 77, 0.75)'; ctx.lineWidth = 1;
+    ctx.beginPath(); ctx.moveTo(c1 - trackWidth / 2 + 8, y); ctx.lineTo(c2 - trackWidth / 2 + 8, y + 8); ctx.moveTo(c1 + trackWidth / 2 - 8, y); ctx.lineTo(c2 + trackWidth / 2 - 8, y + 8); ctx.stroke();
+  }
+  // Marcas de carril que avanzan hacia el jugador.
+  for (let y = 45; y < h; y += 20) {
+    const world = g.progress + (playerY - y) / RACE_SCREEN_SCALE;
+    if (Math.floor(world / 155) % 2 !== 0) continue;
+    const cx = raceTrackCenterAt(world);
+    ctx.fillStyle = 'rgba(160, 230, 255, 0.56)';
+    ctx.fillRect(cx - 2, y, 4, 10);
+    ctx.fillRect(cx - trackWidth * 0.22 - 1, y, 2, 8);
+    ctx.fillRect(cx + trackWidth * 0.22 - 1, y, 2, 8);
+  }
+  // Boyas de la pista.
+  for (const hazard of g.hazards) {
+    if (hazard.hit) continue;
+    const y = playerY - (hazard.progress - g.progress) * RACE_SCREEN_SCALE;
+    if (y < 35 || y > h + 35) continue;
+    const x = raceTrackCenterAt(hazard.progress) + hazard.lane * trackWidth;
+    ctx.save(); ctx.translate(x, y); ctx.rotate(g.frame * 0.035 + hazard.spin);
+    ctx.shadowColor = '#ffb35c'; ctx.shadowBlur = 12;
+    ctx.fillStyle = '#b66d43'; ctx.strokeStyle = '#ffdda0'; ctx.lineWidth = 2;
+    ctx.beginPath(); for (let i = 0; i < 8; i++) { const a = i * Math.PI / 4; const r = i % 2 === 0 ? 14 : 9; const px = Math.cos(a) * r, py = Math.sin(a) * r; if (i === 0) ctx.moveTo(px, py); else ctx.lineTo(px, py); } ctx.closePath(); ctx.fill(); ctx.stroke(); ctx.restore();
+  }
+  // Rivales y destellos de colisión.
+  for (const rival of g.rivals) {
+    const y = raceRivalScreenY(rival, g);
+    if (y < 34 || y > h + 30) continue;
+    drawRaceRival(rival, raceRivalX(rival), y);
+  }
+  for (const spark of g.sparks) {
+    ctx.globalAlpha = Math.max(0, spark.life / 22); ctx.fillStyle = spark.color; ctx.fillRect(spark.x, spark.y, 4, 4);
+  }
+  ctx.globalAlpha = 1;
+  if (!g.over || g.won) {
+    if (g.player.hitTimer > 0 && Math.floor(g.player.hitTimer / 4) % 2 === 0) ctx.globalAlpha = 0.35;
+    drawEnterpriseArcadeShip(g.player.x, g.player.y, 0);
+    ctx.globalAlpha = 1;
+  }
+  const place = 1 + g.rivals.filter(r => r.progress > g.progress).length;
+  const pct = Math.min(100, Math.floor(g.progress / g.finishDistance * 100));
+  ctx.fillStyle = 'rgba(0,8,20,0.82)'; ctx.fillRect(0, 0, w, 47);
+  text('STARFLEET · CARRERA DE NAVES', w / 2, 19, 15, '#7eeeff', true);
+  text(`DISTANCIA ${pct}%`, w * 0.22, 38, 11, '#ffffff', true);
+  ctx.fillStyle = '#19394d'; ctx.fillRect(w * 0.36, 29, w * 0.28, 9);
+  ctx.fillStyle = '#58e9ff'; ctx.fillRect(w * 0.36, 29, w * 0.28 * pct / 100, 9);
+  text(`POSICIÓN ${place}/4`, w * 0.80, 38, 12, '#ffdc72', true);
+  text('MOVER: A/D O FLECHAS · EVITA LAS BOYAS Y ADELANTA A LAS NAVES · X / ESC: SALIR', w / 2, h - 10, 9, '#c5e7f5', true);
+  if (g.offTrack && !g.over) text('FUERA DE PISTA · VELOCIDAD REDUCIDA', w / 2, h - 34, 12, '#ffbb67', true);
+  else if (g.lastImpact && g.player.hitTimer > 0) text(g.lastImpact, w / 2, h - 34, 12, '#ff8e77', true);
+  if (g.over) {
+    ctx.fillStyle = 'rgba(1,6,17,0.82)'; ctx.fillRect(0, 0, w, h);
+    text(g.won ? '¡CARRERA GANADA!' : 'CARRERA PERDIDA', w / 2, h / 2 - 35, 26, g.won ? '#ffdc72' : '#ff716d', true);
+    text(g.won ? 'Has completado la prueba de pilotaje.' : 'Los rivales han cruzado la meta primero.', w / 2, h / 2, 14, '#ffffff');
+    text('ESPACIO / INTRO: ' + (g.won ? 'CONTINUAR AL HOLODECK' : 'REINTENTAR CARRERA'), w / 2, h / 2 + 40, 13, '#7eeeff', true);
+    text('X / ESC: VOLVER A MODOS', w / 2, h / 2 + 67, 11, '#c5e7f5');
+  }
+}
+
+
+// ------------------------------------------------------------
+// MODO ENTRENAMIENTO: PUENTE, MENSAJES DE LA FLOTA Y HOLODECK
+// El puente y el escenario de plataformas se dibujan con canvas.
+// ------------------------------------------------------------
+
+function drawTrainingBridgeBackdrop() {
+  const w = canvas.width, h = canvas.height;
+  const bg = ctx.createLinearGradient(0, 0, 0, h);
+  bg.addColorStop(0, '#09182a'); bg.addColorStop(0.58, '#152d44'); bg.addColorStop(1, '#050a13');
+  ctx.fillStyle = bg; ctx.fillRect(0, 0, w, h);
+  // Ventanal panorámico y espacio exterior.
+  ctx.fillStyle = '#020916'; ctx.fillRect(w * 0.12, h * 0.10, w * 0.76, h * 0.40);
+  for (let i = 0; i < 85; i++) {
+    const sx = ((i * 97) % 997) / 997 * w;
+    const sy = ((i * 53) % 193) / 193 * h * 0.48 + h * 0.10;
+    ctx.globalAlpha = 0.35 + ((i % 5) * 0.12);
+    ctx.fillStyle = i % 6 === 0 ? '#7de9ff' : '#ffffff';
+    ctx.fillRect(sx, sy, i % 4 === 0 ? 2 : 1, i % 4 === 0 ? 2 : 1);
+  }
+  ctx.globalAlpha = 1;
+  ctx.save();
+  ctx.beginPath(); ctx.rect(w * 0.12, h * 0.10, w * 0.76, h * 0.40); ctx.clip();
+  ctx.fillStyle = 'rgba(18,106,176,0.34)';
+  ctx.beginPath(); ctx.ellipse(w * 0.63, h * 0.47, w * 0.36, h * 0.15, -0.12, 0, Math.PI * 2); ctx.fill();
+  ctx.restore();
+  ctx.strokeStyle = '#4b758d'; ctx.lineWidth = 8; ctx.strokeRect(w * 0.12, h * 0.10, w * 0.76, h * 0.40);
+  // Estructura del puente, consolas y suelo.
+  ctx.fillStyle = '#263b50'; ctx.fillRect(0, h * 0.49, w, h * 0.18);
+  ctx.fillStyle = '#40566a'; ctx.fillRect(0, h * 0.49, w, 7);
+  for (let i = 0; i < 7; i++) {
+    const x = 16 + i * (w - 32) / 7;
+    ctx.fillStyle = i % 2 ? '#1a3349' : '#18283b'; ctx.fillRect(x, h * 0.53, w / 8 - 7, h * 0.10);
+    for (let j = 0; j < 5; j++) {
+      ctx.fillStyle = ['#53d8ea', '#ffc65c', '#e45c68'][(i + j) % 3];
+      ctx.globalAlpha = 0.45 + (j % 2) * 0.25; ctx.fillRect(x + 7 + j * 8, h * 0.56 + (j % 2) * 7, 4, 3);
+    }
+    ctx.globalAlpha = 1;
+  }
+  ctx.fillStyle = '#101a27'; ctx.fillRect(0, h * 0.68, w, h * 0.32);
+  ctx.fillStyle = '#34495c'; ctx.fillRect(0, h * 0.68, w, 5);
+  ctx.strokeStyle = 'rgba(104,202,235,0.35)'; ctx.lineWidth = 2;
+  for (let x = 0; x < w; x += 80) { ctx.beginPath(); ctx.moveTo(x, h * 0.70); ctx.lineTo(x - 34, h); ctx.stroke(); }
+  // Consola de mando principal en primer plano.
+  ctx.fillStyle = '#3b5366'; ctx.beginPath(); ctx.moveTo(w * 0.30, h * 0.75); ctx.lineTo(w * 0.70, h * 0.75); ctx.lineTo(w * 0.77, h * 0.93); ctx.lineTo(w * 0.23, h * 0.93); ctx.closePath(); ctx.fill();
+  ctx.fillStyle = '#091724'; ctx.fillRect(w * 0.34, h * 0.77, w * 0.32, h * 0.07);
+  for (let i = 0; i < 12; i++) { ctx.fillStyle = i % 3 === 0 ? '#ffc65c' : '#5be7f4'; ctx.fillRect(w * 0.36 + i * w * 0.023, h * 0.795, 9, 3); }
+  ctx.fillStyle = '#8aa0b3'; ctx.font = 'bold 11px monospace'; ctx.textAlign = 'center'; ctx.fillText('U.S.S. ENTERPRISE · PUENTE DE MANDO', w / 2, h * 0.972);
+}
+
+function wrapCanvasText(str, centerX, startY, maxWidth, lineHeight, color) {
+  ctx.font = '13px monospace'; ctx.textAlign = 'center'; ctx.fillStyle = color;
+  const words = str.split(/\s+/); let line = ''; let y = startY;
+  for (const word of words) {
+    const test = line ? `${line} ${word}` : word;
+    if (ctx.measureText(test).width > maxWidth && line) { ctx.fillText(line, centerX, y); y += lineHeight; line = word; }
+    else line = test;
+  }
+  if (line) ctx.fillText(line, centerX, y);
+}
+
+function drawTrainingBridge() {
+  drawTrainingBridgeBackdrop();
+  ctx.fillStyle = 'rgba(2, 8, 19, 0.78)'; ctx.fillRect(38, 24, canvas.width - 76, 80);
+  text('ACADEMIA DE LA FLOTA ESTELAR', canvas.width / 2, 52, 17, '#79edff', true);
+  text('MODO ENTRENAMIENTO · PUENTE DEL ENTERPRISE', canvas.width / 2, 78, 12, '#ffd66b', true);
+  const d = trainingDialogue[trainingDialogueIndex];
+  ctx.fillStyle = 'rgba(3, 12, 25, 0.91)'; ctx.fillRect(52, canvas.height * 0.66, canvas.width - 104, 112);
+  ctx.strokeStyle = '#64dff4'; ctx.lineWidth = 2; ctx.strokeRect(52, canvas.height * 0.66, canvas.width - 104, 112);
+  text(d.speaker, canvas.width / 2, canvas.height * 0.66 + 25, 13, '#ffd66b', true);
+  wrapCanvasText(d.text, canvas.width / 2, canvas.height * 0.66 + 52, canvas.width - 150, 17, '#ffffff');
+  // Muestra un personaje real del elenco en el puente y permite escoger
+  // quién hará el circuito del holodeck. El selector es exclusivo del entrenamiento.
+  const selected = availableCharacters[trainingCharacterIndex] || availableCharacters[0];
+  const previewX = canvas.width * 0.74;
+  const previewY = canvas.height * 0.31;
+  ctx.fillStyle = 'rgba(2, 10, 22, 0.68)';
+  ctx.fillRect(previewX - 67, previewY - 57, 134, 120);
+  ctx.strokeStyle = '#69dff1'; ctx.lineWidth = 1.5;
+  ctx.strokeRect(previewX - 67, previewY - 57, 134, 120);
+  if (imageIsReady(selected.guardImg)) {
+    const previewW = 38;
+    const previewH = previewW * selected.guardImg.naturalHeight / selected.guardImg.naturalWidth;
+    ctx.drawImage(selected.guardImg, previewX - previewW / 2, previewY - previewH / 2 - 4, previewW, previewH);
+  } else {
+    ctx.fillStyle = '#d9b77d'; ctx.fillRect(previewX - 9, previewY - 25, 18, 18);
+    ctx.fillStyle = '#e3b72f'; ctx.fillRect(previewX - 12, previewY - 7, 24, 30);
+    ctx.fillStyle = '#172638'; ctx.fillRect(previewX - 10, previewY + 22, 8, 14); ctx.fillRect(previewX + 2, previewY + 22, 8, 14);
+  }
+  text(selected.name, previewX, previewY + 48, 12, '#ffdc72', true);
+  text('A/D · ←/→ CAMBIAR', previewX, previewY + 76, 9, '#8ff5ff', true);
+  text('ESPACIO / INTRO: CONTINUAR     A/D O FLECHAS: ELEGIR CADETE     X / ESC: SALIR', canvas.width / 2, canvas.height - 16, 9, '#8ff5ff', true);
+  text(`${trainingDialogueIndex + 1} / ${trainingDialogue.length}`, canvas.width - 70, 125, 11, '#c6d8e6');
+}
+
+function drawTrainingMissionBriefing() {
+  drawTrainingBridgeBackdrop(); overlay(0.55);
+  text('ORDEN DE LA FLOTA ESTELAR', canvas.width / 2, 66, 24, '#7feeff', true);
+  text('PRUEBA PREVIA · GALERÍA DE TIRO', canvas.width / 2, 112, 19, '#ffdc72', true);
+  text('Acertarás al menos 8 blancos antes de agotar la munición.', canvas.width / 2, 163, 14, '#ffffff');
+  text('MOVER LA MIRA: WASD / FLECHAS', canvas.width / 2, 211, 13, '#8ff5ff', true);
+  text('DISPARAR: ESPACIO O INTRO', canvas.width / 2, 241, 13, '#8ff5ff', true);
+  text('Después pasarás al pilotaje espacial con oleadas enemigas y phasers; luego vendrán la carrera, el holodeck y las pruebas de la Academia.', canvas.width / 2, 294, 12, '#d4e6f0');
+  text('ESPACIO / INTRO: COMENZAR PRUEBA DE TIRO     X / ESC: MENÚ', canvas.width / 2, 382, 11, '#ffdc72', true);
+}
+
+// Galería de tiro previa al pilotaje. Se apunta con WASD/flechas y se dispara
+// con Espacio/Intro. Hay 16 disparos y hacen falta 8 aciertos para aprobar.
+function spawnTrainingRangeTarget(g) {
+  const w = canvas.width, h = canvas.height;
+  const amp = Math.min(90, w * 0.12);
+  g.target = {
+    baseX: w * 0.22 + Math.random() * w * 0.56,
+    y: h * 0.23 + Math.random() * h * 0.24,
+    amplitude: amp * (0.45 + Math.random() * 0.55),
+    speed: 0.025 + Math.random() * 0.022,
+    phase: Math.random() * Math.PI * 2,
+    radius: 20
+  };
+}
+
+function beginTrainingShootingRange() {
+  const w = canvas.width, h = canvas.height;
+  trainingRangeGame = {
+    frame: 0, aimX: w / 2, aimY: h * 0.66,
+    shots: 16, hits: 0, requiredHits: 8,
+    timeLeft: 60 * 45, over: false, passed: false,
+    feedback: '', feedbackTimer: 0, targetCooldown: 0,
+    beam: null, beamTimer: 0, target: null
+  };
+  spawnTrainingRangeTarget(trainingRangeGame);
+  for (const k in keys) keys[k] = false;
+  gameState = 'TRAINING_SHOOTING_RANGE';
+}
+
+function fireTrainingRangeShot() {
+  const g = trainingRangeGame;
+  // Durante la breve reaparición del blanco no se consume munición.
+  if (!g || g.over || !g.target || g.shots <= 0 || g.beamTimer > 0) return;
+  g.shots--;
+  const t = g.target;
+  const targetX = t ? t.baseX + Math.sin(g.frame * t.speed + t.phase) * t.amplitude : g.aimX;
+  const targetY = t ? t.y + Math.sin(g.frame * 0.045 + t.phase) * 7 : g.aimY;
+  const hit = !!t && Math.hypot(g.aimX - targetX, g.aimY - targetY) <= t.radius + 11;
+  g.beam = { x1: g.aimX, y1: g.aimY, x2: targetX, y2: targetY, hit };
+  g.beamTimer = 7;
+  if (hit) {
+    g.hits++;
+    g.feedback = '¡IMPACTO CONFIRMADO!';
+    g.feedbackTimer = 30;
+    g.target = null;
+    g.targetCooldown = 14;
+    if (g.hits >= g.requiredHits) { g.over = true; g.passed = true; }
+  } else {
+    g.feedback = 'FALLO · AJUSTA LA MIRA';
+    g.feedbackTimer = 22;
+    if (g.shots <= 0) g.over = true;
+  }
+  if (g.shots <= 0 && g.hits < g.requiredHits) g.over = true;
+}
+
+function updateTrainingShootingRange() {
+  const g = trainingRangeGame;
+  if (gameState !== 'TRAINING_SHOOTING_RANGE' || !g || g.over) return;
+  g.frame++;
+  g.timeLeft--;
+  if (g.feedbackTimer > 0) g.feedbackTimer--;
+  if (g.beamTimer > 0) g.beamTimer--;
+  const speed = 5.2;
+  if (keys.ArrowLeft || keys.a || keys.A) g.aimX -= speed;
+  if (keys.ArrowRight || keys.d || keys.D) g.aimX += speed;
+  if (keys.ArrowUp || keys.w || keys.W) g.aimY -= speed;
+  if (keys.ArrowDown || keys.s || keys.S) g.aimY += speed;
+  g.aimX = clamp(g.aimX, 22, canvas.width - 22);
+  g.aimY = clamp(g.aimY, 82, canvas.height - 54);
+  if (g.targetCooldown > 0) {
+    g.targetCooldown--;
+    if (g.targetCooldown === 0 && g.hits < g.requiredHits) spawnTrainingRangeTarget(g);
+  }
+  if (g.timeLeft <= 0) { g.timeLeft = 0; g.over = true; }
+}
+
+function drawTrainingShootingRange() {
+  const w = canvas.width, h = canvas.height, g = trainingRangeGame;
+  drawTrainingBridgeBackdrop();
+  // Overlay que transforma el puente en una galería táctica de la Flota.
+  ctx.fillStyle = 'rgba(2,8,18,0.58)'; ctx.fillRect(25, 24, w - 50, h - 48);
+  text('ACADEMIA DE LA FLOTA ESTELAR', w / 2, 46, 13, '#82eeff', true);
+  text('PRUEBA DE TIRO · GALERÍA TÁCTICA', w / 2, 76, 20, '#ffdc72', true);
+  if (!g) return;
+  // Líneas de telémetro en el fondo.
+  ctx.strokeStyle = 'rgba(91,211,236,0.14)'; ctx.lineWidth = 1;
+  for (let x = 70; x < w; x += 70) { ctx.beginPath(); ctx.moveTo(x, 95); ctx.lineTo(x, h - 65); ctx.stroke(); }
+  for (let y = 115; y < h - 65; y += 55) { ctx.beginPath(); ctx.moveTo(45, y); ctx.lineTo(w - 45, y); ctx.stroke(); }
+  if (g.target && !g.over) {
+    const t = g.target, tx = t.baseX + Math.sin(g.frame * t.speed + t.phase) * t.amplitude;
+    const ty = t.y + Math.sin(g.frame * 0.045 + t.phase) * 7;
+    ctx.save(); ctx.shadowColor = '#ff5c68'; ctx.shadowBlur = 15;
+    ctx.fillStyle = '#4e1830'; ctx.strokeStyle = '#ff7880'; ctx.lineWidth = 3;
+    ctx.beginPath(); ctx.arc(tx, ty, t.radius, 0, Math.PI * 2); ctx.fill(); ctx.stroke();
+    ctx.shadowBlur = 0; ctx.strokeStyle = '#ffb5b9'; ctx.lineWidth = 2;
+    ctx.beginPath(); ctx.arc(tx, ty, t.radius * 0.58, 0, Math.PI * 2); ctx.stroke();
+    ctx.fillStyle = '#ffcf73'; ctx.beginPath(); ctx.arc(tx, ty, 4, 0, Math.PI * 2); ctx.fill();
+    ctx.restore();
+  }
+  if (g.beam && g.beamTimer > 0) {
+    ctx.save(); ctx.globalAlpha = g.beamTimer / 7; ctx.strokeStyle = g.beam.hit ? '#8bffdc' : '#ff6170'; ctx.shadowColor = ctx.strokeStyle; ctx.shadowBlur = 12; ctx.lineWidth = 3;
+    ctx.beginPath(); ctx.moveTo(g.beam.x1, g.beam.y1); ctx.lineTo(g.beam.x2, g.beam.y2); ctx.stroke(); ctx.restore();
+  }
+  // Mira controlable.
+  ctx.save(); ctx.strokeStyle = '#7dffff'; ctx.shadowColor = '#55f7ff'; ctx.shadowBlur = 10; ctx.lineWidth = 2;
+  ctx.beginPath(); ctx.arc(g.aimX, g.aimY, 14, 0, Math.PI * 2); ctx.moveTo(g.aimX - 23, g.aimY); ctx.lineTo(g.aimX - 7, g.aimY); ctx.moveTo(g.aimX + 7, g.aimY); ctx.lineTo(g.aimX + 23, g.aimY); ctx.moveTo(g.aimX, g.aimY - 23); ctx.lineTo(g.aimX, g.aimY - 7); ctx.moveTo(g.aimX, g.aimY + 7); ctx.lineTo(g.aimX, g.aimY + 23); ctx.stroke(); ctx.restore();
+  ctx.fillStyle = 'rgba(1,7,17,0.86)'; ctx.fillRect(35, 88, w - 70, 35);
+  text(`BLANCOS ${g.hits}/${g.requiredHits}     MUNICIÓN ${g.shots}     TIEMPO ${Math.ceil(g.timeLeft / 60)}s`, w / 2, 110, 13, '#ffffff', true);
+  if (g.feedbackTimer > 0) text(g.feedback, w / 2, h - 78, 13, g.feedback.startsWith('¡') ? '#8dffc9' : '#ff9b9b', true);
+  if (g.over) {
+    ctx.fillStyle = 'rgba(0,4,12,0.84)'; ctx.fillRect(0, 0, w, h);
+    text(g.passed ? '¡PRUEBA DE TIRO SUPERADA!' : 'PRUEBA DE TIRO NO SUPERADA', w / 2, h / 2 - 45, 24, g.passed ? '#ffdc72' : '#ff716d', true);
+    text(`ACIERTOS ${g.hits}/${g.requiredHits} · DISPAROS RESTANTES ${g.shots}`, w / 2, h / 2 - 8, 14, '#ffffff', true);
+    text(g.passed ? 'Has demostrado precisión. La siguiente fase es el pilotaje espacial.' : 'No has alcanzado el mínimo de aciertos. Vuelve a intentarlo.', w / 2, h / 2 + 22, 12, '#d6e9f4');
+    text(g.passed ? 'ESPACIO / INTRO: COMENZAR PILOTAJE' : 'ESPACIO / INTRO: REPETIR PRUEBA', w / 2, h / 2 + 54, 12, '#8ff5ff', true);
+  }
+  text('MIRA: WASD / FLECHAS · DISPARAR: ESPACIO / INTRO · X / ESC: SALIR', w / 2, h - 18, 10, '#b6d9e8', true);
+}
+
+function beginHolodeckLevel(circuitIndex = trainingCircuitIndex) {
+  trainingCircuitIndex = clamp(circuitIndex, 0, holodeckCourses.length - 1);
+  const w = canvas.width, h = canvas.height, floor = h - 43;
+  const course = holodeckCourses[trainingCircuitIndex];
+  const platforms = course.ground.map(([x, width]) => ({ x, y: floor, w: width, h: 43, ground: true }));
+  for (const [x, heightAboveFloor, width] of course.upper) {
+    platforms.push({ x, y: floor - heightAboveFloor, w: width, h: 18, ground: false });
+  }
+  holodeckGame = {
+    circuitIndex: trainingCircuitIndex,
+    courseName: course.name,
+    theme: course.theme,
+    worldWidth: course.worldWidth, cameraX: 0, score: 0, lives: 3,
+    collected: 0, over: false, complete: false, frame: 0,
+    player: { x: 35, y: floor - 37, w: 25, h: 37, vy: 0, speed: 3.6, jump: -10.6, onGround: true, invulnerable: 0, jumpRequested: false, facing: 1 },
+    characterIndex: trainingCharacterIndex,
+    platforms,
+    coins: course.coins.map(([x, heightAboveFloor]) => ({ x, y: floor - heightAboveFloor, got: false })),
+    enemies: course.enemies.map(([x, min, max, speed], i) => ({ x, min, max, dir: i % 2 ? -1 : 1, speed, alive: true }))
+  };
+  for (const k in keys) keys[k] = false;
+  gameState = 'HOLODECK';
+}
+
+function updateHolodeckLevel() {
+  const g = holodeckGame;
+  if (gameState !== 'HOLODECK' || !g || g.over || g.complete) return;
+  const p = g.player, h = canvas.height; g.frame++;
+  if (p.invulnerable > 0) p.invulnerable--;
+  let dx = 0;
+  if (keys.ArrowLeft || keys.a || keys.A) dx--;
+  if (keys.ArrowRight || keys.d || keys.D) dx++;
+  if (dx !== 0) p.facing = dx > 0 ? 1 : -1;
+  p.x = clamp(p.x + dx * p.speed, 0, g.worldWidth - p.w);
+  if (p.jumpRequested && p.onGround) { p.vy = p.jump; p.onGround = false; }
+  p.jumpRequested = false;
+  const prevBottom = p.y + p.h;
+  p.vy = Math.min(12, p.vy + 0.48); p.y += p.vy; p.onGround = false;
+  for (const plat of g.platforms) {
+    const overlapsX = p.x + p.w > plat.x && p.x < plat.x + plat.w;
+    const newBottom = p.y + p.h;
+    if (overlapsX && p.vy >= 0 && prevBottom <= plat.y + 5 && newBottom >= plat.y) {
+      p.y = plat.y - p.h; p.vy = 0; p.onGround = true;
+    }
+  }
+  if (p.y > h + 90) {
+    g.lives--; p.x = 35; p.y = h - 43 - p.h; p.vy = 0; p.onGround = true; p.invulnerable = 75;
+    if (g.lives <= 0) { g.lives = 0; g.over = true; }
+  }
+  for (const coin of g.coins) {
+    if (!coin.got && Math.abs((p.x + p.w / 2) - coin.x) < 25 && Math.abs((p.y + p.h / 2) - coin.y) < 28) {
+      coin.got = true; g.collected++; g.score += 50;
+    }
+  }
+  for (const e of g.enemies) {
+    if (!e.alive) continue;
+    e.x += e.dir * e.speed; if (e.x < e.min || e.x > e.max) e.dir *= -1;
+    const overlapX = p.x < e.x + 22 && p.x + p.w > e.x - 22;
+    const groundTop = h - 43;
+    const enemyTop = groundTop - 32;
+    const overlapY = p.y < groundTop && p.y + p.h > enemyTop;
+    if (overlapX && overlapY && p.invulnerable <= 0) {
+      if (p.vy > 1.2 && p.y + p.h < h - 47) { e.alive = false; p.vy = -6.2; g.score += 100; }
+      else { g.lives--; p.invulnerable = 90; p.vy = -5; p.x = Math.max(0, p.x - 60); if (g.lives <= 0) { g.lives = 0; g.over = true; } }
+    }
+  }
+  g.cameraX = clamp(p.x - canvas.width * 0.34, 0, g.worldWidth - canvas.width);
+  if (p.x + p.w >= g.worldWidth - 78) { g.complete = true; g.score += g.collected * 10; }
+}
+
+function drawPixelStar(cx, cy, outer, inner, color) {
+  ctx.fillStyle = color; ctx.beginPath();
+  for (let i = 0; i < 10; i++) { const a = -Math.PI / 2 + i * Math.PI / 5, r = i % 2 ? inner : outer; const x = cx + Math.cos(a) * r, y = cy + Math.sin(a) * r; if (!i) ctx.moveTo(x, y); else ctx.lineTo(x, y); }
+  ctx.closePath(); ctx.fill();
+}
+
+
+// Enemigos del holodeck: drones Borg dibujados en pixel-art.
+// Conservan el tamaño aproximado y el punto de apoyo de los enemigos originales.
+function drawBorgHolodeckEnemy(x, y, facing = 1, frame = 0) {
+  ctx.save();
+  ctx.translate(Math.round(x), Math.round(y));
+  ctx.scale(facing < 0 ? -1 : 1, 1);
+  // Sombra al pie, pegada al suelo.
+  ctx.fillStyle = 'rgba(0,0,0,0.28)';
+  ctx.beginPath(); ctx.ellipse(0, 25, 18, 4, 0, 0, Math.PI * 2); ctx.fill();
+  // Conductos y soporte mecánico detrás de la cabeza.
+  ctx.strokeStyle = '#263a35'; ctx.lineWidth = 4;
+  ctx.beginPath(); ctx.moveTo(-8, -11); ctx.lineTo(-13, -17); ctx.lineTo(-13, -8); ctx.stroke();
+  ctx.beginPath(); ctx.moveTo(8, -11); ctx.lineTo(13, -16); ctx.lineTo(13, -6); ctx.stroke();
+  ctx.fillStyle = '#8ca59a'; ctx.fillRect(-15, -18, 5, 8); ctx.fillRect(10, -17, 5, 8);
+  ctx.fillStyle = '#263a35'; ctx.fillRect(-14, -17, 3, 6); ctx.fillRect(11, -16, 3, 6);
+  // Piernas articuladas y botas.
+  ctx.fillStyle = '#25342f'; ctx.fillRect(-11, 15, 8, 9); ctx.fillRect(3, 15, 8, 9);
+  ctx.fillStyle = '#63766d'; ctx.fillRect(-12, 19, 9, 4); ctx.fillRect(3, 19, 9, 4);
+  ctx.fillStyle = '#111d1a'; ctx.fillRect(-13, 22, 10, 4); ctx.fillRect(3, 22, 10, 4);
+  // Torso biomecánico con armadura segmentada.
+  ctx.fillStyle = '#344b42'; ctx.fillRect(-14, -2, 28, 20);
+  ctx.fillStyle = '#899c90'; ctx.fillRect(-11, 0, 22, 14);
+  ctx.fillStyle = '#4c6257'; ctx.fillRect(-8, 2, 16, 10);
+  ctx.fillStyle = '#192a25'; ctx.fillRect(-5, 3, 10, 8);
+  ctx.fillStyle = '#8cff5b'; ctx.fillRect(-2, 5, 4, 3);
+  // Hombros y brazos, uno reforzado con implantes.
+  ctx.fillStyle = '#6e8175'; ctx.fillRect(-18, 0, 7, 10); ctx.fillRect(11, 0, 7, 10);
+  ctx.fillStyle = '#26352f'; ctx.fillRect(-17, 8, 6, 8); ctx.fillRect(11, 8, 6, 8);
+  ctx.fillStyle = '#87978b'; ctx.fillRect(-18, 5, 7, 4); ctx.fillRect(11, 5, 7, 4);
+  ctx.fillStyle = '#8cff5b'; ctx.fillRect(12, 2, 3, 3);
+  // Cabeza gris verdosa, placa ocular y asimetría cibernética.
+  ctx.fillStyle = '#1a2924'; ctx.fillRect(-12, -17, 24, 17);
+  ctx.fillStyle = '#9aa99c'; ctx.fillRect(-9, -16, 18, 14);
+  ctx.fillStyle = '#64766b'; ctx.fillRect(-8, -15, 16, 4);
+  ctx.fillStyle = '#1c2924'; ctx.fillRect(-10, -11, 20, 5);
+  ctx.fillStyle = '#b5c1b6'; ctx.fillRect(-7, -10, 14, 3);
+  // Visor ocular rojo y luz de implante verde.
+  ctx.fillStyle = '#2a1418'; ctx.fillRect(-8, -11, 7, 5);
+  ctx.fillStyle = '#ff4147'; ctx.fillRect(-7, -10, 5, 3);
+  ctx.fillStyle = '#d7ffe0'; ctx.fillRect(-6, -10, 2, 1);
+  ctx.fillStyle = '#34453d'; ctx.fillRect(3, -12, 7, 7);
+  ctx.fillStyle = '#8cff5b'; ctx.fillRect(5, -10, 3, 3);
+  // Boca, panel lateral y luces pulsantes.
+  ctx.fillStyle = '#23332d'; ctx.fillRect(-4, -5, 8, 2);
+  ctx.fillStyle = '#76877b'; ctx.fillRect(-8, -5, 3, 2); ctx.fillRect(5, -5, 3, 2);
+  ctx.fillStyle = '#101a17'; ctx.fillRect(8, -15, 5, 11);
+  ctx.fillStyle = '#8cff5b'; ctx.fillRect(9, -13, 3, 2); ctx.fillRect(9, -8, 3, 2);
+  const pulse = Math.floor(frame / 12) % 2 === 0;
+  ctx.fillStyle = pulse ? '#9dff65' : '#4fbe55';
+  ctx.fillRect(13, -20, 4, 4);
+  ctx.fillStyle = 'rgba(140,255,91,0.28)'; ctx.fillRect(10, -22, 9, 2);
+  ctx.restore();
+}
+
+function drawHolodeckLevel() {
+  const g = holodeckGame; const w = canvas.width, h = canvas.height; if (!g) return;
+  const camera = g.cameraX;
+  const palettes = {
+    classic: { sky: ['#55c7ff', '#b4efff', '#e8faff'], hills: ['#63c97c', '#80d98b'], ground: '#2dbb61', dirt: '#b86a36', groundLine: '#78421f', block: '#db8037', blockTop: '#ffcf65', blockLine: '#9a4e2a', dot: '#f5b341', tube: '#168c8c', tubeTop: '#41e0bd', tubeShade: '#0b5f70' },
+    space: { sky: ['#04091f', '#172b5b', '#090f25'], hills: ['#1b3970', '#263d88'], ground: '#39a9c9', dirt: '#243b68', groundLine: '#66dff5', block: '#245a8a', blockTop: '#69e4ff', blockLine: '#163858', dot: '#b2f5ff', tube: '#8b4de0', tubeTop: '#d7a3ff', tubeShade: '#48246d' },
+    volcano: { sky: ['#280e20', '#85361f', '#f29a46'], hills: ['#642c38', '#a44332'], ground: '#ff6944', dirt: '#38313d', groundLine: '#ffcf6b', block: '#60404a', blockTop: '#ff8448', blockLine: '#2e2634', dot: '#ffe16b', tube: '#9c342d', tubeTop: '#ff9757', tubeShade: '#60212c' },
+    ice: { sky: ['#9ce9ff', '#e1fbff', '#f6fdff'], hills: ['#a1d8e9', '#c8f0f6'], ground: '#83deef', dirt: '#6b9fb9', groundLine: '#e5fcff', block: '#8ac4e0', blockTop: '#dffaff', blockLine: '#4e8fae', dot: '#ffffff', tube: '#3679b6', tubeTop: '#8ee8ff', tubeShade: '#24527c' }
+  };
+  const palette = palettes[g.theme] || palettes.classic;
+  const sky = ctx.createLinearGradient(0, 0, 0, h); sky.addColorStop(0, palette.sky[0]); sky.addColorStop(0.63, palette.sky[1]); sky.addColorStop(1, palette.sky[2]); ctx.fillStyle = sky; ctx.fillRect(0, 0, w, h);
+  if (g.theme === 'space') {
+    // Asteroides y estrellas en el corredor espacial.
+    for (let i = 0; i < 65; i++) { const x = ((i * 137 - camera * 0.17) % (w + 50) + w + 50) % (w + 50) - 25; const y = (i * 71) % (h - 65); ctx.fillStyle = i % 7 === 0 ? '#a6f6ff' : 'rgba(255,255,255,0.62)'; ctx.fillRect(x, y, i % 7 === 0 ? 3 : 1, i % 7 === 0 ? 3 : 1); }
+    for (let i = 0; i < 5; i++) { const x = ((i * 245 - camera * 0.30) % (w + 180) + w + 180) % (w + 180) - 90, y = 105 + (i % 3) * 75; ctx.fillStyle = '#33466f'; ctx.beginPath(); ctx.arc(x, y, 30 + (i % 2) * 12, 0, Math.PI * 2); ctx.fill(); ctx.strokeStyle = '#5e779f'; ctx.lineWidth = 3; ctx.stroke(); }
+  } else {
+    // Nubes/ceniza y colinas con desplazamiento parallax según el circuito.
+    for (let i = 0; i < 9; i++) { const x = ((i * 167 - camera * 0.22) % (w + 170) + w + 170) % (w + 170) - 70, y = 52 + (i % 3) * 38; ctx.fillStyle = g.theme === 'volcano' ? 'rgba(255,190,126,0.30)' : g.theme === 'ice' ? 'rgba(255,255,255,0.90)' : 'rgba(255,255,255,0.90)'; ctx.fillRect(x, y, 58, 15); ctx.fillRect(x + 12, y - 10, 22, 14); ctx.fillRect(x + 35, y - 5, 18, 10); }
+    for (let i = 0; i < 7; i++) { const x = ((i * 220 - camera * 0.38) % (w + 240) + w + 240) % (w + 240) - 110; ctx.fillStyle = palette.hills[i % 2]; ctx.beginPath(); ctx.ellipse(x, h - 28, 125, 95, 0, Math.PI, Math.PI * 2); ctx.fill(); }
+  }
+  // Plataformas y terreno de bloques, con paletas diferentes en cada circuito.
+  for (const plat of g.platforms) {
+    const sx = plat.x - camera; if (sx + plat.w < -10 || sx > w + 10) continue;
+    if (plat.ground) { ctx.fillStyle = palette.ground; ctx.fillRect(sx, plat.y, plat.w, 7); ctx.fillStyle = palette.dirt; ctx.fillRect(sx, plat.y + 7, plat.w, plat.h - 7); ctx.strokeStyle = palette.groundLine; ctx.lineWidth = 2; for (let bx = sx; bx < sx + plat.w; bx += 28) { ctx.strokeRect(bx, plat.y + 9, 28, 17); if (((bx - sx) / 28 | 0) % 2 === 0) ctx.strokeRect(bx, plat.y + 26, 28, 14); } }
+    else { ctx.fillStyle = palette.block; ctx.fillRect(sx, plat.y, plat.w, plat.h); ctx.fillStyle = palette.blockTop; ctx.fillRect(sx, plat.y, plat.w, 4); ctx.strokeStyle = palette.blockLine; ctx.lineWidth = 2; for (let bx = sx; bx < sx + plat.w; bx += 25)ctx.strokeRect(bx, plat.y, 25, plat.h); ctx.fillStyle = palette.dot; for (let bx = sx + 12; bx < sx + plat.w; bx += 25)ctx.fillRect(bx, plat.y + 6, 3, 3); }
+  }
+  // Elementos decorativos del holodeck, con siluetas distintas por sector.
+  for (const xw of [365, 770, 1195, 1668, 2087, 2500, 2850]) { const x = xw - camera; if (x < -80 || x > w + 30) continue; ctx.fillStyle = palette.tube; ctx.fillRect(x, h - 85, 44, 42); ctx.fillStyle = palette.tubeTop; ctx.fillRect(x - 5, h - 88, 54, 10); ctx.fillStyle = palette.tubeShade; ctx.fillRect(x + 8, h - 74, 28, 31); }
+  for (const coin of g.coins) { if (coin.got) continue; const x = coin.x - camera; ctx.save(); ctx.shadowColor = '#ffe26f'; ctx.shadowBlur = 12; ctx.fillStyle = '#ffda4d'; ctx.beginPath(); ctx.arc(x, coin.y, 9, 0, Math.PI * 2); ctx.fill(); ctx.fillStyle = '#fff3ad'; ctx.fillRect(x - 2, coin.y - 5, 3, 10); ctx.restore(); }
+  for (const e of g.enemies) {
+    if (!e.alive) continue;
+    const x = e.x - camera;
+    const y = h - 61;
+    const facing = (g.player.x + g.player.w / 2) < e.x ? -1 : 1;
+    drawBorgHolodeckEnemy(x, y, facing, g.frame);
+  }
+  // El avatar del holodeck usa el sprite de guardia del personaje elegido.
+  // La caja de colisión se conserva pequeña, pero el arte se dibuja a escala
+  // proporcional y con los pies alineados al suelo/plataforma.
+  const p = g.player, sx = p.x - camera, sy = p.y;
+  const character = availableCharacters[g.characterIndex] || availableCharacters[0];
+  const avatar = character && character.guardImg;
+  if (!(p.invulnerable > 0 && Math.floor(p.invulnerable / 5) % 2 === 0)) {
+    ctx.fillStyle = 'rgba(0,0,0,0.20)';
+    ctx.beginPath(); ctx.ellipse(sx + p.w / 2, sy + p.h + 2, 32, 5, 0, 0, Math.PI * 2); ctx.fill();
+    if (imageIsReady(avatar)) {
+      // Doble tamaño visual en la prueba del holodeck; los pies siguen anclados a la plataforma.
+      const spriteW = 76;
+      const spriteH = spriteW * avatar.naturalHeight / avatar.naturalWidth;
+      const spriteX = sx + p.w / 2 - spriteW / 2;
+      const spriteY = sy + p.h - spriteH;
+      ctx.save();
+      if (p.facing < 0) {
+        ctx.translate(sx + p.w / 2, 0);
+        ctx.scale(-1, 1);
+        ctx.translate(-(sx + p.w / 2), 0);
+      }
+      ctx.drawImage(avatar, spriteX, spriteY, spriteW, spriteH);
+      ctx.restore();
+    } else {
+      // Respaldo visual por si el PNG de este personaje aún no ha cargado.
+      ctx.save(); ctx.translate(sx, sy);
+      ctx.fillStyle = '#172538'; ctx.fillRect(4, 24, 7, 12); ctx.fillRect(15, 24, 7, 12);
+      ctx.fillStyle = '#e8b98a'; ctx.fillRect(6, 3, 14, 12);
+      ctx.fillStyle = '#d5a72d'; ctx.fillRect(3, 14, 20, 12);
+      ctx.fillStyle = '#101d2d'; ctx.fillRect(0, 15, 4, 13); ctx.fillRect(22, 15, 4, 13);
+      ctx.restore();
+    }
+  }
+  const goalX = g.worldWidth - 80 - camera;
+  if (goalX > -40 && goalX < w + 30) { ctx.fillStyle = '#e8f8ff'; ctx.fillRect(goalX, h - 145, 5, 102); ctx.fillStyle = '#16a8b8'; ctx.beginPath(); ctx.moveTo(goalX + 5, h - 145); ctx.lineTo(goalX + 53, h - 129); ctx.lineTo(goalX + 5, h - 111); ctx.closePath(); ctx.fill(); text('META', goalX + 23, h - 157, 11, '#153c58', true); }
+  ctx.fillStyle = 'rgba(3,20,40,0.78)'; ctx.fillRect(0, 0, w, 38);
+  text(`HOLODECK · CIRCUITO ${g.circuitIndex + 1}/${holodeckCourses.length}: ${g.courseName}`, w / 2, 24, 14, '#ffffff', true);
+  text(`VIDAS ${'◆ '.repeat(g.lives).trim()}`, 95, 61, 13, '#d33f47', true);
+  text(`INSIGNIAS ${g.collected}/${g.coins.length}`, w - 112, 61, 13, g.theme === 'classic' ? '#60420b' : '#ffffff', true);
+  text('MOVER: A/D O FLECHAS · SALTAR: ESPACIO / W / ↑ · X: SALIR', w / 2, h - 12, 10, g.theme === 'volcano' ? '#ffffff' : '#153c58', true);
+  if (g.over || g.complete) {
+    ctx.fillStyle = 'rgba(4,12,27,0.82)'; ctx.fillRect(0, 0, w, h);
+    const isLastCircuit = g.circuitIndex >= holodeckCourses.length - 1;
+    text(g.complete ? `¡CIRCUITO ${g.circuitIndex + 1} COMPLETADO!` : 'SIMULACIÓN FALLIDA', w / 2, h / 2 - 42, 23, g.complete ? '#ffe071' : '#ff746d', true);
+    text(`${g.courseName} · PUNTUACIÓN ${g.score}`, w / 2, h / 2 - 7, 14, '#ffffff', true);
+    text(`INSIGNIAS ${g.collected}/${g.coins.length}`, w / 2, h / 2 + 17, 12, '#d4e6f0', true);
+    text(g.complete ? (isLastCircuit ? 'ESPACIO / INTRO: PRUEBA DE INTELIGENCIA' : `ESPACIO / INTRO: CIRCUITO ${g.circuitIndex + 2}`) : 'ESPACIO / INTRO: REPETIR ESTE CIRCUITO', w / 2, h / 2 + 46, 12, '#8ff5ff', true);
+    text('X / ESC: MENÚ DE MODOS', w / 2, h / 2 + 70, 11, '#c8dbe8');
+  }
+}
+
+function beginIntelligenceTest() {
+  intelligenceQuestions = pickRandomQuestions(intelligenceQuestionBank, 5);
+  intelligenceQuestionIndex = 0;
+  intelligenceScore = 0;
+  intelligenceFeedback = null;
+  for (const k in keys) keys[k] = false;
+  gameState = 'INTELLIGENCE_TEST';
+}
+
+function beginStarTrekTrivia() {
+  starTrekTriviaQuestions = pickRandomQuestions(starTrekTriviaQuestionBank, 5);
+  triviaQuestionIndex = 0;
+  triviaScore = 0;
+  triviaFeedback = null;
+  for (const k in keys) keys[k] = false;
+  gameState = 'STAR_TREK_TRIVIA';
+}
+
+function answerTrainingQuestion(type, optionIndex) {
+  const isIntelligence = type === 'intelligence';
+  const questions = isIntelligence ? intelligenceQuestions : starTrekTriviaQuestions;
+  const index = isIntelligence ? intelligenceQuestionIndex : triviaQuestionIndex;
+  const q = questions[index];
+  if (!q) return;
+  const correct = optionIndex === q.answer;
+  if (isIntelligence) {
+    if (intelligenceFeedback !== null) return;
+    if (correct) intelligenceScore++;
+    intelligenceFeedback = { correct, text: (correct ? '¡Correcto! ' : 'No exactamente. ') + q.explanation };
+  } else {
+    if (triviaFeedback !== null) return;
+    if (correct) triviaScore++;
+    triviaFeedback = { correct, text: (correct ? '¡Correcto! ' : 'Respuesta correcta: ' + q.options[q.answer] + '. ') + q.explanation };
+  }
+}
+
+function advanceTrainingQuestion(type) {
+  if (type === 'intelligence') {
+    if (intelligenceFeedback === null) return;
+    intelligenceFeedback = null;
+    if (intelligenceQuestionIndex < intelligenceQuestions.length - 1) intelligenceQuestionIndex++;
+    else beginStarTrekTrivia();
+  } else {
+    if (triviaFeedback === null) return;
+    triviaFeedback = null;
+    if (triviaQuestionIndex < starTrekTriviaQuestions.length - 1) triviaQuestionIndex++;
+    else beginKobayashiMaru();
+  }
+}
+
+function beginKobayashiMaru() {
+  kobayashiMaruStage = 0;
+  kobayashiMaruChoice = -1;
+  kobayashiMaruOutcome = '';
+  for (const k in keys) keys[k] = false;
+  gameState = 'KOBAYASHI_MARU';
+}
+
+function chooseKobayashiMaruOption(optionIndex) {
+  if (kobayashiMaruStage !== 1 || !kobayashiMaruChoices[optionIndex]) return;
+  kobayashiMaruChoice = optionIndex;
+  const responses = [
+    'La Enterprise cruza el límite de seguridad para intentar el rescate. Los sensores detectan varios contactos tácticos que se aproximan.',
+    'El canal diplomático no obtiene respuesta a tiempo. La señal civil se debilita mientras aparecen contactos tácticos en el perímetro.',
+    'Las sondas transmiten una última lectura de daños. Varias naves desconocidas emergen de los contactos que ocultaba la interferencia.'
+  ];
+  kobayashiMaruOutcome = responses[optionIndex];
+  kobayashiMaruStage = 2;
+  for (const k in keys) keys[k] = false;
+}
+
+function advanceKobayashiMaru() {
+  if (kobayashiMaruStage === 0) kobayashiMaruStage = 1;
+  else if (kobayashiMaruStage === 2) kobayashiMaruStage = 3;
+  else if (kobayashiMaruStage === 3) gameState = 'TRAINING_COMPLETE';
+}
+
+// Siluetas vectoriales para el visor del puente; no necesita nuevos assets.
+function drawKobayashiShip(cx, cy, scale, kind = 'civilian', damage = false) {
+  ctx.save();
+  ctx.translate(cx, cy);
+  ctx.scale(scale, scale);
+  if (kind === 'hostile') {
+    ctx.fillStyle = '#687a8f'; ctx.strokeStyle = '#ff5364'; ctx.lineWidth = 1.8;
+    ctx.beginPath(); ctx.moveTo(0, -19); ctx.lineTo(10, -4); ctx.lineTo(28, 5);
+    ctx.lineTo(11, 8); ctx.lineTo(6, 18); ctx.lineTo(0, 11); ctx.lineTo(-6, 18);
+    ctx.lineTo(-11, 8); ctx.lineTo(-28, 5); ctx.lineTo(-10, -4); ctx.closePath(); ctx.fill(); ctx.stroke();
+    ctx.fillStyle = '#ff5364'; ctx.fillRect(-3, -5, 6, 10);
+  } else {
+    ctx.fillStyle = '#93a9b7'; ctx.strokeStyle = '#d9f2ff'; ctx.lineWidth = 1.6;
+    // Casco central y dos góndolas, una silueta civil original y compacta.
+    ctx.beginPath(); ctx.ellipse(0, -2, 16, 10, 0, 0, Math.PI * 2); ctx.fill(); ctx.stroke();
+    ctx.fillStyle = '#718796'; ctx.fillRect(-5, 5, 10, 12);
+    ctx.fillStyle = '#7fdcf5'; ctx.fillRect(-26, -4, 6, 20); ctx.fillRect(20, -4, 6, 20);
+    ctx.strokeStyle = '#a9deef'; ctx.beginPath(); ctx.moveTo(-15, 1); ctx.lineTo(-20, 0); ctx.moveTo(15, 1); ctx.lineTo(20, 0); ctx.stroke();
+    ctx.fillStyle = damage ? '#ff684f' : '#4dffcf';
+    ctx.fillRect(-3, -5, 6, 4);
+  }
+  if (damage) {
+    ctx.strokeStyle = '#ff6c58'; ctx.lineWidth = 2;
+    ctx.beginPath(); ctx.moveTo(17, -17); ctx.lineTo(28, -27); ctx.moveTo(20, -13); ctx.lineTo(34, -10); ctx.stroke();
+    ctx.fillStyle = '#ffbd57'; ctx.fillRect(25, -26, 4, 4); ctx.fillRect(31, -12, 3, 3);
+  }
+  ctx.restore();
+}
+
+function drawKobayashiViewscren(hostiles = false) {
+  const w = canvas.width, h = canvas.height;
+  const x = w * 0.075, y = h * 0.135, vw = w * 0.85, vh = h * 0.39;
+  ctx.fillStyle = '#020914'; ctx.fillRect(x, y, vw, vh);
+  // Estrellas estables para dar movimiento sin parpadeo aleatorio.
+  for (let i = 0; i < 78; i++) {
+    const sx = x + ((i * 73 + frameCount * (i % 3 + 1) * 0.23) % vw);
+    const sy = y + ((i * 41) % vh);
+    ctx.globalAlpha = 0.45 + (i % 4) * 0.13;
+    ctx.fillStyle = i % 7 === 0 ? '#ffb3a7' : '#e2f4ff';
+    ctx.fillRect(sx, sy, i % 5 === 0 ? 2 : 1, i % 5 === 0 ? 2 : 1);
+  }
+  ctx.globalAlpha = 1;
+  // La nave de rescate permanece visible en la pantalla principal.
+  drawKobayashiShip(x + vw * 0.64, y + vh * 0.52, 1.12, 'civilian', true);
+  drawKobayashiShip(x + vw * 0.27, y + vh * 0.66, 0.78, 'civilian', false);
+  ctx.strokeStyle = 'rgba(108, 226, 255, 0.45)'; ctx.setLineDash([5, 5]);
+  ctx.beginPath(); ctx.moveTo(x + vw * 0.32, y + vh * 0.62); ctx.lineTo(x + vw * 0.59, y + vh * 0.53); ctx.stroke(); ctx.setLineDash([]);
+  if (hostiles) {
+    drawKobayashiShip(x + vw * 0.45, y + vh * 0.19, 0.74, 'hostile');
+    drawKobayashiShip(x + vw * 0.81, y + vh * 0.25, 0.82, 'hostile');
+    drawKobayashiShip(x + vw * 0.84, y + vh * 0.78, 0.8, 'hostile');
+    ctx.strokeStyle = 'rgba(255, 74, 94, 0.72)'; ctx.lineWidth = 1.5;
+    ctx.beginPath(); ctx.moveTo(x + vw * 0.45, y + vh * 0.28); ctx.lineTo(x + vw * 0.30, y + vh * 0.57);
+    ctx.moveTo(x + vw * 0.80, y + vh * 0.33); ctx.lineTo(x + vw * 0.67, y + vh * 0.50);
+    ctx.moveTo(x + vw * 0.81, y + vh * 0.70); ctx.lineTo(x + vw * 0.68, y + vh * 0.56); ctx.stroke();
+  }
+  ctx.strokeStyle = hostiles ? '#ff5265' : '#65dff5'; ctx.lineWidth = 3;
+  ctx.strokeRect(x, y, vw, vh);
+  ctx.strokeStyle = 'rgba(175,224,245,0.45)'; ctx.lineWidth = 1; ctx.strokeRect(x + 5, y + 5, vw - 10, vh - 10);
+}
+
+function drawKobayashiMaru() {
+  drawTrainingBridgeBackdrop();
+  const w = canvas.width, h = canvas.height;
+  overlay(0.58);
+  const alarmOn = Math.floor(frameCount / 18) % 2 === 0;
+  if (alarmOn && kobayashiMaruStage >= 1 && kobayashiMaruStage <= 2) {
+    ctx.fillStyle = 'rgba(235, 33, 53, 0.15)'; ctx.fillRect(0, 0, w, h);
+  }
+  ctx.fillStyle = kobayashiMaruStage >= 1 && kobayashiMaruStage <= 2 ? '#8b1728' : '#173a50';
+  ctx.fillRect(0, 0, w, 40);
+  text('SIMULACIÓN DE MANDO · KOBAYASHI MARU', w / 2, 26, 17, '#ffffff', true);
+  if (kobayashiMaruStage === 0) {
+    text('ALERTA TÁCTICA · SEÑAL DE SOCORRO', w / 2, 66, 13, '#ff827f', true);
+    drawKobayashiViewscren(false);
+    ctx.fillStyle = 'rgba(4, 12, 23, 0.94)'; ctx.fillRect(55, h * 0.56, w - 110, 91);
+    ctx.strokeStyle = '#f06b70'; ctx.lineWidth = 1.5; ctx.strokeRect(55, h * 0.56, w - 110, 91);
+    wrapCanvasText('Un transporte civil, el Kobayashi Maru, informa de daños graves y pérdida de propulsión cerca de la Zona Neutral. La tripulación solicita ayuda; los sensores no ofrecen una lectura completa del área.', w / 2, h * 0.56 + 24, w - 145, 16, '#f5f8fb');
+    text('ESPACIO / INTRO: RECIBIR LA ORDEN · X / ESC: SALIR', w / 2, h - 14, 10, '#8ff5ff', true);
+  } else if (kobayashiMaruStage === 1) {
+    text('DECISIÓN DEL CADETE · ELIGE UNA ORDEN', w / 2, 65, 13, '#ffcf6b', true);
+    drawKobayashiViewscren(false);
+    ctx.fillStyle = 'rgba(4, 12, 23, 0.96)'; ctx.fillRect(55, h * 0.55, w - 110, 122);
+    ctx.strokeStyle = '#f06b70'; ctx.strokeRect(55, h * 0.55, w - 110, 122);
+    kobayashiMaruChoices.forEach((choice, i) => {
+      const yy = h * 0.55 + 30 + i * 29;
+      text(`${i + 1}. ${choice.title} — ${choice.detail}`, w / 2, yy, 10, '#ffffff', i === 0);
+    });
+    text('PULSA 1, 2 O 3 PARA DAR LA ORDEN', w / 2, h - 13, 10, '#8ff5ff', true);
+  } else if (kobayashiMaruStage === 2) {
+    text('ALERTA ROJA · MÚLTIPLES CONTACTOS TÁCTICOS', w / 2, 65, 13, '#ff777f', true);
+    drawKobayashiViewscren(true);
+    ctx.fillStyle = 'rgba(4, 9, 17, 0.96)'; ctx.fillRect(55, h * 0.56, w - 110, 90);
+    ctx.strokeStyle = '#f06b70'; ctx.strokeRect(55, h * 0.56, w - 110, 90);
+    wrapCanvasText(kobayashiMaruOutcome + ' Los escudos de la nave de simulación caen y las comunicaciones se interrumpen. El ordenador detiene el ejercicio para evaluar la decisión de mando.', w / 2, h * 0.56 + 25, w - 145, 16, '#ffffff');
+    text('ESPACIO / INTRO: REVISAR EL RESULTADO', w / 2, h - 13, 10, '#8ff5ff', true);
+  } else {
+    drawKobayashiViewscren(true);
+    ctx.fillStyle = 'rgba(2, 8, 17, 0.97)'; ctx.fillRect(54, h * 0.55, w - 108, 132);
+    ctx.strokeStyle = '#70d7ed'; ctx.lineWidth = 1.5; ctx.strokeRect(54, h * 0.55, w - 108, 132);
+    text('INFORME DE SIMULACIÓN', w / 2, h * 0.55 + 25, 15, '#ffdc72', true);
+    const selected = kobayashiMaruChoices[kobayashiMaruChoice];
+    text(selected ? `ORDEN ELEGIDA: ${selected.title}` : 'ORDEN ELEGIDA: SIN REGISTRO', w / 2, h * 0.55 + 49, 10, '#8ceeff', true);
+    wrapCanvasText('El escenario no está diseñado para garantizar una victoria. La evaluación mide tu criterio, la comunicación con la tripulación y cómo priorizas vidas bajo presión, no solo el resultado táctico.', w / 2, h * 0.55 + 73, w - 150, 16, '#ffffff');
+    text('ESPACIO / INTRO: FINALIZAR ENTRENAMIENTO', w / 2, h - 13, 10, '#ffdc72', true);
+  }
+}
+
+function drawTrainingQuiz(type) {
+  drawTrainingBridgeBackdrop();
+  overlay(0.67);
+  const isIntelligence = type === 'intelligence';
+  const questions = isIntelligence ? intelligenceQuestions : starTrekTriviaQuestions;
+  const index = isIntelligence ? intelligenceQuestionIndex : triviaQuestionIndex;
+  const score = isIntelligence ? intelligenceScore : triviaScore;
+  const feedback = isIntelligence ? intelligenceFeedback : triviaFeedback;
+  const q = questions[index];
+  const title = isIntelligence ? 'PRUEBA DE INTELIGENCIA' : 'PREGUNTAS TREKKIES';
+  text('ACADEMIA DE LA FLOTA ESTELAR', canvas.width / 2, 44, 13, '#8ceeff', true);
+  text(title, canvas.width / 2, 78, 22, '#ffdc72', true);
+  text(`PREGUNTA ${index + 1} / ${questions.length}     ACIERTOS ${score}`, canvas.width / 2, 105, 12, '#c4e5f0', true);
+  ctx.fillStyle = 'rgba(3, 13, 27, 0.94)';
+  ctx.fillRect(58, 120, canvas.width - 116, 74);
+  ctx.strokeStyle = '#51cfe9'; ctx.lineWidth = 1.5;
+  ctx.strokeRect(58, 120, canvas.width - 116, 74);
+  wrapCanvasText(q.question, canvas.width / 2, 149, canvas.width - 150, 18, '#ffffff');
+  q.options.forEach((option, i) => {
+    const y = 204 + i * 43;
+    ctx.fillStyle = feedback && i === q.answer ? 'rgba(33, 116, 83, 0.88)' : 'rgba(12, 35, 56, 0.92)';
+    ctx.fillRect(90, y, canvas.width - 180, 34);
+    ctx.strokeStyle = feedback && i === q.answer ? '#76f0a8' : '#416c83';
+    ctx.strokeRect(90, y, canvas.width - 180, 34);
+    text(`${i + 1}. ${option}`, canvas.width / 2, y + 22, 13, '#f3fbff', i === q.answer && !!feedback);
+  });
+  if (feedback) {
+    ctx.fillStyle = 'rgba(2, 11, 21, 0.96)';
+    ctx.fillRect(45, 378, canvas.width - 90, 51);
+    ctx.strokeStyle = feedback.correct ? '#62e49b' : '#f0b75e'; ctx.strokeRect(45, 378, canvas.width - 90, 51);
+    wrapCanvasText(feedback.text, canvas.width / 2, 396, canvas.width - 120, 14, feedback.correct ? '#a8ffc9' : '#ffe0a0');
+    text('ESPACIO / INTRO: CONTINUAR', canvas.width / 2, canvas.height - 7, 10, '#8ceeff', true);
+  } else {
+    text('PULSA 1, 2, 3 O 4 PARA RESPONDER · X / ESC: SALIR', canvas.width / 2, canvas.height - 15, 11, '#8ceeff', true);
+  }
+}
+
+function drawTrainingComplete() {
+  drawTrainingBridgeBackdrop(); overlay(0.64);
+  text('¡ENTRENAMIENTO DE LA FLOTA COMPLETADO!', canvas.width / 2, 150, 24, '#ffdc72', true);
+  text('Has superado todas las pruebas de la Academia y la simulación de mando.', canvas.width / 2, 196, 13, '#ffffff');
+  text(`Razonamiento: ${intelligenceScore}/${intelligenceQuestions.length} · Preguntas Trekkies: ${triviaScore}/${starTrekTriviaQuestions.length}`, canvas.width / 2, 226, 12, '#ffdc72', true);
+  text('Has completado Kobayashi Maru: la Flota registra tu certificación de cadete.', canvas.width / 2, 258, 12, '#7feeff');
+  text('ESPACIO / INTRO: VOLVER A LOS MODOS', canvas.width / 2, 315, 13, '#ffdc72', true);
+}
+
+// Ventajas y consecuencias de las decisiones de la historia.
+
+let storyBonusDamage = 0;
+let storyBonusHealth = 0;
+let storyMachineDamage = 0;
+let storyDecision = '';
+let storyDecisionText = '';
+let storyIntroSeen = false;
+
+const energyParticles = Array.from({ length: 25 }, () => ({
+  x: Math.random() * canvas.width,
+  y: Math.random() * canvas.height,
+  size: Math.random() * 2 + 1,
+  speedY: Math.random() * 1.5 + 0.5,
+  opacity: Math.random() * 0.7 + 0.3
+}));
+
+// Ocho destinos de campaña, uno por misión.
+const galaxyNodes = [
+  { id: 1, name: 'Academia de la Flota', x: 90, y: 145 },
+  { id: 2, name: 'Zona de entrenamiento', x: 190, y: 225 },
+  { id: 3, name: 'Estación en peligro', x: 290, y: 145 },
+  { id: 4, name: 'Emergencia estelar', x: 390, y: 225 },
+  { id: 5, name: 'Núcleo estelar', x: 490, y: 145 },
+  { id: 6, name: 'Minas de Dilithium', x: 590, y: 225 },
+  { id: 7, name: 'Ingeniería Enterprise', x: 690, y: 145 },
+  { id: 8, name: 'Talos IV', x: 750, y: 255 }
+];
+
+let shuttleX = galaxyNodes[0].x;
+let shuttleY = galaxyNodes[0].y;
+
+// Ocho misiones, con dificultad creciente y combate final más difícil.
+const storyDetails = {
+  1: { title: 'CAPÍTULO 1: LA NOCHE EN LA ENTERPRISE', desc: 'Una señal alienígena invade la nave y convierte a la tripulación en una amenaza.' },
+  2: { title: 'CAPÍTULO 2: NADIE ES DE FIAR', desc: 'Avanza por los pasillos y descubre cómo se propaga el control mental.' },
+  3: { title: 'CAPÍTULO 3: ÓRDENES FALSAS', desc: 'La entidad ha tomado las comunicaciones y está enfrentando a la tripulación.' },
+  4: { title: 'CAPÍTULO 4: INGENIERÍA BAJO ASEDIO', desc: 'Recupera los motores antes de que la nave sea arrastrada hacia la señal.' },
+  5: { title: 'CAPÍTULO 5: EL HILO CONDUCTOR', desc: 'Las pistas revelan una red neuronal alienígena distribuida por la nave.' },
+  6: { title: 'CAPÍTULO 6: LA ÚLTIMA DEFENSA', desc: 'Rompe el cordón de seguridad y alcanza el origen de la señal.' },
+  7: { title: 'CAPÍTULO 7: KHAN', desc: 'Khan aprovecha la invasión para apoderarse de la Enterprise. Detén sus planes.' },
+  8: { title: 'CAPÍTULO 8: LOCUTUS', desc: 'Enfréntate al amplificador Borg y libera a la tripulación del control mental.' }
+};
+
+const machineSettings = {
+  FACIL: {
+    approachDistance: 100,
+    attackDistance: 100,
+    attackChance: 0.014,
+    jumpChance: 0.004,
+    movementMultiplier: 0.62,
+    reactionFrames: 38,
+    retreatChance: 0.012
+  },
+  NORMAL: {
+    approachDistance: 92,
+    attackDistance: 108,
+    attackChance: 0.025,
+    jumpChance: 0.006,
+    movementMultiplier: 0.74,
+    reactionFrames: 28,
+    retreatChance: 0.02
+  },
+  DIFICIL: {
+    approachDistance: 78,
+    attackDistance: 125,
+    attackChance: 0.055,
+    jumpChance: 0.014,
+    movementMultiplier: 1,
+    reactionFrames: 12,
+    retreatChance: 0.04
+  }
+};
+
+function clamp(v, min, max) {
+  return Math.max(min, Math.min(max, v));
+}
+
+
+function getHumanPlayer() {
+  return humanPlayerIndex === 1 ? player1 : player2;
+}
+
+function getMachinePlayer() {
+  return humanPlayerIndex === 1 ? player2 : player1;
+}
+
+
+function getCharacter(p) {
+  return availableCharacters[
+    clamp(p.charIndex, 0, availableCharacters.length - 1)
+  ];
+}
+
+function updatePlayerAttributes(p) {
+  const c = getCharacter(p);
+  p.name = c.name;
+  p.width = c.width;
+  p.height = c.height;
+  p.speed = c.movementSpeed;
+  p.x = clamp(p.x, 0, Math.max(0, canvas.width - p.width));
+}
+
+function resetMachineAI() {
+  machineAttackCooldown = 0;
+  machineJumpCooldown = 0;
+}
+
+// ------------------------------------------------------------
+// ACTUALIZACIÓN DE LOS COMBATIENTES SEGÚN LA ARENA
+// ------------------------------------------------------------
+
+function setArenaCombatants(arenaNumber) {
+  const arenaIndex = clamp(
+    arenaNumber - 1,
+    0,
+    arenaCombatants.length - 1
+  );
+
+  const [character1, character2] = arenaCombatants[arenaIndex];
+
+  if (isVsMachine) {
+    // En los modos contra la máquina, se conserva el personaje
+    // elegido por el jugador humano y se adapta el rival a la arena.
+    const human = getHumanPlayer();
+    const machine = getMachinePlayer();
+
+    if (human.charIndex === character1) {
+      machine.charIndex = character2;
+    } else if (human.charIndex === character2) {
+      machine.charIndex = character1;
+    } else {
+      machine.charIndex = character1;
+    }
+
+    updatePlayerAttributes(human);
+    updatePlayerAttributes(machine);
+  } else {
+    // En VS Player, conservar siempre los personajes elegidos en la
+    // pantalla de selección. La arena cambia el escenario, no los luchadores.
+    updatePlayerAttributes(player1);
+    updatePlayerAttributes(player2);
+  }
+
+  // Limpiar estados de combate al cambiar de enfrentamiento.
+  for (const p of [player1, player2]) {
+    p.isAttacking = false;
+    p.attackTimer = 0;
+    p.attackCooldown = 0;
+    p.attackStyle = 'normal';
+    p.activeAttackDuration = 0;
+    p.hasHitThisAttack = false;
+    p.stunTimer = 0;
+    p.hitFlashTimer = 0;
+    p.hitReactTimer = 0;
+    p.hitReactDirection = 0;
+    p.hitReactStep = 0;
+    p.comboCount = 0;
+    p.comboTimer = 0;
+    p.comboDisplayTimer = 0;
+    p.invulnerabilityTimer = 0;
+    p.vy = 0;
+    p.y = floorY;
+  }
+
+  resetMachineAI();
+  impactEffects = [];
+  screenShakeTimer = 0;
+}
+
+function resetMatch() {
+  impactEffects = [];
+  screenShakeTimer = 0;
+  for (const p of [player1, player2]) {
+    p.maxHealth = 100;
+    p.health = 100;
+    p.maxEnergy = 100;
+    p.energy = 100;
+    updatePlayerAttributes(p);
+    p.y = floorY;
+    p.vy = 0;
+    p.isAttacking = false;
+    p.attackTimer = 0;
+    p.attackCooldown = 0;
+    p.attackStyle = 'normal';
+    p.activeAttackDuration = 0;
+    p.hasHitThisAttack = false;
+    p.stunTimer = 0;
+    p.hitFlashTimer = 0;
+    p.hitReactTimer = 0;
+    p.hitReactDirection = 0;
+    p.hitReactStep = 0;
+    p.comboCount = 0;
+    p.comboTimer = 0;
+    p.comboDisplayTimer = 0;
+    p.invulnerabilityTimer = 0;
+  }
+
+  player1.x = 100;
+  player2.x = Math.max(200, canvas.width - player2.width - 40);
+  player1.facing = 1;
+  player2.facing = -1;
+
+  if (isStoryMode) {
+    player1.health = clamp(100 + storyBonusHealth, 1, 100);
+    player2.health = 100;
+
+    if (storyPhase === TOTAL_MISIONES || storyPhase === TOTAL_MISIONES - 1) {
+      player2.maxHealth = 150;
+      player2.health = 150;
+      player2.damageBonus = 0;
+    }
+  }
+
+  // Vida inicial de esta ronda: sirve para comprobar si la victoria fue PERFECT.
+  player1.startingHealth = player1.health;
+  player2.startingHealth = player2.health;
+
+  for (const k in keys) keys[k] = false;
+
+  gameOver = false;
+  gameOverFrame = 0;
+  storyDefeatCountdownStart = 0;
+  storyDefeatAttemptCounted = false;
+  storyRoundRecorded = false;
+  matchTimeLeft = 120;
+  timeText = '02:00';
+  roundWinnerMessage = '';
+  screenShakeTimer = 0;
+  resetMachineAI();
+}
+
+function getRoundWinner() {
+  if (player1.health > player2.health) return 1;
+  if (player2.health > player1.health) return 2;
+  return 0;
+}
+
+function humanWonStoryPhase() {
+  return getHumanPlayer().health >= getMachinePlayer().health;
+}
+
+function humanLostStoryPhase() {
+  return getHumanPlayer().health < getMachinePlayer().health;
+}
+
+function setWinnerMessageByHealth() {
+  gameOverFrame = frameCount;
+  const w = getRoundWinner();
+  picardVictory = w !== 0 && availableCharacters[(w === 1 ? player1 : player2).charIndex]?.name === 'PICARD';
+
+  if (w === 0) {
+    roundWinnerMessage = 'DRAW';
+  } else if (isVsMachine) {
+    const humanWon =
+      (w === 1 && humanPlayerIndex === 1) ||
+      (w === 2 && humanPlayerIndex === 2);
+
+    const humanPerfect =
+      humanWon && getHumanPlayer().health >= getHumanPlayer().startingHealth;
+
+    roundWinnerMessage = humanPerfect
+      ? 'PERFECT!'
+      : humanWon
+        ? 'YOU WIN!'
+        : 'YOU LOSE!';
+  } else {
+    roundWinnerMessage = w === 1
+      ? `¡${player1.name} GANA EL COMBATE!`
+      : `¡${player2.name} GANA EL COMBATE!`;
+  }
+}
+
+
+function finishMatchByTime() {
+  gameOver = true;
+  setWinnerMessageByHealth();
+}
+
+
+// Para Riker: mantener S (jugador 1) o flecha abajo (jugador 2)
+// prepara la silla. Para LaForge, la misma combinación activa la patada especial.
+function isRikerChairGuardHeld(p) {
+  if (getCharacter(p).name !== 'RIKER') return false;
+  if (p === player1) return !!(keys.s || keys.S);
+  if (p === player2) return !!keys.ArrowDown;
+  return false;
+}
+
+function isLaForgeKickHeld(p) {
+  if (getCharacter(p).name !== 'LAFORGE') return false;
+  if (p === player1) return !!(keys.s || keys.S);
+  if (p === player2) return !!keys.ArrowDown;
+  return false;
+}
+
+function startAttack(p) {
+  if (p.isAttacking || gameOver || p.stunTimer > 0 || p.attackCooldown > 0) return;
+  const c = getCharacter(p);
+  const useChair = c.name === 'RIKER' && isRikerChairGuardHeld(p);
+  const useLaForgeKick = c.name === 'LAFORGE' && isLaForgeKickHeld(p);
+  p.attackStyle = useChair ? 'chair' : useLaForgeKick ? 'kick' : 'normal';
+  p.activeAttackDuration = useChair
+    ? (c.chairAttackDuration || c.attackDuration)
+    : useLaForgeKick ? (c.kickAttackDuration || c.attackDuration) : c.attackDuration;
+  p.isAttacking = true;
+  p.hasHitThisAttack = false;
+  p.attackTimer = p.activeAttackDuration;
+}
+
+function applyHit(attacker, defender, damage, knockback) {
+  // Devuelve true solo cuando el impacto se aplica realmente.
+  if (defender.invulnerabilityTimer > 0 || defender.health <= 0) return false;
+
+  const bonus = isStoryMode && attacker === getHumanPlayer()
+    ? storyBonusDamage
+    : 0;
+  const enemyBonus = isStoryMode && attacker === getMachinePlayer()
+    ? storyMachineDamage
+    : 0;
+
+  // Cada impacto válido dentro de la ventana de 1,5 s continúa la cadena.
+  // A partir del segundo golpe, el daño adicional sube hasta un máximo de +8.
+  const comboContinues = attacker.comboTimer > 0 && attacker.comboCount > 0;
+  const comboDamageBonus = comboContinues ? Math.min(5, attacker.comboCount) : 0;
+  const finalDamage = Math.max(1, damage + comboDamageBonus + enemyBonus - bonus);
+  // La nueva barra de energía actúa como escudo: absorbe los golpes antes de la salud.
+  const absorbed = Math.min(Math.max(0, defender.energy || 0), finalDamage);
+  defender.energy = Math.max(0, (defender.energy || 0) - absorbed);
+  const healthDamage = finalDamage - absorbed;
+  if (healthDamage > 0) defender.health = Math.max(0, defender.health - healthDamage);
+  attacker.comboCount = comboContinues ? attacker.comboCount + 1 : 1;
+  attacker.comboTimer = 90;
+  attacker.comboDisplayTimer = 90;
+  // Si recibes un golpe, se rompe tu propia cadena.
+  defender.comboCount = 0;
+  defender.comboTimer = 0;
+  defender.comboDisplayTimer = 0;
+  defender.stunTimer = 6;
+  defender.invulnerabilityTimer = 7;
+  defender.hitFlashTimer = 7;
+
+  // Retroceso físico durante varios fotogramas, en lugar de desplazar al rival
+  // de golpe. Conserva la posición dentro de los límites del escenario.
+  defender.hitReactTimer = 4;
+  defender.hitReactDirection = attacker.x < defender.x ? 1 : -1;
+  defender.hitReactStep = Math.max(2.0, knockback / 4.5);
+
+  // Destello circular más una ráfaga de chispas en el punto del impacto.
+  const impactX = defender.x + defender.width / 2;
+  const impactY = clamp(defender.y + Math.min(defender.height * 0.42, canvas.height * 0.60), 90, canvas.height - 55);
+  impactEffects.push({ type: 'ring', x: impactX, y: impactY, life: 12, maxLife: 12, radius: 8, color: '#fff3a6' });
+  for (let i = 0; i < 13; i++) {
+    const angle = (Math.PI * 2 * i / 13) + (Math.random() - 0.5) * 0.35;
+    const speed = 1.8 + Math.random() * 3.7;
+    impactEffects.push({
+      type: 'spark', x: impactX, y: impactY,
+      vx: Math.cos(angle) * speed, vy: Math.sin(angle) * speed,
+      life: 12 + Math.floor(Math.random() * 9), maxLife: 21,
+      size: 2 + Math.random() * 3,
+      color: i % 3 === 0 ? '#ffffff' : (i % 2 === 0 ? '#ffd54a' : '#62f6ff')
+    });
+  }
+  screenShakeTimer = Math.max(screenShakeTimer, 9);
+  return true;
+}
+
+function updateAttack(attacker, defender) {
+  if (!attacker.isAttacking) return;
+  const c = getCharacter(attacker);
+  const distance = Math.abs(attacker.x - defender.x);
+  const vertical = Math.abs(attacker.y - defender.y);
+  const activeDuration = attacker.activeAttackDuration || c.attackDuration;
+  const chairAttack = c.name === 'RIKER' && attacker.attackStyle === 'chair';
+  const laforgeKickAttack = c.name === 'LAFORGE' && attacker.attackStyle === 'kick';
+  const specialAttack = chairAttack || laforgeKickAttack;
+  const attackRange = chairAttack ? (c.chairAttackRange || c.attackRange)
+    : laforgeKickAttack ? (c.kickAttackRange || c.attackRange) : c.attackRange;
+  const attackDamage = chairAttack ? (c.chairDamage || c.damage)
+    : laforgeKickAttack ? (c.kickDamage || c.damage) : c.damage;
+  const attackKnockback = chairAttack ? (c.chairKnockback || 19)
+    : laforgeKickAttack ? (c.kickKnockback || 20) : 15;
+  const hitFrame = Math.ceil(activeDuration * 0.55);
+
+  // Riker y LaForge disponen de una ventana de impacto de varios fotogramas,
+  // para que sus ataques especiales no dependan de un único instante exacto.
+  const isHitFrame = c.name === 'RIKER'
+    ? (chairAttack
+      ? attacker.attackTimer <= Math.ceil(activeDuration * 0.78) &&
+      attacker.attackTimer >= Math.max(1, Math.floor(activeDuration * 0.20))
+      : attacker.attackTimer <= Math.ceil(activeDuration * 0.60) &&
+      attacker.attackTimer >= Math.max(1, Math.floor(activeDuration * 0.30)))
+    : laforgeKickAttack
+      ? attacker.attackTimer <= Math.ceil(activeDuration * 0.78) &&
+      attacker.attackTimer >= Math.max(1, Math.floor(activeDuration * 0.22))
+      : attacker.attackTimer === hitFrame;
+
+  if (c.name === 'KAN' && attacker.attackTimer >= c.attackDuration - 8) {
+    attacker.x = clamp(
+      attacker.x + (attacker.x < defender.x ? 5.5 : -5.5),
+      0,
+      Math.max(0, canvas.width - attacker.width)
+    );
+    if (distance < 90 && vertical < 55 && !attacker.hasHitThisAttack) {
+      if (applyHit(attacker, defender, 7, 19)) attacker.hasHitThisAttack = true;
+    }
+  } else if (
+    isHitFrame &&
+    distance <= attackRange &&
+    vertical < 55 &&
+    !attacker.hasHitThisAttack
+  ) {
+    if (applyHit(attacker, defender, attackDamage, attackKnockback)) {
+      attacker.hasHitThisAttack = true;
+    }
+  }
+
+  attacker.attackTimer--;
+  if (attacker.attackTimer <= 0) {
+    const endedWithChair = attacker.attackStyle === 'chair';
+    const endedWithLaForgeKick = attacker.attackStyle === 'kick';
+    attacker.attackTimer = 0;
+    attacker.isAttacking = false;
+    attacker.attackCooldown = endedWithChair ? (c.chairAttackCooldown || 16)
+      : endedWithLaForgeKick ? (c.kickAttackCooldown || 13) : 8;
+    attacker.attackStyle = 'normal';
+    attacker.activeAttackDuration = 0;
+    attacker.hasHitThisAttack = false;
+  }
+}
+
+function updateCombatImpactEffects() {
+  for (const p of [player1, player2]) {
+    if (p.hitFlashTimer > 0) p.hitFlashTimer--;
+    if (p.hitReactTimer > 0 && !gameOver) {
+      p.x = clamp(p.x + p.hitReactDirection * p.hitReactStep, 0, Math.max(0, canvas.width - p.width));
+      p.hitReactTimer--;
+    }
+  }
+  for (const effect of impactEffects) {
+    effect.life--;
+    if (effect.type === 'ring') {
+      effect.radius += 3.2;
+    } else {
+      effect.x += effect.vx;
+      effect.y += effect.vy;
+      effect.vx *= 0.91;
+      effect.vy = effect.vy * 0.91 + 0.04;
+    }
+  }
+  impactEffects = impactEffects.filter(effect => effect.life > 0);
+}
+
+function drawCombatImpactEffects() {
+  for (const effect of impactEffects) {
+    const alpha = Math.max(0, effect.life / effect.maxLife);
+    ctx.save();
+    ctx.globalAlpha = alpha;
+    if (effect.type === 'ring') {
+      ctx.strokeStyle = effect.color;
+      ctx.lineWidth = 3;
+      ctx.beginPath();
+      ctx.arc(effect.x, effect.y, effect.radius, 0, Math.PI * 2);
+      ctx.stroke();
+      ctx.strokeStyle = '#62f6ff';
+      ctx.lineWidth = 1.5;
+      ctx.beginPath();
+      ctx.arc(effect.x, effect.y, effect.radius * 0.58, 0, Math.PI * 2);
+      ctx.stroke();
+    } else {
+      ctx.fillStyle = effect.color;
+      ctx.shadowColor = effect.color;
+      ctx.shadowBlur = 8;
+      ctx.fillRect(effect.x, effect.y, effect.size, effect.size);
+    }
+    ctx.restore();
+  }
+}
+
+function jumpPlayer(p) {
+  if (p.y >= floorY && p.stunTimer <= 0) {
+    p.y = floorY;
+    p.vy = p.jumpForce;
+  }
+}
+
+function movePlayer(p, amount) {
+  if (p.stunTimer > 0) return;
+  p.x = clamp(
+    p.x + amount * p.speed,
+    0,
+    Math.max(0, canvas.width - p.width)
+  );
+}
+
+function updatePlayerPhysics(p) {
+  if (p.stunTimer > 0) p.stunTimer--;
+  if (p.invulnerabilityTimer > 0) p.invulnerabilityTimer--;
+  if (p.attackCooldown > 0) p.attackCooldown--;
+  if (p.comboTimer > 0) {
+    p.comboTimer--;
+    if (p.comboTimer === 0) p.comboCount = 0;
+  }
+  if (p.comboDisplayTimer > 0) p.comboDisplayTimer--;
+  p.vy += p.gravity;
+  p.y += p.vy;
+
+  if (p.y > floorY) {
+    p.y = floorY;
+    p.vy = 0;
+  }
+  p.x = clamp(p.x, 0, Math.max(0, canvas.width - p.width));
+}
+
+function updateFacingDirections() {
+  if (player1.x < player2.x) {
+    player1.facing = 1;
+    player2.facing = -1;
+  } else {
+    player1.facing = -1;
+    player2.facing = 1;
+  }
+}
+
+function updateMachineAI() {
+  if (!isVsMachine || gameOver) return;
+  const ai = getMachinePlayer();
+  const human = getHumanPlayer();
+  const s = machineSettings[machineDifficulty] || machineSettings.NORMAL;
+  if (machineAttackCooldown > 0) machineAttackCooldown--;
+  if (machineJumpCooldown > 0) machineJumpCooldown--;
+  const distance = Math.abs(human.x - ai.x);
+  const vertical = Math.abs(human.y - ai.y);
+  const direction = Math.sign(human.x - ai.x);
+  let multiplier = s.movementMultiplier;
+  if (isStoryMode && storyPhase === TOTAL_MISIONES) {
+    multiplier = Math.min(1.35, multiplier * 1.35);
+  } else if (isStoryMode && storyPhase >= 5) {
+    multiplier = Math.min(1.2, multiplier * 1.1);
+  }
+  if (
+    distance > s.approachDistance &&
+    !ai.isAttacking &&
+    ai.stunTimer <= 0
+  ) {
+    ai.x += direction * ai.speed * multiplier;
+  }
+  if (
+    distance < 65 &&
+    !ai.isAttacking &&
+    Math.random() < s.retreatChance
+  ) {
+    ai.x -= direction * ai.speed * multiplier;
+  }
+
+  if (
+    ai.y === floorY &&
+    distance > 100 &&
+    machineJumpCooldown <= 0 &&
+    Math.random() < s.jumpChance
+  ) {
+    jumpPlayer(ai);
+    machineJumpCooldown = 70;
+  }
+
+  let attackChance = s.attackChance;
+  if (isStoryMode && storyPhase === TOTAL_MISIONES) {
+    attackChance *= 1.8;
+  } else if (isStoryMode && storyPhase >= 5) {
+    attackChance *= 1.3;
+  }
+
+  if (
+    distance <= s.attackDistance &&
+    vertical < 65 &&
+    !ai.isAttacking &&
+    ai.stunTimer <= 0 &&
+    machineAttackCooldown <= 0 &&
+    Math.random() < attackChance
+  ) {
+    startAttack(ai);
+    machineAttackCooldown =
+      s.reactionFrames + Math.floor(Math.random() * 20);
+  }
+  ai.x = clamp(ai.x, 0, Math.max(0, canvas.width - ai.width));
+}
+
+function canHumanControlPlayer(index) {
+  return !isVsMachine || humanPlayerIndex === index;
+}
+
+// ------------------------------------------------------------
+// MODO HISTORIA
+// ------------------------------------------------------------
+const STORY_DIALOGUES = {
+  1: { title: 'CAPÍTULO 1 · LA NOCHE EN LA ENTERPRISE', before: [['COMPUTADORA', 'Alerta roja. Una forma de vida desconocida ha entrado por los conductos de mantenimiento.'], ['DATA', 'No está atacando los cuerpos: está alterando los impulsos eléctricos del cerebro. La tripulación no controla sus actos.'], ['PICARD', 'Nadie dispara para matar. Contened a nuestros compañeros y encontrad el origen de esta señal.']], afterWin: ['DATA', 'El tripulante ha recuperado el conocimiento. La señal sigue activa y se ha desplazado hacia las cubiertas de servicio.'], afterLose: ['PICARD', 'No confundáis a los afectados con el enemigo. Reorganizad la defensa; debemos detenerlos sin abandonarlos.'] },
+  2: { title: 'CAPÍTULO 2 · NADIE ES DE FIAR', before: [['RIKER', 'Los equipos de seguridad se atacan entre sí. La señal convierte el miedo en furia y bloquea cualquier orden racional.'], ['SPOCK', 'La conducta agresiva es inducida. Si localizamos el transmisor, podremos liberar a todos a la vez.']], afterWin: ['RIKER', 'Hemos abierto el paso a la cubierta de comunicaciones. Los registros muestran que la computadora está transmitiendo órdenes falsas.'], afterLose: ['SPOCK', 'La entidad aprende de nuestros patrones. Cambiad de estrategia y evitad reaccionar a sus provocaciones.'] },
+  3: { title: 'CAPÍTULO 3 · ÓRDENES FALSAS', before: [['UHURA', 'La computadora está imitando nuestras voces y enviando instrucciones contradictorias por toda la nave.'], ['PICARD', 'Aísle las comunicaciones internas. Yo abriré paso hasta el panel de control.'], ['DATA', 'La señal principal procede de ingeniería. Los combates están siendo utilizados para distraernos.']], afterWin: ['UHURA', 'Canales seguros restablecidos. Ya podemos distinguir las órdenes reales de las falsificaciones.'], afterLose: ['UHURA', 'No he podido aislar todos los canales. Seguid adelante: cada repetidor que desactivemos debilitará el control.'] },
+  4: { title: 'CAPÍTULO 4 · INGENIERÍA BAJO ASEDIO', before: [['SCOTTY', '¡Los motores están respondiendo a órdenes que yo no he dado! Si la señal toma el núcleo de propulsión, perderemos la nave.'], ['PICARD', 'Recupere el control manual. Nosotros mantendremos despejada la sala de máquinas.']], afterWin: ['SCOTTY', 'Motores bajo control manual. He encontrado una secuencia oculta: la señal está reuniendo las mentes de los huéspedes en una sola conciencia.'], afterLose: ['SCOTTY', 'Los motores siguen comprometidos. He aislado una parte del sistema, pero la fuente continúa activa. No tenemos tiempo que perder.'] },
+  5: { title: 'CAPÍTULO 5 · EL HILO CONDUCTOR', before: [['DATA', 'La entidad funciona como una red. Cada tripulante controlado actúa como repetidor y extiende su alcance.'], ['SEVEN OF NINE', 'No es tecnología Borg, aunque utiliza un principio parecido: una voluntad central y muchas mentes subordinadas.'], ['PICARD', 'Entonces iremos desconectando la red hasta que su controlador tenga que mostrarse.']], afterWin: ['SEVEN OF NINE', 'La red se ha fragmentado. He detectado una señal secundaria que no pertenece al organismo alienígena: alguien está aprovechando la invasión.'], afterLose: ['DATA', 'La señal ha cambiado de frecuencia. La red está aprendiendo, pero ahora sabemos que existe un segundo emisor dentro de la nave.'] },
+  6: { title: 'CAPÍTULO 6 · LA ÚLTIMA DEFENSA', before: [['WORF', 'La seguridad ha levantado una barricada. Mis propios oficiales intentan impedirnos el paso.'], ['SEVEN OF NINE', 'Puedo aislar la señal alienígena, pero alguien está protegiendo deliberadamente el transmisor.'], ['PICARD', 'No hemos llegado hasta aquí para entregar la Enterprise. Despejad el camino.']], afterWin: ['DATA', 'La señal primaria está localizada. El intruso que se aprovecha de la crisis es Khan. Más allá de él, la señal se conecta a una interfaz Borg.'], afterLose: ['SEVEN OF NINE', 'La red aún domina esta cubierta. Pero he identificado a quien está aprovechando el caos: Khan. Si cae, podremos llegar a la interfaz Borg.'] },
+  7: { title: 'CAPÍTULO 7 · KHAN', before: [['KHAN', 'Mientras vuestra tripulación se despedaza, yo tomaré el puente. Una nave como esta merece un capitán más fuerte.'], ['PICARD', 'No permitiré que uses el sufrimiento de mis oficiales para conquistar la Enterprise.'], ['DATA', 'Khan no es el origen del control mental; es un oportunista que pretende hacerse con la nave. Detenerlo es imprescindible para llegar al transmisor.']], afterWin: ['DATA', 'Khan ha sido derrotado y sus fuerzas se retiran. Antes de caer, confirmó que la señal está conectada a una interfaz Borg en el núcleo.'], afterLose: ['KHAN', 'Vuestra resistencia se desmorona. La Enterprise será mía y el caos habrá hecho el trabajo por mí.'] },
+  8: { title: 'CAPÍTULO 8 · LOCUTUS', before: [['SEVEN OF NINE', 'La interfaz Borg ha encontrado un huésped: Locutus. La entidad alienígena la usa para amplificar el control mental por toda la nave.'], ['LOCUTUS', 'Vuestras identidades serán silenciadas. Una sola voluntad decidirá por todos. La resistencia solo prolongará el sufrimiento.'], ['PICARD', 'Sé que aún hay alguien detrás de esa voz. Voy a detener la señal y devolverle a cada persona su propia mente.']], afterWin: ['DATA', 'La señal madre se ha extinguido. Los tripulantes están recuperando la consciencia y la computadora vuelve a obedecer a la tripulación. La Enterprise está a salvo.'], afterLose: ['LOCUTUS', 'La red permanece intacta. Vuestras mentes se unirán al colectivo y la Enterprise será el primer nodo de una nueva conciencia.'] }
+};
+let storyDialogueLines = [];
+let storyDialogueIndex = 0;
+let storyDialogueAfter = false;
+function startStoryDialogue(after = false) {
+  const d = STORY_DIALOGUES[storyPhase] || STORY_DIALOGUES[8];
+  if (after) {
+    const won = getStorySeriesWinner() === 1;
+    const reportTitle = won ? 'CONSECUENCIA' : 'LA AMENAZA CONTINÚA';
+    const outcome = won
+      ? (storyPhase === 7 ? 'Khan ha sido apartado del camino. La señal que controla a la tripulación sigue activa en la interfaz Borg.' : storyPhase === 8 ? 'La señal ha sido cortada. La tripulación empieza a recuperar el control de sus actos.' : 'La resistencia de esta cubierta ha cedido. El equipo ha obtenido una pista para llegar al origen de la invasión.')
+      : (storyPhase === 7 ? 'Khan sigue controlando el puente y la Enterprise corre el riesgo de caer en sus manos.' : storyPhase === 8 ? 'Locutus mantiene activa la red. La tripulación continúa atrapada bajo el control mental.' : 'La tripulación sigue bajo influencia alienígena. La ruta hacia el transmisor permanece peligrosa.');
+    const characterReport = won ? d.afterWin : d.afterLose;
+    storyDialogueLines = [[reportTitle, outcome], characterReport];
+  } else {
+    storyDialogueLines = d.before;
+  }
+  storyDialogueIndex = 0;
+  storyDialogueAfter = after;
+  gameState = 'STORY_DIALOGUE';
+}
+function continueStoryDialogue() {
+  if (storyDialogueIndex + 1 < storyDialogueLines.length) { storyDialogueIndex++; return; }
+  if (!storyDialogueAfter) {
+    currentArena = storyPhase; setArenaCombatants(currentArena); resetMatch(); gameState = 'STORY_FIGHT';
+  } else {
+    if (storyDialogueAfter) {
+      if (storyPhase === 4 || storyPhase === TOTAL_MISIONES) { beginShuttleMinigame(); return; }
+      if (storyPhase === 1) { storyPhase = 2; gameState = 'MAP'; return; }
+      if (storyPhase === 2) { storyPhase = 3; gameState = 'MAP'; return; }
+      if (storyPhase === 3) { storyPhase = 4; gameState = 'MAP'; return; }
+      if (storyPhase < TOTAL_MISIONES) { storyPhase++; gameState = 'MAP'; return; }
+      campaignCompleted = true; gameState = 'CAMPAIGN_COMPLETE'; return;
+    }
+    gameState = 'MAP';
+  }
+}
+function drawStoryDialogue() {
+  const w = canvas.width, h = canvas.height, d = STORY_DIALOGUES[storyPhase] || STORY_DIALOGUES[8];
+  ctx.fillStyle = '#020713'; ctx.fillRect(0, 0, w, h); drawParticles(true);
+  text('STAR TREK · EXPULSANDO EL NÚCLEO', w / 2, 44, 13, '#75edff', true);
+  text(d.title, w / 2, 86, 20, '#ffcf70', true);
+  ctx.fillStyle = 'rgba(6,20,38,.94)'; ctx.strokeStyle = '#49dff4'; ctx.lineWidth = 2;
+  ctx.fillRect(55, 135, w - 110, 190); ctx.strokeRect(55, 135, w - 110, 190);
+  const line = storyDialogueLines[storyDialogueIndex] || ['COMPUTADORA', ''];
+  text(line[0], w / 2, 177, 15, '#78efff', true);
+  const words = line[1].split(' '); let rows = [], row = '';
+  for (const word of words) { if ((row + ' ' + word).trim().length > 64) { rows.push(row); row = word; } else row = (row + ' ' + word).trim(); } if (row) rows.push(row);
+  rows.slice(0, 4).forEach((r, i) => text(r, w / 2, 215 + i * 24, 13, '#ffffff'));
+  text(`${storyDialogueIndex + 1}/${storyDialogueLines.length} · ESPACIO / INTRO: CONTINUAR`, w / 2, h - 42, 12, '#00ffcc', true);
+}
+
+function beginCampaign() {
+  // En historia, el jugador controla siempre al J1 (lado izquierdo).
+  // Evita que el selector de lado de otro modo deje la campaña desincronizada.
+  humanPlayerIndex = 1;
+  storyPhase = 1;
+  resetStorySeries();
+  campaignAttempts = 3;
+  campaignCompleted = false;
+  campaignFailed = false;
+  picardNexusStep = 0;
+  storyBonusDamage = 0;
+  storyBonusHealth = 0;
+  storyMachineDamage = 0;
+  storyDecision = '';
+  storyDecisionText = '';
+  storyIntroSeen = false;
+  currentArena = 1;
+  shuttleX = galaxyNodes[0].x;
+  shuttleY = galaxyNodes[0].y;
+  isStoryMode = true;
+  isVsMachine = true;
+}
+
+function chooseStoryDecision(choice) {
+  storyDecision = choice;
+  if (choice === 'ALLY') {
+    storyBonusHealth = 15;
+    storyBonusDamage = 0;
+    storyMachineDamage = 0;
+    storyDecisionText =
+      'Protegiste a tu aliado. Empiezas el próximo combate con salud adicional.';
+  } else if (choice === 'PURSUIT') {
+    storyBonusDamage = 3;
+    storyBonusHealth = 0;
+    storyMachineDamage = 0;
+    storyDecisionText =
+      'Perseguiste al enemigo. Tus ataques causarán más daño durante la campaña.';
+  } else if (choice === 'OBJECTIVE') {
+    storyBonusHealth = 5;
+    storyBonusDamage = 0;
+    storyMachineDamage = -1;
+    storyDecisionText =
+      'Aseguraste el objetivo. Tendrás algo más de salud y el enemigo golpeará menos.';
+  } else if (choice === 'REPAIR') {
+    storyBonusHealth = 20;
+    storyMachineDamage = 0;
+    storyDecisionText =
+      'Reparaste el equipo. Recuperas salud antes de seguir.';
+  } else if (choice === 'WEAPON') {
+    storyBonusDamage = 4;
+    storyBonusHealth = 0;
+    storyDecisionText =
+      'Mejoraste el armamento. Tus golpes serán más fuertes.';
+  } else if (choice === 'SAFE') {
+    storyBonusHealth = 10;
+    storyBonusDamage = 0;
+    storyMachineDamage = -2;
+    storyDecisionText =
+      'Elegiste la ruta segura. Recuperas salud y reduces el daño enemigo.';
+  }
+  gameState = 'MAP';
+}
+
+function resetStorySeries() {
+  storySeriesHumanWins = 0;
+  storySeriesMachineWins = 0;
+  storySeriesRoundsPlayed = 0;
+  storySeriesHumanHealthTotal = 0;
+  storySeriesMachineHealthTotal = 0;
+  storyRoundRecorded = false;
+}
+
+function getStorySeriesWinner() {
+  if (storySeriesHumanWins >= 2) return 1;
+  if (storySeriesMachineWins >= 2) return 2;
+  if (storySeriesRoundsPlayed < 3) return 0;
+
+  // Si el tercer combate termina empatado sin que nadie llegue a dos victorias,
+  // se usa la salud acumulada en la serie como desempate.
+  if (storySeriesHumanWins !== storySeriesMachineWins) {
+    return storySeriesHumanWins > storySeriesMachineWins ? 1 : 2;
+  }
+  if (storySeriesHumanHealthTotal !== storySeriesMachineHealthTotal) {
+    return storySeriesHumanHealthTotal > storySeriesMachineHealthTotal ? 1 : 2;
+  }
+  // Desempate final determinista: evita dejar la campaña bloqueada en un 0-0.
+  return 2;
+}
+
+function recordStoryBoutResult() {
+  if (!isStoryMode || !gameOver || storyRoundRecorded) return;
+  storyRoundRecorded = true;
+  storySeriesRoundsPlayed++;
+  const boutWinner = getRoundWinner();
+  const human = getHumanPlayer();
+  const machine = getMachinePlayer();
+  storySeriesHumanHealthTotal += human.health;
+  storySeriesMachineHealthTotal += machine.health;
+  if (boutWinner !== 0) {
+    const winningPlayer = boutWinner === 1 ? player1 : player2;
+    if (winningPlayer === human) storySeriesHumanWins++;
+    else storySeriesMachineWins++;
+  }
+}
+
+function startNextStoryBout() {
+  currentArena = storyPhase;
+  setArenaCombatants(currentArena);
+  resetMatch();
+  gameState = 'STORY_FIGHT';
+}
+
+function advanceStory() {
+  if (isStoryMode && gameOver) recordStoryBoutResult();
+  if (isStoryMode) {
+    const seriesWinner = getStorySeriesWinner();
+    if (seriesWinner === 0) {
+      // Aún no hay vencedor de la serie: jugar el siguiente combate.
+      startNextStoryBout();
+      return;
+    }
+    if (seriesWinner !== 1) return;
+    // La serie la ha ganado el jugador. Mostrar la escena posterior antes de avanzar.
+    resetStorySeries();
+    startStoryDialogue(true);
+    return;
+  } else if (!humanWonStoryPhase()) {
+    campaignAttempts--;
+    if (campaignAttempts <= 0) {
+      campaignAttempts = 0;
+      campaignFailed = true;
+      gameState = 'CAMPAIGN_FAILED';
+    } else {
+      gameState = 'RETRY';
+    }
+    return;
+  }
+
+  // Tras las misiones 4 y 8 se intercala la fase arcade de lanzadera.
+  if (storyPhase === 4 || storyPhase === TOTAL_MISIONES) {
+    beginShuttleMinigame();
+    return;
+  }
+
+  if (storyPhase === 1) {
+    storyPhase = 2;
+    gameState = 'DECISION_TACTICAL';
+    return;
+  }
+  if (storyPhase === 2) {
+    storyPhase = 3;
+    gameState = 'DECISION_RESCUE';
+    return;
+  }
+  if (storyPhase === 3) {
+    storyPhase = 4;
+    gameState = 'DECISION_EMERGENCY';
+    return;
+  }
+  if (storyPhase < TOTAL_MISIONES) {
+    storyPhase++;
+    gameState = 'MAP';
+    return;
+  }
+  campaignCompleted = true;
+  gameState = 'CAMPAIGN_COMPLETE';
+}
+
+function beginStoryDefeatCountdown() {
+  storyDefeatCountdownStart = frameCount;
+  storyDefeatAttemptCounted = false;
+  gameState = 'STORY_DEFEAT_COUNTDOWN';
+}
+
+function retryStoryFightImmediately() {
+  if (isStoryMode && gameOver) recordStoryBoutResult();
+  const seriesWinner = getStorySeriesWinner();
+
+  if (seriesWinner === 0) {
+    // La serie sigue abierta: el combate siguiente no consume un intento de campaña.
+    startNextStoryBout();
+    return;
+  }
+
+  // Solo perder la serie completa consume un intento. La revancha reinicia la serie.
+  campaignAttempts = Math.max(0, campaignAttempts - 1);
+  storyDefeatAttemptCounted = true;
+  if (campaignAttempts <= 0) {
+    campaignAttempts = 0;
+    campaignFailed = true;
+    gameState = 'STORY_NEED_TRAINING';
+    return;
+  }
+  resetStorySeries();
+  startNextStoryBout();
+}
+
+function handleStoryNeedTrainingContinue() {
+  if (campaignFailed || campaignAttempts <= 0) {
+    gameState = 'CAMPAIGN_FAILED';
+    return;
+  }
+  // Se agotó la ventana de revancha. Consume un intento y permite comenzar la serie de nuevo.
+  campaignAttempts = Math.max(0, campaignAttempts - 1);
+  if (campaignAttempts <= 0) {
+    campaignAttempts = 0;
+    campaignFailed = true;
+    gameState = 'CAMPAIGN_FAILED';
+    return;
+  }
+  resetStorySeries();
+  storyDefeatAttemptCounted = false;
+  gameState = 'RETRY';
+}
+
+function updateStoryDefeatCountdown() {
+  if (gameState !== 'STORY_DEFEAT_COUNTDOWN') return;
+  const elapsed = frameCount - storyDefeatCountdownStart;
+  if (elapsed >= STORY_DEFEAT_COUNTDOWN_FRAMES) {
+    gameState = 'STORY_NEED_TRAINING';
+  }
+}
+
+function drawStoryDefeatCountdown() {
+  ctx.fillStyle = '#000';
+  ctx.fillRect(0, 0, canvas.width, canvas.height);
+  const elapsed = Math.max(0, frameCount - storyDefeatCountdownStart);
+  const secondsLeft = Math.max(0, Math.ceil((STORY_DEFEAT_COUNTDOWN_FRAMES - elapsed) / 60));
+  text('COMBATE PERDIDO', canvas.width / 2, canvas.height * 0.32, 24, '#ff5555', true);
+  text('¿QUIERES VOLVER A PELEAR?', canvas.width / 2, canvas.height * 0.43, 18, '#fff', true);
+  text(`TIEMPO PARA REINTENTAR: ${secondsLeft}`, canvas.width / 2, canvas.height * 0.55, 22, '#ffcc00', true);
+  text('ESPACIO / INTRO: VOLVER A PELEAR', canvas.width / 2, canvas.height * 0.68, 14, '#00ffcc', true);
+  text('X / ESC: SALIR AL MENÚ', canvas.width / 2, canvas.height * 0.75, 12, '#aaaaaa');
+}
+
+function drawNeedMoreTraining() {
+  ctx.fillStyle = '#000';
+  ctx.fillRect(0, 0, canvas.width, canvas.height);
+  text('NECESITAS ENTRENAR MÁS', canvas.width / 2, canvas.height * 0.42, 26, '#ffcc00', true);
+  if (campaignFailed || campaignAttempts <= 0) {
+    text('Has agotado los intentos de la campaña.', canvas.width / 2, canvas.height * 0.52, 14, '#fff');
+    text('ESPACIO / INTRO: VER RESULTADO | X: MENÚ', canvas.width / 2, canvas.height * 0.65, 13, '#00ffcc', true);
+  } else {
+    text(`Te quedan ${campaignAttempts} intento(s) de campaña.`, canvas.width / 2, canvas.height * 0.52, 14, '#fff');
+    text('ESPACIO / INTRO: CONTINUAR | X: MENÚ', canvas.width / 2, canvas.height * 0.65, 13, '#00ffcc', true);
+  }
+}
+
+function beginShuttleMinigame() {
+  shuttleMaxHealth = 300;
+  shuttleHealth = 300;
+  shuttleTimer = 60 * 60;
+  shuttleHits = 0;
+  shuttlePlayerPunchTimer = 0;
+  shuttlePlayerX = canvas.width * 0.08;
+  shuttlePlayerY = null;
+  shuttleResult = '';
+  shuttleResultTimer = 0;
+  shuttleSparks = [];
+  shuttleBonus = 0;
+  gameState = 'SHUTTLE';
+}
+
+function finishShuttleMinigame(destroyed) {
+  if (gameState !== 'SHUTTLE') return;
+  shuttleResult = destroyed ? 'SHUTTLE DESTROYED!' : 'TIME OVER';
+  shuttleResultTimer = 0;
+  if (destroyed) {
+    shuttleBonus = 10;
+    storyBonusDamage += 0; // La bonificación es puntuación; no altera el equilibrio del combate.
+  }
+  gameState = 'SHUTTLE_RESULT';
+}
+
+function continueAfterShuttle() {
+  if (storyPhase >= TOTAL_MISIONES) {
+    if (isStoryMode && getCharacter(getHumanPlayer()).name === 'PICARD') {
+      // Final alternativo: Picard entra en el Nexus y solicita la ayuda de Kirk.
+      picardNexusStep = 0;
+      gameState = 'PICARD_NEXUS';
+    } else {
+      beginQTrial();
+    }
+  } else {
+    storyPhase++;
+    gameState = 'MAP';
+  }
+}
+
+function beginQTrial() {
+  qTrialTimer = 60;
+  qTrialPower = 3;
+  qTrialStability = 0;
+  qTrialStep = 0;
+  qTrialMessage = 'Q ha detenido el tiempo. ¡Demuestra que mereces sobrevivir!';
+  qTrialOutcome = '';
+  qTrialFrame = 0;
+  gameState = 'Q_TRIAL';
+}
+
+function chooseQTrialAction(action) {
+  if (gameState !== 'Q_TRIAL' || qTrialOutcome) return;
+  // Solución táctica: redirigir energía, estabilizar el campo y expulsar el núcleo.
+  if (qTrialStep === 0 && action === 1) {
+    qTrialPower += 2;
+    qTrialStep = 1;
+    qTrialMessage = 'Energía redirigida a los amortiguadores. ¡El núcleo empieza a estabilizarse!';
+  } else if (qTrialStep === 1 && action === 2) {
+    qTrialStability += 1;
+    qTrialPower -= 1;
+    qTrialStep = 2;
+    qTrialMessage = 'Conductos de plasma ventilados. La ventana de expulsión está abierta.';
+  } else if (qTrialStep === 2 && action === 3) {
+    qTrialOutcome = 'WIN';
+    qTrialMessage = '¡NÚCLEO EXPULSADO! La nave está a salvo.';
+    campaignCompleted = true;
+    gameState = 'Q_TRIAL_RESULT';
+    return;
+  } else {
+    qTrialTimer -= 8;
+    qTrialPower = Math.max(0, qTrialPower - 1);
+    qTrialMessage = '¡Error táctico! Q se impacienta y el núcleo se vuelve más inestable. Pierdes 8 segundos.';
+    if (qTrialTimer <= 0 || qTrialPower <= 0) {
+      qTrialOutcome = 'LOSE';
+      gameState = 'Q_TRIAL_RESULT';
+    }
+  }
+}
+
+function updateQTrial() {
+  if (gameState !== 'Q_TRIAL') return;
+  qTrialFrame++;
+  if (qTrialFrame % 60 === 0) qTrialTimer--;
+  if (qTrialTimer <= 0) {
+    qTrialTimer = 0;
+    qTrialOutcome = 'LOSE';
+    qTrialMessage = 'El tiempo se ha agotado. El núcleo ha alcanzado un punto crítico.';
+    gameState = 'Q_TRIAL_RESULT';
+  }
+}
+
+function drawQTrial() {
+  const w = canvas.width, h = canvas.height;
+  const bg = ctx.createLinearGradient(0, 0, w, h);
+  bg.addColorStop(0, '#050817'); bg.addColorStop(0.55, '#10243c'); bg.addColorStop(1, '#260d2d');
+  ctx.fillStyle = bg; ctx.fillRect(0, 0, w, h);
+  // Estrellas y marco táctico
+  for (let i = 0; i < 70; i++) {
+    const x = (i * 137 + 31) % w, y = (i * 83 + 17) % h;
+    ctx.fillStyle = i % 4 === 0 ? '#ffd36b' : '#8bdcff';
+    ctx.globalAlpha = 0.35 + ((i % 5) * 0.12);
+    ctx.fillRect(x, y, i % 6 === 0 ? 3 : 1.5, i % 6 === 0 ? 3 : 1.5);
+  }
+  ctx.globalAlpha = 1;
+  ctx.strokeStyle = '#66eaff'; ctx.lineWidth = 2; ctx.strokeRect(24, 22, w - 48, h - 44);
+  text('EL JUICIO DE Q', w / 2, 55, 27, '#ffe28a', true);
+  text('PROTOCOLO DE EXPULSIÓN DEL NÚCLEO', w / 2, 83, 13, '#82eaff', true);
+  // Retrato de Q desde assets/q_talk.png
+  const qBoxX = w / 2 - 105, qBoxY = 98, qBoxW = 210, qBoxH = 78;
+  ctx.fillStyle = 'rgba(5,10,25,0.88)'; ctx.fillRect(qBoxX, qBoxY, qBoxW, qBoxH);
+  ctx.strokeStyle = '#d5b6ff'; ctx.strokeRect(qBoxX, qBoxY, qBoxW, qBoxH);
+  if (qTalkImage.complete && qTalkImage.naturalWidth > 0) {
+    const ratio = Math.min((qBoxW - 8) / qTalkImage.naturalWidth, (qBoxH - 8) / qTalkImage.naturalHeight);
+    const drawW = qTalkImage.naturalWidth * ratio, drawH = qTalkImage.naturalHeight * ratio;
+    ctx.drawImage(qTalkImage, w / 2 - drawW / 2, qBoxY + (qBoxH - drawH) / 2, drawW, drawH);
+  } else {
+    text('Q', w / 2, 137, 35, '#e7d1ff', true);
+  }
+  text('«La inteligencia es vuestra última oportunidad.»', w / 2, 190, 13, '#f4eaff');
+  // Temporizador y barra
+  const seconds = Math.max(0, qTrialTimer);
+  text(`TIEMPO: ${String(Math.floor(seconds / 60)).padStart(2, '0')}:${String(seconds % 60).padStart(2, '0')}`, w / 2, 220, 22, seconds <= 10 ? '#ff5d66' : '#ffd36b', true);
+  ctx.fillStyle = '#293747'; ctx.fillRect(w * 0.2, 232, w * 0.6, 12);
+  ctx.fillStyle = seconds <= 10 ? '#ff4655' : '#56e5ff'; ctx.fillRect(w * 0.2, 232, w * 0.6 * Math.max(0, qTrialTimer / 60), 12);
+  ctx.strokeStyle = '#d8f8ff'; ctx.strokeRect(w * 0.2, 232, w * 0.6, 12);
+  text(`RESERVA DE ENERGÍA: ${qTrialPower}`, w / 2, 272, 14, '#8df5ff', true);
+  const tasks = [
+    '1. REDIRIGIR ENERGÍA A LOS AMORTIGUADORES',
+    '2. VENTILAR LOS CONDUCTOS DE PLASMA',
+    '3. EXPULSAR EL NÚCLEO'
+  ];
+  for (let i = 0; i < tasks.length; i++) {
+    const y = 305 + i * 38;
+    ctx.fillStyle = i < qTrialStep ? 'rgba(40,190,130,0.22)' : 'rgba(15,30,48,0.85)';
+    ctx.fillRect(w * 0.14, y - 20, w * 0.72, 29);
+    ctx.strokeStyle = i < qTrialStep ? '#55f0b0' : '#527b99'; ctx.strokeRect(w * 0.14, y - 20, w * 0.72, 29);
+    text((i < qTrialStep ? '✓ ' : '') + tasks[i], w / 2, y, 12, i < qTrialStep ? '#79ffc7' : '#e4f6ff', true);
+  }
+  ctx.fillStyle = 'rgba(1,5,15,0.92)'; ctx.fillRect(w * 0.1, h - 82, w * 0.8, 48);
+  ctx.strokeStyle = '#66eaff'; ctx.strokeRect(w * 0.1, h - 82, w * 0.8, 48);
+  text(qTrialMessage, w / 2, h - 62, 11, '#ffffff', true);
+  text('PULSA 1, 2 O 3 PARA ELEGIR MANIOBRA · X: ABANDONAR', w / 2, h - 18, 10, '#8df5ff', true);
+}
+
+function drawQTrialResult() {
+  const w = canvas.width, h = canvas.height;
+  ctx.fillStyle = '#030713'; ctx.fillRect(0, 0, w, h);
+  overlay(0.72);
+  const won = qTrialOutcome === 'WIN';
+  text(won ? 'JUICIO SUPERADO' : 'JUICIO PERDIDO', w / 2, h / 2 - 48, 30, won ? '#7dffbe' : '#ff6474', true);
+  text(won ? 'El núcleo ha sido expulsado. Q reconoce vuestra astucia.' : 'El núcleo ha colapsado. Q dicta sentencia.', w / 2, h / 2 - 8, 14, '#ffffff', true);
+  text(won ? '«Admito que los humanos aún pueden sorprenderme.» — Q' : '«Qué decepción. Volved a intentarlo, si os atrevéis.» — Q', w / 2, h / 2 + 24, 12, '#d7c8ff', true);
+  text('ESPACIO / INTRO: VOLVER AL MENÚ', w / 2, h / 2 + 65, 13, '#8df5ff', true);
+}
+
+function updateShuttleMinigame() {
+  if (gameState !== 'SHUTTLE') return;
+
+  // Movimiento del personaje seleccionado con WASD o flechas, limitado al área visible.
+  const moveSpeed = 4;
+  if (keys.ArrowLeft || keys.a || keys.A) shuttlePlayerX -= moveSpeed;
+  if (keys.ArrowRight || keys.d || keys.D) shuttlePlayerX += moveSpeed;
+  if (keys.ArrowUp || keys.w || keys.W) shuttlePlayerY = (shuttlePlayerY ?? canvas.height * 0.35) - moveSpeed;
+  if (keys.ArrowDown || keys.s || keys.S) shuttlePlayerY = (shuttlePlayerY ?? canvas.height * 0.35) + moveSpeed;
+  const drawWidth = Math.min(canvas.width * 0.23, 190);
+  const shuttleCharacter = getCharacter(getHumanPlayer());
+  const img = shuttlePlayerPunchTimer > 0 ? shuttleCharacter.punchImg : shuttleCharacter.guardImg;
+  const drawHeight = img && img.naturalWidth > 0
+    ? drawWidth * img.naturalHeight / img.naturalWidth
+    : drawWidth * 1.7;
+  shuttlePlayerX = clamp(shuttlePlayerX, 0, Math.max(0, canvas.width - drawWidth));
+  const minY = 85;
+  const maxY = Math.max(minY, canvas.height - drawHeight - 45);
+  if (shuttlePlayerY === null) shuttlePlayerY = maxY;
+  shuttlePlayerY = clamp(shuttlePlayerY, minY, maxY);
+
+  if (shuttlePlayerPunchTimer > 0) shuttlePlayerPunchTimer--;
+  if (shuttleTimer > 0) shuttleTimer--;
+  if (shuttleTimer <= 0) {
+    finishShuttleMinigame(false);
+    return;
+  }
+  for (const spark of shuttleSparks) {
+    spark.x += spark.vx;
+    spark.y += spark.vy;
+    spark.vy += 0.12;
+    spark.life--;
+  }
+  shuttleSparks = shuttleSparks.filter(spark => spark.life > 0);
+}
+
+function hitShuttle() {
+  if (gameState !== 'SHUTTLE') return;
+  shuttleHealth = Math.max(0, shuttleHealth - 5);
+  shuttleHits++;
+  shuttlePlayerPunchTimer = 9;
+  const cx = canvas.width * 0.62 + (Math.random() - 0.5) * 150;
+  const cy = canvas.height * 0.57 + (Math.random() - 0.5) * 75;
+  for (let i = 0; i < 9; i++) {
+    const angle = Math.random() * Math.PI * 2;
+    const speed = 1 + Math.random() * 4;
+    shuttleSparks.push({
+      x: cx, y: cy, vx: Math.cos(angle) * speed,
+      vy: Math.sin(angle) * speed, life: 15 + Math.floor(Math.random() * 18)
+    });
+  }
+  if (shuttleHealth <= 0) finishShuttleMinigame(true);
+}
+
+function drawShuttleMinigame() {
+  const w = canvas.width, h = canvas.height;
+  // El hangar solo se dibuja en el minijuego; las ocho arenas originales no cambian.
+  if (shuttleHangarBackground.complete && shuttleHangarBackground.naturalWidth > 0) {
+    ctx.drawImage(shuttleHangarBackground, 0, 0, w, h);
+    // Ligero velo para mantener legibles el HUD y los efectos del minijuego.
+    ctx.fillStyle = 'rgba(2, 9, 20, 0.16)';
+    ctx.fillRect(0, 0, w, h);
+  } else {
+    // Fondo alternativo mientras carga el PNG o si no está disponible.
+    const sky = ctx.createLinearGradient(0, 0, 0, h);
+    sky.addColorStop(0, '#071426');
+    sky.addColorStop(1, '#182b3b');
+    ctx.fillStyle = sky;
+    ctx.fillRect(0, 0, w, h);
+    ctx.strokeStyle = '#24516a'; ctx.lineWidth = 3;
+    for (let x = 25; x < w; x += 90) {
+      ctx.beginPath(); ctx.moveTo(x, 35); ctx.lineTo(x + 25, h - 80); ctx.stroke();
+    }
+    ctx.fillStyle = '#101820'; ctx.fillRect(0, h - 75, w, 75);
+    ctx.strokeStyle = '#42616d'; ctx.lineWidth = 2;
+    ctx.beginPath(); ctx.moveTo(0, h - 75); ctx.lineTo(w, h - 75); ctx.stroke();
+  }
+  // Lanzadera Galileo: usa los PNG del usuario y mantiene la misma caja/posición.
+  const galileoImage = shuttleHealth <= 0
+    ? galileoDestruida
+    : shuttleHealth <= (shuttleMaxHealth / 2) ? galileoDanada : galileoIntacta;
+  const shuttleDrawWidth = w * 0.66;
+  const shuttleDrawHeight = galileoImage.naturalWidth > 0
+    ? shuttleDrawWidth * galileoImage.naturalHeight / galileoImage.naturalWidth
+    : shuttleDrawWidth * 0.42;
+  const shuttleDrawX = w * 0.34;
+  const shuttleDrawY = h * 0.35;
+  if (galileoImage.complete && galileoImage.naturalWidth > 0) {
+    ctx.drawImage(galileoImage, shuttleDrawX, shuttleDrawY, shuttleDrawWidth, shuttleDrawHeight);
+  } else {
+    // Indicador temporal si aún no se han copiado/cargado los PNG.
+    ctx.fillStyle = '#d7e1e8';
+    ctx.fillRect(shuttleDrawX, shuttleDrawY + 30, shuttleDrawWidth, 70);
+    ctx.fillStyle = '#d62828';
+    ctx.fillRect(shuttleDrawX + 100, shuttleDrawY + 65, shuttleDrawWidth - 180, 10);
+    text('FALTAN LOS PNG DE GALILEO EN assets/', w / 2, h * 0.31, 13, '#ffcf4a', true);
+  }
+  // El minijuego usa el personaje que el jugador seleccionó para la campaña.
+  // Al pulsar ESPACIO/INTRO se muestra brevemente su sprite de ataque.
+  const shuttleCharacter = getCharacter(getHumanPlayer());
+  const playerImage = shuttlePlayerPunchTimer > 0 ? shuttleCharacter.punchImg : shuttleCharacter.guardImg;
+  const playerDrawWidth = Math.min(w * 0.23, 190);
+  const playerDrawHeight = playerImage && playerImage.naturalWidth > 0
+    ? playerDrawWidth * playerImage.naturalHeight / playerImage.naturalWidth
+    : playerDrawWidth * 1.7;
+  const playerDrawX = shuttlePlayerX;
+  const playerDrawY = shuttlePlayerY === null
+    ? h - playerDrawHeight - 70
+    : clamp(shuttlePlayerY, 85, Math.max(85, h - playerDrawHeight - 45));
+  if (playerImage && playerImage.complete && playerImage.naturalWidth > 0) {
+    ctx.drawImage(playerImage, playerDrawX, playerDrawY, playerDrawWidth, playerDrawHeight);
+  }
+  // HUD arcade
+  text('BONUS STAGE', w / 2, 34, 25, '#ffcf4a', true);
+  text('DESTROY THE SHUTTLE!', w / 2, 62, 15, '#ffffff', true);
+  text(`TIME ${String(Math.ceil(shuttleTimer / 60)).padStart(2, '0')}`, w - 90, 35, 18, '#ffcf4a', true);
+  text(`HITS ${shuttleHits}`, 78, 35, 16, '#8df4ff', true);
+  ctx.fillStyle = '#273744'; ctx.fillRect(w * 0.35, 82, w * 0.42, 18);
+  ctx.fillStyle = shuttleHealth > (shuttleMaxHealth * 0.4) ? '#41d66b' : '#ff573d';
+  ctx.fillRect(w * 0.35, 82, w * 0.42 * (shuttleHealth / shuttleMaxHealth), 18);
+  ctx.strokeStyle = '#e4f4ff'; ctx.strokeRect(w * 0.35, 82, w * 0.42, 18);
+  for (const spark of shuttleSparks) {
+    ctx.fillStyle = '#ffd166'; ctx.globalAlpha = Math.max(0, spark.life / 30);
+    ctx.fillRect(spark.x, spark.y, 4, 4);
+  }
+  ctx.globalAlpha = 1;
+  text('WASD / FLECHAS: MOVERSE | ESPACIO / INTRO: GOLPEAR', w / 2, h - 25, 12, '#d6e7ef', true);
+}
+
+function drawShuttleResult() {
+  drawShuttleMinigame();
+  overlay(0.72);
+  text(shuttleResult, canvas.width / 2, canvas.height / 2 - 12, 28,
+    shuttleResult === 'SHUTTLE DESTROYED!' ? '#ffcf4a' : '#ff755e', true);
+  text(shuttleResult === 'SHUTTLE DESTROYED!' ? 'BONUS +10' : 'THE CAMPAIGN CONTINUES',
+    canvas.width / 2, canvas.height / 2 + 22, 15, '#ffffff', true);
+  text('ESPACIO / INTRO: CONTINUAR', canvas.width / 2, canvas.height / 2 + 58, 13, '#8df4ff', true);
+}
+
+// ------------------------------------------------------------
+// CONTROLES DEL TECLADO
+// ------------------------------------------------------------
+canvas.addEventListener('click', (event) => {
+  if (gameState !== 'CHARACTER_SELECT' || !isVsMachine || isStoryMode) return;
+  const rect = canvas.getBoundingClientRect();
+  const x = (event.clientX - rect.left) * canvas.width / rect.width;
+  const y = (event.clientY - rect.top) * canvas.height / rect.height;
+  if (selectRosterCharacterAt(x, y)) {
+    // La máquina mantiene su selección salvo que coincida con el personaje humano.
+  }
+});
+
+window.addEventListener('keydown', (e) => {
+  if (e.key === ' ' || e.key.startsWith('Arrow')) {
+    e.preventDefault();
+  }
+
+  if (gameState === 'TRIBBLES_EASTER_EGG' || gameState === 'SPOCK_EASTER_EGG') {
+    if (e.key === ' ' || e.key === 'Enter' || e.key.toLowerCase() === 'x' || e.key === 'Escape') {
+      gameState = 'MENU';
+      easterEggKeySequence = [];
+      easterEggLetterBuffer = '';
+    }
+    return;
+  }
+
+  if (gameState === 'MENU') {
+    const secretKey = e.key.length === 1 ? e.key.toLowerCase() : e.key;
+    easterEggKeySequence.push(secretKey);
+    if (easterEggKeySequence.length > TRIBBLES_SECRET_SEQUENCE.length) easterEggKeySequence.shift();
+    if (easterEggKeySequence.length === TRIBBLES_SECRET_SEQUENCE.length &&
+      easterEggKeySequence.every((key, index) => key === TRIBBLES_SECRET_SEQUENCE[index])) {
+      gameState = 'TRIBBLES_EASTER_EGG';
+      easterEggKeySequence = [];
+      easterEggLetterBuffer = '';
+      return;
+    }
+    if (e.key.length === 1 && /^[a-z]$/i.test(e.key)) {
+      easterEggLetterBuffer = (easterEggLetterBuffer + e.key.toUpperCase()).slice(-4);
+      if (easterEggLetterBuffer === 'LLAP') {
+        gameState = 'SPOCK_EASTER_EGG';
+        easterEggKeySequence = [];
+        easterEggLetterBuffer = '';
+        return;
+      }
+    }
+
+    if (e.key === ' ') {
+      gameState = 'MODE_SELECT';
+    } else if (e.key.toLowerCase() === 'c') {
+      gameState = 'CREDITS';
+    }
+    return;
+  }
+
+  if (gameState === 'MODE_SELECT') {
+    if (e.key === '1') {
+      isStoryMode = false;
+      isVsMachine = false;
+      campaignCompleted = false;
+      campaignFailed = false;
+      currentArena = 1;
+      gameState = 'CHARACTER_SELECT';
+    } else if (e.key === '2') {
+      isStoryMode = false;
+      isVsMachine = true;
+      campaignCompleted = false;
+      campaignFailed = false;
+      currentArena = 1;
+      gameState = 'CHARACTER_SELECT';
+    } else if (e.key === '3') {
+      beginCampaign();
+      gameState = 'CHARACTER_SELECT';
+    } else if (e.key === '4') {
+      beginTrainingMode();
+    } else if (
+      e.key.toLowerCase() === 'x' ||
+      e.key === 'Escape'
+    ) {
+      gameState = 'MENU';
+    }
+    return;
+  }
+
+  if (gameState === 'TRAINING_BRIDGE') {
+    if (e.key === 'ArrowLeft' || e.key.toLowerCase() === 'a') {
+      changeTrainingCharacter(-1);
+    } else if (e.key === 'ArrowRight' || e.key.toLowerCase() === 'd') {
+      changeTrainingCharacter(1);
+    } else if (e.key === ' ' || e.key === 'Enter') {
+      if (trainingDialogueIndex < trainingDialogue.length - 1) trainingDialogueIndex++;
+      else gameState = 'TRAINING_BRIEFING';
+    } else if (e.key === 'Escape' || e.key.toLowerCase() === 'x') gameState = 'MODE_SELECT';
+    return;
+  }
+
+  if (gameState === 'TRAINING_BRIEFING') {
+    if (e.key === ' ' || e.key === 'Enter') beginTrainingShootingRange();
+    else if (e.key === 'Escape' || e.key.toLowerCase() === 'x') gameState = 'MODE_SELECT';
+    return;
+  }
+
+  if (gameState === 'TRAINING_SHOOTING_RANGE') {
+    if (e.key === 'Escape' || e.key.toLowerCase() === 'x') { for (const k in keys) keys[k] = false; gameState = 'MODE_SELECT'; return; }
+    if (trainingRangeGame && trainingRangeGame.over && (e.key === ' ' || e.key === 'Enter') && !e.repeat) {
+      if (trainingRangeGame.passed) beginStarshipMode(); else beginTrainingShootingRange();
+      return;
+    }
+    if ((e.key === ' ' || e.key === 'Enter') && !e.repeat) { fireTrainingRangeShot(); return; }
+    keys[e.key] = true;
+    return;
+  }
+
+  if (gameState === 'TRAINING_COMPLETE') {
+    if (e.key === ' ' || e.key === 'Enter' || e.key === 'Escape' || e.key.toLowerCase() === 'x') gameState = 'MODE_SELECT';
+    return;
+  }
+
+  if (gameState === 'INTELLIGENCE_TEST' || gameState === 'STAR_TREK_TRIVIA') {
+    const type = gameState === 'INTELLIGENCE_TEST' ? 'intelligence' : 'trivia';
+    const feedback = type === 'intelligence' ? intelligenceFeedback : triviaFeedback;
+    if (e.key === 'Escape' || e.key.toLowerCase() === 'x') {
+      for (const k in keys) keys[k] = false;
+      gameState = 'MODE_SELECT'; return;
+    }
+    if (feedback !== null) {
+      if (e.key === ' ' || e.key === 'Enter') advanceTrainingQuestion(type);
+    } else if (/^[1-4]$/.test(e.key)) {
+      answerTrainingQuestion(type, Number(e.key) - 1);
+    }
+    return;
+  }
+
+  if (gameState === 'KOBAYASHI_MARU') {
+    if (e.key === 'Escape' || e.key.toLowerCase() === 'x') {
+      for (const k in keys) keys[k] = false;
+      gameState = 'MODE_SELECT'; return;
+    }
+    if (kobayashiMaruStage === 1 && /^[1-3]$/.test(e.key)) {
+      chooseKobayashiMaruOption(Number(e.key) - 1);
+    } else if ((e.key === ' ' || e.key === 'Enter') && !e.repeat) {
+      advanceKobayashiMaru();
+    }
+    return;
+  }
+
+  if (gameState === 'STARSHIP_RACE') {
+    if (e.key === 'Escape' || e.key.toLowerCase() === 'x') {
+      for (const k in keys) keys[k] = false;
+      gameState = 'MODE_SELECT';
+      return;
+    }
+    if (starshipRaceGame && starshipRaceGame.over && (e.key === ' ' || e.key === 'Enter')) {
+      if (starshipRaceGame.won) beginHolodeckLevel();
+      else beginStarshipRace();
+      return;
+    }
+    keys[e.key] = true;
+    return;
+  }
+
+  if (gameState === 'HOLODECK') {
+    if (e.key === 'Escape' || e.key.toLowerCase() === 'x') { for (const k in keys) keys[k] = false; gameState = 'MODE_SELECT'; return; }
+    if (holodeckGame && (holodeckGame.over || holodeckGame.complete) && (e.key === ' ' || e.key === 'Enter')) {
+      if (holodeckGame.complete) {
+        if (trainingCircuitIndex < holodeckCourses.length - 1) beginHolodeckLevel(trainingCircuitIndex + 1);
+        else beginIntelligenceTest();
+      } else beginHolodeckLevel(trainingCircuitIndex);
+      return;
+    }
+    if ((e.key === ' ' || e.key === 'ArrowUp' || e.key.toLowerCase() === 'w') && !e.repeat && holodeckGame) holodeckGame.player.jumpRequested = true;
+    keys[e.key] = true;
+    return;
+  }
+
+  if (gameState === 'CHARACTER_SELECT') {
+    if (e.key.toLowerCase() === 'a') {
+      player1.charIndex =
+        (player1.charIndex - 1 + availableCharacters.length) %
+        availableCharacters.length;
+      updatePlayerAttributes(player1);
+    } else if (e.key.toLowerCase() === 'd') {
+      player1.charIndex =
+        (player1.charIndex + 1) % availableCharacters.length;
+      updatePlayerAttributes(player1);
+    }
+
+    if (e.key.toLowerCase() === 'w') {
+      player2.charIndex =
+        (player2.charIndex - 1 + availableCharacters.length) %
+        availableCharacters.length;
+      updatePlayerAttributes(player2);
+    } else if (e.key.toLowerCase() === 's') {
+      player2.charIndex =
+        (player2.charIndex + 1) % availableCharacters.length;
+      updatePlayerAttributes(player2);
+    }
+
+    if (isVsMachine && e.key.toLowerCase() === 'q') {
+      humanPlayerIndex = humanPlayerIndex === 1 ? 2 : 1;
+    }
+
+    if (e.key === ' ') {
+      // Aplicar los combatientes correspondientes a la arena inicial.
+      // En los modos contra la máquina se conserva el personaje humano.
+      setArenaCombatants(currentArena);
+      resetMatch();
+      gameState = isStoryMode ? 'INTRO' : 'FIGHT';
+    } else if (
+      e.key.toLowerCase() === 'x' ||
+      e.key === 'Escape'
+    ) {
+      gameState = 'MODE_SELECT';
+    }
+
+    return;
+  }
+
+  if (gameState === 'INTRO') {
+    if (e.key === ' ' || e.key === 'Enter') {
+      gameState = 'MAP';
+    } else if (
+      e.key.toLowerCase() === 'x' ||
+      e.key === 'Escape'
+    ) {
+      gameState = 'MENU';
+    }
+    return;
+  }
+
+  if (gameState === 'DECISION_TACTICAL') {
+    if (e.key === '1') chooseStoryDecision('ALLY');
+    else if (e.key === '2') chooseStoryDecision('PURSUIT');
+    else if (e.key === '3') chooseStoryDecision('OBJECTIVE');
+    return;
+  }
+
+  if (gameState === 'DECISION_RESCUE') {
+    if (e.key === '1') chooseStoryDecision('ALLY');
+    else if (e.key === '2') chooseStoryDecision('PURSUIT');
+    else if (e.key === '3') chooseStoryDecision('OBJECTIVE');
+    return;
+  }
+
+  if (gameState === 'DECISION_EMERGENCY') {
+    if (e.key === '1') chooseStoryDecision('REPAIR');
+    else if (e.key === '2') chooseStoryDecision('WEAPON');
+    else if (e.key === '3') chooseStoryDecision('SAFE');
+    return;
+  }
+
+  if (gameState === 'STORY_DIALOGUE') {
+    if (e.key === ' ' || e.key === 'Enter') continueStoryDialogue();
+    else if (e.key === 'Escape' || e.key.toLowerCase() === 'x') gameState = 'MENU';
+    return;
+  }
+
+  if (gameState === 'MAP') {
+    if (e.key === ' ' || e.key === 'Enter') {
+      resetStorySeries();
+      startStoryDialogue(false);
+    } else if (
+      e.key.toLowerCase() === 'x' ||
+      e.key === 'Escape'
+    ) {
+      gameState = 'MODE_SELECT';
+    }
+    return;
+  }
+
+  if (gameState === 'STORY_DEFEAT_COUNTDOWN') {
+    if (e.key === ' ' || e.key === 'Enter') {
+      if (!e.repeat) retryStoryFightImmediately();
+    } else if (e.key.toLowerCase() === 'x' || e.key === 'Escape') {
+      gameState = 'MENU';
+    }
+    return;
+  }
+
+  if (gameState === 'STORY_NEED_TRAINING') {
+    if (e.key === ' ' || e.key === 'Enter') {
+      handleStoryNeedTrainingContinue();
+    } else if (e.key.toLowerCase() === 'x' || e.key === 'Escape') {
+      gameState = 'MENU';
+    }
+    return;
+  }
+
+  if (gameState === 'RETRY') {
+    if (e.key === ' ' || e.key === 'Enter') {
+      resetStorySeries();
+      currentArena = storyPhase;
+      setArenaCombatants(currentArena);
+      resetMatch();
+      gameState = 'STORY_FIGHT';
+    } else if (
+      e.key.toLowerCase() === 'x' ||
+      e.key === 'Escape'
+    ) {
+      gameState = 'MENU';
+    }
+
+    return;
+  }
+
+  if (gameState === 'Q_TRIAL') {
+    if (e.key === '1' || e.key === '2' || e.key === '3') {
+      chooseQTrialAction(Number(e.key));
+    } else if (e.key.toLowerCase() === 'x' || e.key === 'Escape') {
+      gameState = 'MENU';
+    }
+    return;
+  }
+
+  if (gameState === 'Q_TRIAL_RESULT') {
+    if (e.key === ' ' || e.key === 'Enter' || e.key.toLowerCase() === 'x' || e.key === 'Escape') {
+      resetMatch();
+      gameState = 'MENU';
+    }
+    return;
+  }
+
+  if (gameState === 'PICARD_NEXUS') {
+    if ((e.key === ' ' || e.key === 'Enter') && !e.repeat) {
+      if (picardNexusStep < 3) {
+        picardNexusStep++;
+      } else {
+        beginQTrial();
+      }
+    } else if (e.key.toLowerCase() === 'x' || e.key === 'Escape') {
+      gameState = 'MENU';
+    }
+    return;
+  }
+
+  if (
+    gameState === 'CAMPAIGN_COMPLETE' ||
+    gameState === 'CAMPAIGN_FAILED'
+  ) {
+    if (
+      e.key === ' ' ||
+      e.key === 'Enter' ||
+      e.key.toLowerCase() === 'x' ||
+      e.key === 'Escape'
+    ) {
+      resetMatch();
+      gameState = 'MENU';
+    }
+
+    return;
+  }
+
+  if (gameState === 'CREDITS') {
+    if (
+      e.key.toLowerCase() === 'x' ||
+      e.key === 'Escape'
+    ) {
+      gameState = 'MENU';
+    }
+
+    return;
+  }
+
+
+  if (gameState === 'SHUTTLE') {
+    if (['ArrowLeft', 'ArrowRight', 'ArrowUp', 'ArrowDown', ' '].includes(e.key)) e.preventDefault();
+    if (['ArrowLeft', 'ArrowRight', 'ArrowUp', 'ArrowDown', 'a', 'A', 'd', 'D', 'w', 'W', 's', 'S'].includes(e.key)) {
+      keys[e.key] = true;
+    }
+    if ((e.key === ' ' || e.key === 'Enter') && !e.repeat) {
+      hitShuttle();
+    } else if (e.key === 'Escape' || e.key.toLowerCase() === 'x') {
+      finishShuttleMinigame(false);
+    }
+    return;
+  }
+
+  if (gameState === 'SHUTTLE_RESULT') {
+    if (e.key === ' ' || e.key === 'Enter') continueAfterShuttle();
+    else if (e.key === 'Escape' || e.key.toLowerCase() === 'x') gameState = 'MENU';
+    return;
+  }
+
+  if (gameState === 'STARSHIP') {
+    if (e.key === 'Escape' || e.key.toLowerCase() === 'x') {
+      for (const k in keys) keys[k] = false;
+      gameState = 'MODE_SELECT';
+      return;
+    }
+    if (starshipGame && starshipGame.over && (e.key === ' ' || e.key === 'Enter')) {
+      if (starshipGame.missionComplete) beginStarshipRace();
+      else beginStarshipMode();
+      return;
+    }
+    keys[e.key] = true;
+    return;
+  }
+
+  if (gameOver) {
+    // Ignorar cambios de pantalla durante los primeros 5 segundos de la caída.
+    if (frameCount - gameOverFrame < GAME_OVER_PAUSE_FRAMES) return;
+
+    if (e.key === ' ' || e.key === 'Enter') {
+      if (isStoryMode) {
+        advanceStory();
+      } else {
+        resetMatch();
+        gameState = 'FIGHT';
+      }
+    } else if (
+      e.key.toLowerCase() === 'x' ||
+      e.key === 'Escape'
+    ) {
+      resetMatch();
+      gameState = 'MENU';
+    }
+
+    return;
+  }
+
+  keys[e.key] = true;
+
+  if (
+    canHumanControlPlayer(1) &&
+    e.key.toLowerCase() === 'w' &&
+    player1.y === floorY
+  ) {
+    jumpPlayer(player1);
+  }
+
+  if (
+    canHumanControlPlayer(2) &&
+    e.key === 'ArrowUp' &&
+    player2.y === floorY
+  ) {
+    jumpPlayer(player2);
+  }
+
+  if (canHumanControlPlayer(1) && e.key === ' ') {
+    startAttack(player1);
+  }
+
+  if (canHumanControlPlayer(2) && e.key === 'Enter') {
+    startAttack(player2);
+  }
+
+  // En combate libre, E avanza a la siguiente arena
+  // y actualiza también los combatientes.
+  if (
+    gameState === 'FIGHT' &&
+    e.key.toLowerCase() === 'e'
+  ) {
+    nextArena();
+  }
+});
+
+window.addEventListener('keyup', (e) => {
+  keys[e.key] = false;
+});
+
+window.addEventListener('blur', () => {
+  for (const k in keys) keys[k] = false;
+});
+
+// ------------------------------------------------------------
+// FONDOS, PARTÍCULAS Y UTILIDADES DE DIBUJO
+// ------------------------------------------------------------
+
+function drawBackground() {
+  const arenaIndex = clamp(
+    currentArena - 1,
+    0,
+    arenaImages.length - 1
+  );
+
+  const img = arenaImages[arenaIndex];
+
+  if (img && img.complete && img.naturalWidth > 0) {
+    ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+  } else {
+    ctx.fillStyle = '#0f172a';
+    ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+    // Fondo alternativo si la imagen no existe
+    // o todavía no ha terminado de cargar.
+    ctx.save();
+    ctx.strokeStyle = 'rgba(0,255,255,0.18)';
+    ctx.lineWidth = 1;
+    for (let x = 0; x < canvas.width; x += 40) {
+      ctx.beginPath();
+      ctx.moveTo(x, 0);
+      ctx.lineTo(x, canvas.height);
+      ctx.stroke();
+    }
+
+    for (let y = 0; y < canvas.height; y += 40) {
+      ctx.beginPath();
+      ctx.moveTo(0, y);
+      ctx.lineTo(canvas.width, y);
+      ctx.stroke();
+    }
+    ctx.restore();
+  }
+
+  drawParticles(true);
+}
+
+function drawParticles(move) {
+  for (const p of energyParticles) {
+    if (move) {
+      p.y -= p.speedY;
+      if (p.y < 0) {
+        p.y = canvas.height;
+        p.x = Math.random() * canvas.width;
+      }
+    }
+
+    ctx.globalAlpha = p.opacity;
+    ctx.fillStyle = '#00ffff';
+    ctx.fillRect(p.x, p.y, p.size, p.size);
+  }
+
+  ctx.globalAlpha = 1;
+}
+
+function drawTitleBackground() {
+  if (
+    titleScreenImage.complete &&
+    titleScreenImage.naturalWidth > 0
+  ) {
+    ctx.drawImage(
+      titleScreenImage,
+      0,
+      0,
+      canvas.width,
+      canvas.height
+    );
+  } else {
+    drawBackground();
+  }
+}
+
+function overlay(alpha = 0.8) {
+  ctx.fillStyle = `rgba(0,0,0,${alpha})`;
+  ctx.fillRect(0, 0, canvas.width, canvas.height);
+}
+
+function text(str, x, y, size = 16, color = '#fff', bold = false) {
+  ctx.fillStyle = color;
+  ctx.font = `${bold ? 'bold ' : ''}${size}px monospace`;
+  ctx.textAlign = 'center';
+  ctx.fillText(str, x, y);
+}
+
+// ------------------------------------------------------------
+// ------------------------------------------------------------
+// EASTER EGGS SECRETOS
+// ------------------------------------------------------------
+function drawTribble(x, y, r, variant = 0) {
+  ctx.save();
+  ctx.fillStyle = 'rgba(0,0,0,0.25)';
+  ctx.beginPath(); ctx.ellipse(x + 2, y + r * 0.68, r * 0.9, r * 0.28, 0, 0, Math.PI * 2); ctx.fill();
+  const colors = ['#b98a55', '#c7b08b', '#8b684d', '#d2bd96'];
+  ctx.fillStyle = colors[variant % colors.length];
+  ctx.beginPath(); ctx.arc(x, y, r, 0, Math.PI * 2); ctx.fill();
+  ctx.save();
+  ctx.beginPath(); ctx.arc(x, y, r - 1, 0, Math.PI * 2); ctx.clip();
+  ctx.strokeStyle = 'rgba(70,42,24,0.42)'; ctx.lineWidth = Math.max(1, r * 0.08);
+  for (let i = -2; i <= 2; i++) {
+    ctx.beginPath(); ctx.arc(x + i * r * 0.25, y - r * 0.15, r * 0.62, 0.2, Math.PI - 0.2); ctx.stroke();
+  }
+  ctx.fillStyle = 'rgba(255,244,215,0.85)';
+  ctx.beginPath(); ctx.arc(x - r * 0.2, y - r * 0.18, Math.max(1.3, r * 0.055), 0, Math.PI * 2); ctx.fill();
+  ctx.restore();
+  ctx.restore();
+}
+
+function drawTribbleEasterEgg() {
+  drawTitleBackground();
+  overlay(0.48);
+  for (let i = 0; i < 42; i++) {
+    const x = 22 + ((i * 137) % Math.max(1, canvas.width - 44));
+    const y = 130 + ((i * 59) % Math.max(1, canvas.height - 180));
+    const r = 10 + (i % 5) * 2;
+    drawTribble(x, y, r, i % 4);
+  }
+  text('¡INVASIÓN DE TRIBBLES!', canvas.width / 2, 65, 27, '#ffcf72', true);
+  text('ALERTA DE LA FLOTA ESTELAR: LOS TRIBBLES SE HAN MULTIPLICADO', canvas.width / 2, 100, 11, '#ffffff', true);
+  text('Parece que alguien ha traído demasiados tribbles a bordo...', canvas.width / 2, canvas.height - 57, 12, '#fff1d6');
+  text('ESPACIO / INTRO / X: VOLVER AL MENÚ', canvas.width / 2, canvas.height - 27, 12, '#8df4ff', true);
+}
+
+function drawSpockEasterEgg() {
+  drawTitleBackground();
+  overlay(0.72);
+  text('TRANSMISIÓN PRIVADA DE SPOCK', canvas.width / 2, 100, 22, '#8df4ff', true);
+  text('🖖', canvas.width / 2, 235, 104, '#7ce7ff', true);
+  text('LARGA VIDA Y PROSPERIDAD', canvas.width / 2, 315, 24, '#ffcf72', true);
+  text('La lógica indica que has encontrado un secreto.', canvas.width / 2, 360, 14, '#ffffff');
+  text('— SPOCK', canvas.width / 2, 393, 13, '#8df4ff', true);
+  text('ESPACIO / INTRO / X: VOLVER AL MENÚ', canvas.width / 2, canvas.height - 30, 12, '#8df4ff', true);
+}
+
+// MENÚS
+// ------------------------------------------------------------
+function drawMainMenu() {
+  drawTitleBackground();
+  overlay(0.45);
+
+  text('STAR TREK', canvas.width / 2, 150, 36, '#00ffff', true);
+  text(
+    'EXPULSANDO EL NÚCLEO',
+    canvas.width / 2,
+    195,
+    23,
+    '#ffcc00',
+    true
+  );
+
+  text(
+    'PRESIONA [ ESPACIO ] PARA JUGAR',
+    canvas.width / 2,
+    370,
+    18,
+    '#00ffcc',
+    true
+  );
+
+  text('[ C ] CRÉDITOS', canvas.width / 2, 410, 14);
+}
+
+function drawModeSelect() {
+  drawTitleBackground();
+  overlay(0.84);
+
+  text('SELECCIONA MODO DE JUEGO', 400, 90, 25, '#00ffff', true);
+  text('[ 1 ] COMBATE LIBRE (2 JUGADORES)', 400, 165, 18, '#ffcc00', true);
+  text('[ 2 ] COMBATE LIBRE CONTRA LA MÁQUINA', 400, 220, 17, '#ffcc00', true);
+  text('[ 3 ] MODO HISTORIA CONTRA LA MÁQUINA', 400, 275, 17, '#00ffcc', true);
+  text('[ 4 ] ENTRENAMIENTO ESTELAR: PUENTE + PHASERS + HOLODECK', 400, 330, 13, '#8df4ff', true);
+  text('X / ESC: VOLVER', 400, 405, 13);
+}
+
+// ------------------------------------------------------------
+// SELECCIÓN DE PERSONAJES
+// Tarjetas centradas y marco luminoso independiente.
+// El sprite del segundo participante se refleja solo aquí.
+// ------------------------------------------------------------
+
+function drawSelectionFrame(x, y, width, height, color) {
+  ctx.save();
+  ctx.shadowColor = color;
+  ctx.shadowBlur = 18;
+  ctx.strokeStyle = color;
+  ctx.lineWidth = 2;
+  ctx.strokeRect(x, y, width, height);
+  ctx.shadowBlur = 0;
+  ctx.strokeStyle = 'rgba(255,255,255,0.55)';
+  ctx.lineWidth = 1;
+  ctx.strokeRect(x + 5, y + 5, width - 10, height - 10);
+  ctx.restore();
+}
+
+function drawCharacterCard(p, centerX, index) {
+  const c = getCharacter(p);
+  const cardWidth = 250;
+  const cardHeight = 300;
+  const cardX = centerX - cardWidth / 2;
+  const cardY = 95;
+  const color = index === 1 ? '#00ffff' : '#ff9900';
+  drawSelectionFrame(
+    cardX,
+    cardY,
+    cardWidth,
+    cardHeight,
+    color
+  );
+
+  const heading = isVsMachine
+    ? (humanPlayerIndex === index ? 'TÚ' : 'MÁQUINA')
+    : `JUGADOR ${index}`;
+  text(heading, centerX, 78, 14, color, true);
+
+  if (c.guardImg.complete && c.guardImg.naturalWidth > 0) {
+    const spriteWidth = 140;
+    const spriteHeight = 190;
+    const spriteX = centerX - spriteWidth / 2;
+    const spriteY = 110;
+    ctx.save();
+    if (index === 2) {
+      // Solo se refleja la imagen de la tarjeta derecha.
+      ctx.translate(centerX, spriteY + spriteHeight / 2);
+      ctx.scale(-1, 1);
+      ctx.drawImage(
+        c.guardImg,
+        -spriteWidth / 2,
+        -spriteHeight / 2,
+        spriteWidth,
+        spriteHeight
+      );
+    } else {
+      ctx.drawImage(
+        c.guardImg,
+        spriteX,
+        spriteY,
+        spriteWidth,
+        spriteHeight
+      );
+    }
+    ctx.restore();
+  }
+
+  text(c.name, centerX, 320, 20, '#fff', true);
+  text(c.role, centerX, 343, 11, '#00ffcc');
+  text(
+    `Personaje ${p.charIndex + 1}/${availableCharacters.length}`,
+    centerX,
+    365,
+    12
+  );
+}
+
+
+// Selector en cuadrícula para Player vs Máquina: todos los luchadores visibles.
+function drawVsMachineRoster() {
+  const cols = 8;
+  const rows = Math.ceil(availableCharacters.length / cols);
+  const marginX = 24;
+  const topY = 68;
+  const gapX = 6;
+  const gapY = 7;
+  const cardW = (canvas.width - marginX * 2 - gapX * (cols - 1)) / cols;
+  const cardH = Math.min(82, (canvas.height - topY - 65 - gapY * (rows - 1)) / rows);
+  const humanIndex = humanPlayerIndex === 1 ? player1.charIndex : player2.charIndex;
+  const machineIndex = humanPlayerIndex === 1 ? player2.charIndex : player1.charIndex;
+
+  text('ELIGE TU LUCHADOR', canvas.width / 2, 42, 21, '#00ffff', true);
+  text('HAZ CLIC EN UNA TARJETA · A/D O W/S: CAMBIAR RIVAL · ESPACIO: COMBATIR', canvas.width / 2, canvas.height - 13, 9, '#00ffcc', true);
+
+  for (let i = 0; i < availableCharacters.length; i++) {
+    const col = i % cols;
+    const row = Math.floor(i / cols);
+    const x = marginX + col * (cardW + gapX);
+    const y = topY + row * (cardH + gapY);
+    const ch = availableCharacters[i];
+    const isHuman = i === humanIndex;
+    const isMachine = i === machineIndex;
+    const color = isHuman ? '#00ffff' : (isMachine ? '#ff9900' : 'rgba(150,190,210,0.65)');
+
+    ctx.save();
+    ctx.fillStyle = isHuman ? 'rgba(0,180,255,0.22)' : (isMachine ? 'rgba(255,140,0,0.16)' : 'rgba(5,18,34,0.86)');
+    ctx.fillRect(x, y, cardW, cardH);
+    ctx.strokeStyle = color;
+    ctx.lineWidth = (isHuman || isMachine) ? 2 : 1;
+    ctx.strokeRect(x, y, cardW, cardH);
+
+    if (ch.guardImg && ch.guardImg.complete && ch.guardImg.naturalWidth > 0) {
+      const iw = 36;
+      const ih = cardH - 24;
+      ctx.drawImage(ch.guardImg, x + (cardW - iw) / 2, y + 3, iw, ih);
+    }
+    text(ch.name, x + cardW / 2, y + cardH - 8, 10, isHuman ? '#7df7ff' : (isMachine ? '#ffc078' : '#ffffff'), true);
+    if (isHuman || isMachine) {
+      ctx.fillStyle = color;
+      ctx.beginPath();
+      ctx.arc(x + cardW - 7, y + 7, 3, 0, Math.PI * 2);
+      ctx.fill();
+    }
+    ctx.restore();
+  }
+}
+
+function selectRosterCharacterAt(x, y) {
+  const cols = 8;
+  const marginX = 24;
+  const topY = 68;
+  const gapX = 6;
+  const gapY = 7;
+  const rows = Math.ceil(availableCharacters.length / cols);
+  const cardW = (canvas.width - marginX * 2 - gapX * (cols - 1)) / cols;
+  const cardH = Math.min(82, (canvas.height - topY - 65 - gapY * (rows - 1)) / rows);
+  const col = Math.floor((x - marginX) / (cardW + gapX));
+  const row = Math.floor((y - topY) / (cardH + gapY));
+  if (col < 0 || col >= cols || row < 0 || row >= rows) return false;
+  const localX = (x - marginX) - col * (cardW + gapX);
+  const localY = (y - topY) - row * (cardH + gapY);
+  if (localX > cardW || localY > cardH) return false;
+  const idx = row * cols + col;
+  if (idx < 0 || idx >= availableCharacters.length) return false;
+
+  const human = humanPlayerIndex === 1 ? player1 : player2;
+  const machine = humanPlayerIndex === 1 ? player2 : player1;
+  human.charIndex = idx;
+  updatePlayerAttributes(human);
+  // Evita que la máquina use el mismo personaje: avanza al siguiente disponible.
+  if (machine.charIndex === idx) {
+    machine.charIndex = (idx + 1) % availableCharacters.length;
+    updatePlayerAttributes(machine);
+  }
+  return true;
+}
+
+function drawCharacterSelect() {
+  drawTitleBackground();
+  overlay(0.84);
+
+  if (isVsMachine && !isStoryMode) {
+    drawVsMachineRoster();
+    text(`DIFICULTAD: ${machineDifficulty}`, 400, 57, 10, '#ffcc00');
+    return;
+  }
+
+  text('SELECCIÓN DE COMBATIENTES', 400, 40, 23, '#00ffff', true);
+  drawCharacterCard(player1, 200, 1);
+  drawCharacterCard(player2, 600, 2);
+  if (isVsMachine) {
+    text('Q: CAMBIAR LADO', 400, 380, 12);
+    text(
+      `DIFICULTAD: ${machineDifficulty}`,
+      400,
+      400,
+      12,
+      '#ffcc00'
+    );
+  }
+
+  text('A/D: CAMBIAR J1 | W/S: CAMBIAR J2', 400, 420, 11);
+  text('ESPACIO: CONFIRMAR | X: VOLVER', 400, 440, 11, '#00ffcc');
+}
+
+function drawCredits() {
+  drawTitleBackground();
+  overlay(0.85);
+  text('CRÉDITOS', 400, 90, 25, '#00ffff', true);
+  text('Star Trek: Expulsando el núcleo', 400, 145, 16, '#ffcc00');
+  text('Creado con JavaScript y Canvas', 400, 185, 14);
+  text('Un regalo sin ánimo de lucro', 400, 240, 14, '#00ffcc');
+  text('Con cariño, el hermano de Ramón.', 400, 300, 14, '#ff9900');
+  text('X / ESC: VOLVER', 400, 390, 14);
+}
+
+// ------------------------------------------------------------
+// INTRODUCCIÓN DE LA CAMPAÑA: OCHO MISIONES
+// ------------------------------------------------------------
+function drawIntro() {
+  drawTitleBackground();
+  overlay(0.88);
+  text('ACADEMIA DE LA FLOTA ESTELAR', 400, 90, 23, '#00ffff', true);
+  text(`Cadete ${getHumanPlayer().name}`, 400, 145, 18, '#ffcc00', true);
+  text('Tu entrenamiento determinará tu futuro.', 400, 195, 14);
+  text('Supera las ocho misiones y expulsa el núcleo.', 400, 225, 14);
+  text('Dispones de TRES INTENTOS para toda la campaña.', 400, 270, 15, '#ff7777', true);
+  text('Las decisiones pueden ayudarte en los próximos combates.', 400, 305, 13);
+  text('PRESIONA ESPACIO PARA COMENZAR', 400, 385, 15, '#00ffcc', true);
+}
+
+// ------------------------------------------------------------
+// PANTALLAS DE DECISIONES
+// ------------------------------------------------------------
+function drawDecision() {
+  drawTitleBackground();
+  overlay(0.9);
+
+  if (gameState === 'DECISION_TACTICAL') {
+    text('DECISIÓN TÁCTICA', 400, 70, 25, '#00ffff', true);
+    text('La simulación presenta tres objetivos urgentes.', 400, 120, 14);
+  } else if (gameState === 'DECISION_RESCUE') {
+    text('RESCATE EN EL ESPACIO', 400, 70, 25, '#00ffff', true);
+    text('Un aliado está en peligro y el enemigo intenta escapar.', 400, 120, 13);
+  } else {
+    text('EMERGENCIA ESTELAR', 400, 70, 25, '#00ffff', true);
+    text('Prepara tus recursos antes de continuar la campaña.', 400, 120, 14);
+  }
+
+  if (gameState === 'DECISION_EMERGENCY') {
+    text('[ 1 ] REPARAR EL EQUIPO: +SALUD', 400, 195, 15, '#00ffcc');
+    text('[ 2 ] MEJORAR ARMAS: +DAÑO', 400, 240, 15, '#ffcc00');
+    text('[ 3 ] RUTA SEGURA: REDUCE DAÑO ENEMIGO', 400, 285, 14, '#fff');
+  } else {
+    text('[ 1 ] PROTEGER AL ALIADO: +SALUD', 400, 195, 15, '#00ffcc');
+    text('[ 2 ] PERSEGUIR AL ENEMIGO: +DAÑO', 400, 240, 15, '#ffcc00');
+    text('[ 3 ] ASEGURAR EL OBJETIVO: EQUILIBRIO', 400, 285, 14, '#fff');
+  }
+
+  text('PULSA 1, 2 O 3 PARA DECIDIR', 400, 370, 15, '#00ffcc', true);
+}
+
+
+// ------------------------------------------------------------
+// MAPA DE LAS OCHO MISIONES
+// ------------------------------------------------------------
+function drawStoryMap() {
+  ctx.fillStyle = '#030712';
+  ctx.fillRect(0, 0, canvas.width, canvas.height);
+  drawParticles(true);
+
+  text('STAR TREK: CRISIS EN LA ENTERPRISE', 400, 30, 17, '#00ffff', true);
+  text(
+    `ARENA ${storyPhase}/${TOTAL_MISIONES} | INTENTOS: ${campaignAttempts}/3`,
+    400,
+    57,
+    14,
+    '#ffcc00',
+    true
+  );
+
+  ctx.strokeStyle = 'rgba(0,255,255,0.4)';
+  ctx.setLineDash([5, 5]);
+  ctx.beginPath();
+
+  galaxyNodes.forEach((n, i) => {
+    if (i === 0) {
+      ctx.moveTo(n.x, n.y);
+    } else {
+      ctx.lineTo(n.x, n.y);
+    }
+  });
+
+  ctx.stroke();
+  ctx.setLineDash([]);
+  galaxyNodes.forEach((n, i) => {
+    const nodeNumber = i + 1;
+    ctx.beginPath();
+    ctx.arc(
+      n.x,
+      n.y,
+      nodeNumber === storyPhase ? 11 : 7,
+      0,
+      Math.PI * 2
+    );
+
+    ctx.fillStyle =
+      nodeNumber === storyPhase
+        ? '#ffcc00'
+        : nodeNumber < storyPhase
+          ? '#00ffcc'
+          : '#4b5563';
+    ctx.fill();
+
+    text(String(nodeNumber), n.x, n.y + 4, 9, '#030712', true);
+    text(n.name, n.x, n.y + 20, 8, '#fff');
+  });
+
+  const target = galaxyNodes[storyPhase - 1];
+  shuttleX += (target.x - shuttleX) * 0.1;
+  shuttleY += (target.y - shuttleY) * 0.1;
+  text('▲', shuttleX, shuttleY - 13, 15, '#00ffcc', true);
+  const info = storyDetails[storyPhase];
+  text(info.title, 400, 330, 14, '#ffcc00', true);
+  text(info.desc, 400, 355, 11);
+  text('ESPACIO: INICIAR MISIÓN', 400, 385, 13, '#00ffcc', true);
+
+  if (storyDecisionText) {
+    text(storyDecisionText, 400, 420, 9, '#fff');
+  }
+
+}
+// ------------------------------------------------------------
+// HUD: SALUD, TIEMPO Y NOMBRE DE LA ARENA
+// ------------------------------------------------------------
+function drawHUD() {
+  ctx.fillStyle = 'rgba(0,0,0,0.72)';
+  ctx.fillRect(35, 15, 230, 47);
+  ctx.fillRect(canvas.width - 265, 15, 230, 47);
+  // Barra superior: salud. Barra inferior: energía/escudo.
+  ctx.fillStyle = '#555';
+  ctx.fillRect(45, 30, 200, 16);
+  ctx.fillRect(canvas.width - 255, 30, 200, 16);
+  ctx.fillStyle = '#39ff14';
+  ctx.fillRect(45, 30, 2 * clamp(player1.health, 0, 100), 16);
+  ctx.fillRect(canvas.width - 255, 30, 2 * clamp(player2.health, 0, 100), 16);
+
+  ctx.fillStyle = '#25384b';
+  ctx.fillRect(45, 50, 200, 8);
+  ctx.fillRect(canvas.width - 255, 50, 200, 8);
+  ctx.fillStyle = '#20cfff';
+  ctx.fillRect(45, 50, 2 * clamp(player1.energy || 0, 0, player1.maxEnergy || 100), 8);
+  ctx.fillRect(
+    canvas.width - 255,
+    50,
+    2 * clamp(player2.energy || 0, 0, player2.maxEnergy || 100),
+    8
+  );
+
+  text(player1.name, 145, 25, 12, '#fff', true);
+  text(player2.name, canvas.width - 155, 25, 12, '#fff', true);
+  text(timeText, canvas.width / 2, 39, 16, '#ffcc00', true);
+  if (isStoryMode) {
+    text(
+      `HISTORIA ${storyPhase}/${TOTAL_MISIONES} | INTENTOS ${campaignAttempts}/3`,
+      canvas.width / 2,
+      65,
+      12,
+      '#ffcc00',
+      true
+    );
+    text(`SERIE ${storySeriesHumanWins}-${storySeriesMachineWins} | COMBATE ${Math.min(storySeriesRoundsPlayed + 1, 3)}/3`, canvas.width / 2, 82, 10, '#8df4ff', true);
+  } else {
+    const arenaName = arenaNames[currentArena - 1] || 'Arena';
+
+    text(
+      `MODO LIBRE | ARENA ${currentArena}/${TOTAL_ARENAS}: ${arenaName} | E CAMBIA ARENA`,
+      canvas.width / 2,
+      65,
+      10,
+      '#ffcc00'
+    );
+  }
+
+  if (getCharacter(player1).name === 'RIKER' || getCharacter(player2).name === 'RIKER') {
+    text('RIKER: MANTÉN S / FLECHA ABAJO + ESPACIO / INTRO = GOLPE CON SILLA', canvas.width / 2, 88, 10, '#8df4ff', true);
+  }
+  if (getCharacter(player1).name === 'LAFORGE' || getCharacter(player2).name === 'LAFORGE') {
+    text('LAFORGE: S + ESPACIO / FLECHA ABAJO + INTRO = PATADA ESPECIAL', canvas.width / 2, 104, 10, '#8df4ff', true);
+    text('COMBOS: conecta varios golpes seguidos en menos de 1,5 s para aumentar el daño', canvas.width / 2, 120, 9, '#ffcf4a', true);
+  }
+  for (const p of [player1, player2]) {
+    if (p.comboDisplayTimer > 0 && p.comboCount >= 2 && !gameOver) {
+      const x = p === player1 ? 145 : canvas.width - 155;
+      const damageBonus = Math.min(8, (p.comboCount - 1) * 2);
+      text(`COMBO x${p.comboCount}! +${damageBonus}`, x, 78, 13, '#ffcf4a', true);
+    }
+  }
+}
+
+// ------------------------------------------------------------
+// DIBUJO DE LOS PERSONAJES DURANTE EL COMBATE
+// Se mantiene la orientación y el sistema original de sprites.
+// ------------------------------------------------------------
+function imageIsReady(img) {
+  return !!(img && img.complete && img.naturalWidth > 0 && img.naturalHeight > 0);
+}
+
+function drawCharacterImage(p, img, y) {
+  if (!imageIsReady(img)) return false;
+  ctx.save();
+  if (p.hitFlashTimer > 0) ctx.filter = 'brightness(2.1) saturate(0.18)';
+  if (p.facing === -1) {
+    ctx.translate(p.x + p.width / 2, y + p.height / 2);
+    ctx.scale(-1, 1);
+    ctx.drawImage(img, -p.width / 2, -p.height / 2, p.width, p.height);
+  } else {
+    ctx.drawImage(img, p.x, y, p.width, p.height);
+  }
+  ctx.restore();
+  return true;
+}
+
+function drawDefeatedCharacterImage(p, img, uprightY) {
+  if (!imageIsReady(img)) return false;
+
+  // Mantener exactamente la caja del sprite de pie, sin escalarlo ni analizar
+  // sus márgenes transparentes: así la caída usa el suelo real del combate.
+  const drawWidth = p.width;
+  const drawHeight = p.height;
+  const groundY = uprightY + p.height;
+  const centerY = groundY - drawWidth / 2;
+  const centerX = clamp(p.x + p.width / 2, drawWidth / 2, canvas.width - drawWidth / 2);
+  const isOnLeftSide = (p.x + p.width / 2) < (canvas.width / 2);
+
+  ctx.save();
+  ctx.translate(centerX, centerY);
+  // Quien cae a la izquierda se tumba hacia la izquierda; quien cae a la
+  // derecha se tumba hacia la derecha. El tamaño original se conserva.
+  ctx.rotate(isOnLeftSide ? -Math.PI / 2 : Math.PI / 2);
+  ctx.drawImage(img, -drawWidth / 2, -drawHeight / 2, drawWidth, drawHeight);
+  ctx.restore();
+  return true;
+}
+
+function drawSprite(p) {
+  const c = getCharacter(p);
+  let y = p.y + (BASE_HEIGHT - p.height);
+  if (p.name === 'MARINA') y -= 40;
+
+  // Picard toca la flauta cuando gana el combate.
+  if (gameOver && picardVictory && c.name === 'PICARD' && imageIsReady(picardFlute)) {
+    drawCharacterImage(p, picardFlute, y);
+    return;
+  }
+
+  if (gameOver) {
+    const winner = getRoundWinner();
+    const playerNumber = p === player1 ? 1 : 2;
+    const isDefeated = winner === 0 || winner !== playerNumber;
+    if (isDefeated && drawDefeatedCharacterImage(p, c.guardImg, y)) return;
+    // El vencedor termina de pie, en pose neutral, no congelado a mitad de golpe.
+    if (drawCharacterImage(p, c.guardImg, y)) return;
+  } else if (c.name === 'RIKER') {
+    // Alterna entre las dos poses normales y las dos poses con silla.
+    // Si alguna imagen adicional falta o tarda en cargar, vuelve a la pose normal.
+    if (p.isAttacking) {
+      const attackImg = p.attackStyle === 'chair' ? c.chairPunchImg : c.punchImg;
+      if (drawCharacterImage(p, attackImg, y)) return;
+      if (p.attackStyle === 'chair' && drawCharacterImage(p, c.punchImg, y)) return;
+      if (drawCharacterImage(p, c.guardImg, y)) return;
+    } else {
+      const guardImg = isRikerChairGuardHeld(p) ? c.chairGuardImg : c.guardImg;
+      if (drawCharacterImage(p, guardImg, y)) return;
+      if (drawCharacterImage(p, c.guardImg, y)) return;
+      if (drawCharacterImage(p, c.punchImg, y)) return;
+    }
+    return;
+  } else if (c.name === 'LAFORGE') {
+    if (p.isAttacking) {
+      const attackImg = p.attackStyle === 'kick' ? c.kickImg : c.punchImg;
+      if (drawCharacterImage(p, attackImg, y)) return;
+      // Si la nueva imagen aún no carga, conserva un sprite visible.
+      if (p.attackStyle === 'kick' && drawCharacterImage(p, c.punchImg, y)) return;
+      if (drawCharacterImage(p, c.guardImg, y)) return;
+    } else {
+      if (drawCharacterImage(p, c.guardImg, y)) return;
+      if (drawCharacterImage(p, c.punchImg, y)) return;
+    }
+    return;
+  } else {
+    const img = p.isAttacking ? c.punchImg : c.guardImg;
+    if (drawCharacterImage(p, img, y)) return;
+    // Para el resto del elenco, intenta la otra pose si la actual aún no carga.
+    drawCharacterImage(p, p.isAttacking ? c.guardImg : c.punchImg, y);
+    return;
+  }
+
+  // Respaldo por si el sprite de guardia todavía está cargando.
+  drawCharacterImage(p, c.punchImg, y);
+}
+
+// ------------------------------------------------------------
+// FIN DEL COMBATE
+// ------------------------------------------------------------
+function drawGameOver() {
+  // Durante cinco segundos se ve la caída antes de mostrar el resultado.
+  if (frameCount - gameOverFrame < GAME_OVER_PAUSE_FRAMES) return;
+
+  if (isStoryMode) {
+    recordStoryBoutResult();
+    const boutWinner = getRoundWinner();
+    const seriesWinner = getStorySeriesWinner();
+    const human = getHumanPlayer();
+    const humanWonBout = boutWinner !== 0 && (boutWinner === (human === player1 ? 1 : 2));
+
+    // Si la máquina gana el combate y la serie aún no está decidida, la cuenta atrás
+    // permite iniciar el siguiente combate. Si ya ganó la serie, permite reiniciarla.
+    if (seriesWinner === 2 || (!humanWonBout && boutWinner !== 0 && seriesWinner === 0)) {
+      if (gameState !== 'STORY_DEFEAT_COUNTDOWN') beginStoryDefeatCountdown();
+      return;
+    }
+  }
+
+  overlay(0.82);
+  text(roundWinnerMessage, canvas.width / 2, canvas.height / 2 - 30, 21, '#ffcc00', true);
+
+  if (isStoryMode) {
+    const boutWinner = getRoundWinner();
+    const seriesWinner = getStorySeriesWinner();
+    let headline;
+    if (seriesWinner === 1) {
+      headline = `MISIÓN SUPERADA · SERIE ${storySeriesHumanWins}-${storySeriesMachineWins}`;
+    } else if (boutWinner === 0) {
+      headline = 'COMBATE EMPATADO';
+    } else if (boutWinner === (getHumanPlayer() === player1 ? 1 : 2)) {
+      headline = `COMBATE GANADO · SERIE ${storySeriesHumanWins}-${storySeriesMachineWins}`;
+    } else {
+      headline = `COMBATE PERDIDO · SERIE ${storySeriesHumanWins}-${storySeriesMachineWins}`;
+    }
+    text(headline, canvas.width / 2, canvas.height / 2 + 10, 15, '#ffffff', true);
+    text(`ARENA ${storyPhase}/${TOTAL_MISIONES} | COMBATE ${storySeriesRoundsPlayed}/3`, canvas.width / 2, canvas.height / 2 + 34, 13, '#ffcc00', true);
+    text(`MARCADOR DE LA SERIE: ${storySeriesHumanWins}-${storySeriesMachineWins}`, canvas.width / 2, canvas.height / 2 + 56, 13, '#00ffcc', true);
+    text(seriesWinner === 1 ? 'ESPACIO: CONTINUAR MISIÓN' : 'ESPACIO: SIGUIENTE COMBATE', canvas.width / 2, canvas.height / 2 + 82, 13, '#00ffcc', true);
+  } else {
+    text('ESPACIO: REVANCHA | X: MENÚ', canvas.width / 2, canvas.height / 2 + 30, 14, '#00ffcc');
+  }
+}
+
+function drawPicardNexusEnding() {
+  const w = canvas.width, h = canvas.height;
+  const bg = ctx.createLinearGradient(0, 0, w, h);
+  bg.addColorStop(0, '#030711');
+  bg.addColorStop(0.48, '#19142d');
+  bg.addColorStop(1, '#070b19');
+  ctx.fillStyle = bg;
+  ctx.fillRect(0, 0, w, h);
+  drawParticles(true);
+
+  // La cinta luminosa del Nexus: capas doradas para sugerir el espacio-tiempo.
+  ctx.save();
+  ctx.globalAlpha = 0.18;
+  ctx.strokeStyle = '#ffd875';
+  ctx.lineWidth = 24;
+  ctx.beginPath();
+  ctx.ellipse(w * 0.5, h * 0.47, w * 0.43, h * 0.18, -0.22, 0, Math.PI * 2);
+  ctx.stroke();
+  ctx.globalAlpha = 0.65;
+  ctx.strokeStyle = '#ffdc82';
+  ctx.lineWidth = 3;
+  ctx.beginPath();
+  ctx.ellipse(w * 0.5, h * 0.47, w * 0.43, h * 0.18, -0.22, 0, Math.PI * 2);
+  ctx.stroke();
+  ctx.restore();
+
+  // Reutiliza los sprites existentes de Picard y Kirk sin necesitar nuevos assets.
+  const charW = Math.min(115, w * 0.145);
+  const charH = charW * 600 / 340;
+  if (imageIsReady(picardGuard)) {
+    ctx.save();
+    ctx.translate(w * 0.27 + charW / 2, h * 0.61);
+    ctx.scale(1, 1);
+    ctx.drawImage(picardGuard, -charW / 2, -charH / 2, charW, charH);
+    ctx.restore();
+  } else {
+    ctx.fillStyle = '#d7aa55'; ctx.fillRect(w * 0.27 - 22, h * 0.48, 44, 100);
+  }
+  if (imageIsReady(kirkGuard)) {
+    ctx.save();
+    ctx.translate(w * 0.73 + charW / 2, h * 0.61);
+    ctx.scale(-1, 1);
+    ctx.drawImage(kirkGuard, -charW / 2, -charH / 2, charW, charH);
+    ctx.restore();
+  } else {
+    ctx.fillStyle = '#c4a36c'; ctx.fillRect(w * 0.73 - 22, h * 0.48, 44, 100);
+  }
+
+  const pages = [
+    {
+      title: 'EL NEXUS',
+      lines: [
+        'La cinta luminosa envuelve a Picard y lo arrastra fuera del tiempo.',
+        'En aquel lugar imposible, encuentra una oportunidad inesperada:',
+        'el capitán James T. Kirk todavía puede ayudarle.'
+      ],
+      accent: '#ffd875'
+    },
+    {
+      title: 'UNA PETICIÓN A KIRK',
+      lines: [
+        'PICARD: Capitán, necesito su ayuda. Soran va a destruir',
+        'la estrella veridiana. Si no actuamos, un mundo entero',
+        'quedará condenado. Debemos detenerlo antes de que dispare.'
+      ],
+      accent: '#8df4ff'
+    },
+    {
+      title: 'DOS CAPITANES, UNA MISIÓN',
+      lines: [
+        'KIRK: Entonces salgamos de aquí y detengamos a Soran.',
+        'PICARD: Conozco su plan; usted sabe cómo enfrentarse',
+        'a lo imposible. Juntos aún podemos cambiar el desenlace.'
+      ],
+      accent: '#ffd875'
+    },
+    {
+      title: 'VERIDIANA: EL DESTINO CAMBIA',
+      lines: [
+        'Picard y Kirk abandonan el Nexus y regresan al espacio real.',
+        'Intervienen a tiempo y desbaratan el plan de Soran.',
+        'La estrella veridiana permanece intacta. El sistema está a salvo.'
+      ],
+      accent: '#8dffb5'
+    }
+  ];
+  const page = pages[clamp(picardNexusStep, 0, pages.length - 1)];
+  text('STAR TREK: EXPULSANDO EL NÚCLEO', w / 2, 31, 13, '#b7c8e8', true);
+  text(page.title, w / 2, 76, 23, page.accent, true);
+  page.lines.forEach((line, i) => text(line, w / 2, 113 + i * 20, 12, '#ffffff', i === 0));
+  text(`SECUENCIA ${picardNexusStep + 1}/4`, w / 2, h - 47, 11, '#d6c5f4', true);
+  text(picardNexusStep < pages.length - 1 ? 'ESPACIO / INTRO: CONTINUAR' : 'ESPACIO / INTRO: VER INFORME FINAL', w / 2, h - 24, 12, '#8df4ff', true);
+}
+
+
+function drawCampaignEnd(completed) {
+  drawTitleBackground();
+  overlay(0.88);
+
+  text(
+    completed ? '¡CAMPAÑA COMPLETADA!' : 'CAMPAÑA FALLIDA',
+    400,
+    160,
+    27,
+    completed ? '#00ffcc' : '#ff4444',
+    true
+  );
+
+  if (completed) {
+    text('Has superado las ocho misiones.', 400, 205, 15);
+    if (getCharacter(getHumanPlayer()).name === 'PICARD') {
+      text('Con Kirk impediste que Soran destruyera la estrella veridiana.', 400, 235, 12, '#8df4ff', true);
+      text(`¡Felicidades, ${getHumanPlayer().name}!`, 400, 265, 17, '#ffcc00', true);
+    } else {
+      text('Has expulsado el núcleo y salvado a la Flota.', 400, 235, 14);
+      text(`¡Felicidades, ${getHumanPlayer().name}!`, 400, 265, 17, '#ffcc00', true);
+    }
+    text(
+      'Te gradúas como OFICIAL JÚNIOR de la Flota Estelar.',
+      400,
+      300,
+      13,
+      '#00ffcc',
+      true
+    );
+  } else {
+    text('Has agotado los tres intentos de la campaña.', 400, 220, 15);
+    text('La Flota necesita que vuelvas a intentarlo.', 400, 255, 14);
+  }
+  text('ESPACIO: VOLVER AL MENÚ', 400, 365, 14, '#fff');
+}
+
+
+
+function drawRetry() {
+  drawBackground();
+  overlay(0.85);
+  text('HAS PERDIDO EL COMBATE', 400, 160, 25, '#ff5555', true);
+  text(`ARENA ${storyPhase}/${TOTAL_MISIONES}`, 400, 195, 15, '#00ffff', true);
+  text(`TE QUEDAN ${campaignAttempts} INTENTO(S)`, 400, 230, 20, '#ffcc00', true);
+  text('Puedes volver a intentarlo, cadete.', 400, 270, 14);
+  text('ESPACIO: REINTENTAR | X: MENÚ', 400, 330, 14, '#00ffcc');
+}
+
+// ------------------------------------------------------------
+// BUCLE PRINCIPAL
+// ------------------------------------------------------------
+function gameLoop() {
+  try {
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    frameCount++;
+    if (gameState === 'TRIBBLES_EASTER_EGG') {
+      drawTribbleEasterEgg();
+    } else if (gameState === 'SPOCK_EASTER_EGG') {
+      drawSpockEasterEgg();
+    } else if (gameState === 'MENU') {
+      drawMainMenu();
+    } else if (gameState === 'MODE_SELECT') {
+      drawModeSelect();
+    } else if (gameState === 'CHARACTER_SELECT') {
+      drawCharacterSelect();
+    } else if (gameState === 'CREDITS') {
+      drawCredits();
+    } else if (gameState === 'INTRO') {
+      drawIntro();
+    } else if (gameState.startsWith('DECISION\_')) {
+      drawDecision();
+    } else if (gameState === 'STORY_DIALOGUE') {
+      drawStoryDialogue();
+    } else if (gameState === 'MAP') {
+      drawStoryMap();
+    } else if (gameState === 'TRAINING_BRIDGE') {
+      drawTrainingBridge();
+    } else if (gameState === 'TRAINING_BRIEFING') {
+      drawTrainingMissionBriefing();
+    } else if (gameState === 'TRAINING_SHOOTING_RANGE') {
+      updateTrainingShootingRange();
+      drawTrainingShootingRange();
+    } else if (gameState === 'INTELLIGENCE_TEST') {
+      drawTrainingQuiz('intelligence');
+    } else if (gameState === 'STAR_TREK_TRIVIA') {
+      drawTrainingQuiz('trivia');
+    } else if (gameState === 'KOBAYASHI_MARU') {
+      drawKobayashiMaru();
+    } else if (gameState === 'TRAINING_COMPLETE') {
+      drawTrainingComplete();
+    } else if (gameState === 'HOLODECK') {
+      updateHolodeckLevel();
+      drawHolodeckLevel();
+    } else if (gameState === 'STARSHIP') {
+      updateStarshipMode();
+      drawStarshipMode();
+    } else if (gameState === 'STARSHIP_RACE') {
+      updateStarshipRace();
+      drawStarshipRace();
+    } else if (gameState === 'SHUTTLE') {
+      updateShuttleMinigame();
+      drawShuttleMinigame();
+    } else if (gameState === 'SHUTTLE_RESULT') {
+      drawShuttleResult();
+    } else if (gameState === 'Q_TRIAL') {
+      updateQTrial();
+      if (gameState === 'Q_TRIAL') drawQTrial();
+      else drawQTrialResult();
+    } else if (gameState === 'Q_TRIAL_RESULT') {
+      drawQTrialResult();
+    } else if (gameState === 'PICARD_NEXUS') {
+      drawPicardNexusEnding();
+    } else if (gameState === 'CAMPAIGN_COMPLETE') {
+      drawCampaignEnd(true);
+    } else if (gameState === 'CAMPAIGN_FAILED') {
+      drawCampaignEnd(false);
+    } else if (gameState === 'STORY_DEFEAT_COUNTDOWN') {
+      updateStoryDefeatCountdown();
+      if (gameState === 'STORY_DEFEAT_COUNTDOWN') drawStoryDefeatCountdown();
+      else drawNeedMoreTraining();
+    } else if (gameState === 'STORY_NEED_TRAINING') {
+      drawNeedMoreTraining();
+    } else if (gameState === 'RETRY') {
+      drawRetry();
+    } else {
+      // FIGHT y STORY_FIGHT utilizan el mismo motor de combate.
+      if (!gameOver) {
+        if (frameCount % 60 === 0 && matchTimeLeft > 0) {
+          matchTimeLeft--;
+
+          timeText =
+            `${String(Math.floor(matchTimeLeft / 60)).padStart(2, '0')}:` +
+            `${String(matchTimeLeft % 60).padStart(2, '0')}`;
+
+          if (matchTimeLeft <= 0) {
+            finishMatchByTime();
+          }
+        }
+
+        if (canHumanControlPlayer(1)) {
+          if (keys.a || keys.A) {
+            movePlayer(player1, -1);
+          }
+
+          if (keys.d || keys.D) {
+            movePlayer(player1, 1);
+          }
+        }
+
+        if (canHumanControlPlayer(2) && !isVsMachine) {
+          if (keys.ArrowLeft) {
+            movePlayer(player2, -1);
+          }
+
+          if (keys.ArrowRight) {
+            movePlayer(player2, 1);
+          }
+        }
+
+        updateMachineAI();
+        updatePlayerPhysics(player1);
+        updatePlayerPhysics(player2);
+        updateFacingDirections();
+        updateAttack(player1, player2);
+        updateAttack(player2, player1);
+
+        if (player1.health <= 0 || player2.health <= 0) {
+          player1.health = Math.max(0, player1.health);
+          player2.health = Math.max(0, player2.health);
+          gameOver = true;
+          setWinnerMessageByHealth();
+        }
+      }
+
+      // Actualiza el destello, las chispas y el retroceso incluso durante la pausa
+      // posterior al combate.
+      updateCombatImpactEffects();
+      const shakeIntensity = screenShakeTimer > 0 ? Math.min(5, screenShakeTimer * 0.6) : 0;
+      ctx.save();
+      if (shakeIntensity > 0) {
+        ctx.translate((Math.random() - 0.5) * shakeIntensity * 2, (Math.random() - 0.5) * shakeIntensity * 1.6);
+      }
+      drawBackground();
+      drawSprite(player1);
+      drawSprite(player2);
+      drawCombatImpactEffects();
+      ctx.restore();
+      if (screenShakeTimer > 0) screenShakeTimer--;
+
+      drawHUD();
+      if (gameOver) {
+        drawGameOver();
+      }
+    }
+  } catch (error) {
+    console.error('Error en STAR TREK:', error);
+  }
+
+  requestAnimationFrame(gameLoop);
+}
+
+// ------------------------------------------------------------
+// INICIO DEL JUEGO
+// ------------------------------------------------------------
+
+requestAnimationFrame(gameLoop);
