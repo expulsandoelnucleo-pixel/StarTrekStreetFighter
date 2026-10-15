@@ -14,14 +14,14 @@ class Character {
         width = 340,
         height = 600,
         // Propiedades especiales opcionales (con valores por defecto si no las tienen)
-        chairGuardImg = null,
-        chairPunchImg = null,
-        chairDamage = 0,
         victoryImg = null,
-        chairAttackRange = 0,
-        chairAttackDuration = 0,
-        chairAttackCooldown = 0,
-        chairKnockback = 0,
+        extraGuardImg = null,
+        extraPunchImg = null,
+        extraDamage = 0,
+        extraAttackRange = 0,
+        extraAttackDuration = 0,
+        extraAttackCooldown = 0,
+        extraKnockback = 0,
         kickImg = null,
         kickDamage = 0,
         kickAttackRange = 0,
@@ -40,16 +40,15 @@ class Character {
         this.movementSpeed = movementSpeed;
         this.width = width;
         this.height = height;
-
         // Habilidades especiales
-        this.chairGuardImg = chairGuardImg;
-        this.chairPunchImg = chairPunchImg;
-        this.chairDamage = chairDamage;
         this.victoryImg = victoryImg,
-        this.chairAttackRange = chairAttackRange;
-        this.chairAttackDuration = chairAttackDuration;
-        this.chairAttackCooldown = chairAttackCooldown;
-        this.chairKnockback = chairKnockback;
+        this.extraGuardImg = extraGuardImg;
+        this.extraPunchImg = extraPunchImg;
+        this.extraDamage = extraDamage;
+        this.extraAttackRange = extraAttackRange;
+        this.extraAttackDuration = extraAttackDuration;
+        this.extraAttackCooldown = extraAttackCooldown;
+        this.extraKnockback = extraKnockback;
         this.kickImg = kickImg;
         this.kickDamage = kickDamage;
         this.kickAttackRange = kickAttackRange;
@@ -129,7 +128,7 @@ const khanPunch = loadImage('assets/khan_punch.png');
 const picardGuard = loadImage('assets/picard_guard.png');
 const picardKick = loadImage('assets/picard_kick.png');
 const picardVictoryImg = loadImage('assets/picard_flute.png');
-// Riker tiene guardia y golpe normales, además de dos poses con silla.
+// Riker tiene guardia y golpe normales, ademÃ¡s de dos poses con silla.
 const rikerGuard = loadImage('assets/ricker_guard.png');
 const rikerPunch = loadImage('assets/ricker_kick.png');
 const rikerChairGuard = loadProjectAsset('ricker_silla_guard.png');
@@ -263,14 +262,14 @@ const availableCharacters = [
             name: 'RIKER',
             guardImg: rikerGuard,
             punchImg: rikerPunch,
-            chairGuardImg: rikerChairGuard,
-            chairPunchImg: rikerChairPunch,
+            extraGuardImg: rikerChairGuard,
+            extraPunchImg: rikerChairPunch,
             role: 'Primer oficial de la Flota Estelar',
-            chairDamage: 10,
-            chairAttackRange: 155,
-            chairAttackDuration: 22,
-            chairAttackCooldown: 18,
-            chairKnockback: 19
+            extraDamage: 10,
+            extraAttackRange: 155,
+            extraAttackDuration: 22,
+            extraAttackCooldown: 18,
+            extraKnockback: 19
         }
     ),
         new Character(
@@ -378,5 +377,5 @@ const availableCharacters = [
             height: 610
         }
     )
-  // ... y así con el resto de personajes
+  // ... y asÃ­ con el resto de personajes
 ];
