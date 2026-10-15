@@ -159,6 +159,17 @@ const sevenVictory = loadImage('assets/seven_victory.png');
 // Locutus de Borg
 const locutusGuard = loadImage('assets/locutus_guard.png');
 const locutusPunch = loadImage('assets/locutus_punch.png');
+// Andreu
+const andreuGuard = loadImage('assets/andreu_guard.png');
+const andreuPunch = loadImage('assets/andreu_kick.png');
+// Jesús
+const jesusGuard = loadImage('assets/jesus_guard.png');
+const jesusPunch = loadImage('assets/jesus_kick.png');
+// Emilio
+const emilioGuard = loadImage('assets/emilio_guard.png');
+const emilioPunch = loadImage('assets/emilio_kick.png');
+
+
 
 // Y luego creas tu array usando la clase:
 const availableCharacters = [
@@ -376,6 +387,33 @@ const availableCharacters = [
             width: 350,
             height: 610
         }
+    ),
+    new Character(
+        {
+            id: 20,
+            name: 'ANDREU',
+            guardImg: andreuGuard,
+            punchImg: andreuPunch,
+            role: 'Padrino 1',
+        }
+    ),
+    new Character(
+        {
+            id: 21,
+            name: 'JESÚS',
+            guardImg: jesusGuard,
+            punchImg: jesusPunch,
+            role: 'Padrino 2',
+         }
+    ),
+    new Character(
+        {
+            id: 22,
+            name: 'EMILIO',
+            guardImg: emilioGuard,
+            punchImg: emilioPunch,
+            role: 'AKA Anónimo Aguacate',
+        }
     )
-  // ... y asÃ­ con el resto de personajes
+  // ... y así con el resto de personajes
 ];
