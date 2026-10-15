@@ -825,7 +825,7 @@ const tribblesEasterEgg3 = 'Parece que alguien ha traído demasiados tribbles a 
 const tribblesEasterEgg4 = 'ESPACIO / INTRO / X: VOLVER AL MENÚ';
 // Spock
 const spockEasterEgg1 = 'TRANSMISIÓN PRIVADA DE SPOCK';
-const spockEasterEgg2 = 'ߖ槬';
+const spockEasterEgg2 = '🖖';
 const spockEasterEgg3 = 'LARGA VIDA Y PROSPERIDAD';
 const spockEasterEgg4 = 'La lógica indica que has encontrado un secreto.';
 const spockEasterEgg5 = '— SPOCK';
