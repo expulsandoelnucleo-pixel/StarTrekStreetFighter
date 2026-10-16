@@ -496,7 +496,7 @@ const starTrekTriviaQuestionBank = [{
         explanation: triviaQuestion33Explanation
     }, {
         id: 34,
-        question: 'triviaQuestion34',
+        question: triviaQuestion34,
         options: [triviaQuestion34Option1, triviaQuestion34Option2, triviaQuestion34Option3, triviaQuestion34Option4],
         answer: 0,
         explanation: triviaQuestion34Explanation
@@ -4908,8 +4908,7 @@ function drawCharacterCard(p, centerX, index) {
 
     text(c.name, centerX, 320, 20, '#fff', true);
     text(c.role, centerX, 343, 11, '#00ffcc');
-    text(
-`${menuSelectPlayerCharacter}${p.charIndex + 1}/${availableCharacters.length}`,
+    text(`${menuSelectPlayerCharacter}${p.charIndex + 1}/${availableCharacters.length}`,
         centerX,
         365,
         12);
@@ -5563,6 +5562,7 @@ function updateAndDrawCombat() {
 // BUCLE PRINCIPAL
 // ------------------------------------------------------------
 function gameLoop() {
+    syncMenuMusic();
     try {
         ctx.clearRect(0, 0, canvas.width, canvas.height);
         frameCount++;
