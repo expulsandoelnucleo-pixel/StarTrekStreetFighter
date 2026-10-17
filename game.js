@@ -3,6 +3,7 @@
 // ============================================================
 // STAR TREK: EXPULSANDO EL NÚCLEO
 // ============================================================
+const GAME_FONT = "'StarTrekFont', monospace";
 
 const canvas = document.getElementById('gameCanvas');
 if (!canvas)
@@ -1587,13 +1588,13 @@ function drawTrainingBridgeBackdrop() {
         ctx.fillRect(w * 0.36 + i * w * 0.023, h * 0.795, 9, 3);
     }
     ctx.fillStyle = '#8aa0b3';
-    ctx.font = 'bold 11px monospace';
+    ctx.font = 'bold 11px ${GAME_FONT}';
     ctx.textAlign = 'center';
     ctx.fillText(trainingBridge, w / 2, h * 0.972);
 }
 
 function wrapCanvasText(str, centerX, startY, maxWidth, lineHeight, color) {
-    ctx.font = '13px monospace';
+    ctx.font = '13px ${GAME_FONT}';
     ctx.textAlign = 'center';
     ctx.fillStyle = color;
     const words = str.split(/\s+/);
@@ -4751,7 +4752,7 @@ function overlay(alpha = 0.8) {
 
 function text(str, x, y, size = 16, color = '#fff', bold = false) {
     ctx.fillStyle = color;
-    ctx.font = `${bold ? 'bold ' : ''}${size}px monospace`;
+    ctx.font = `${bold ? 'bold ' : ''}${size}px ${GAME_FONT}`;
     ctx.textAlign = 'center';
     ctx.fillText(str, x, y);
 }
@@ -5690,5 +5691,6 @@ function gameLoop() {
 // ------------------------------------------------------------
 // INICIO DEL JUEGO
 // ------------------------------------------------------------
-
-requestAnimationFrame(gameLoop);
+document.fonts.load("16px StarTrekFont").then(() => {
+    requestAnimationFrame(gameLoop);
+});

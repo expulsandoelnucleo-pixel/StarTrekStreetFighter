@@ -17,6 +17,13 @@ canvas {
     display: block;
     background: #000;
 }
+/* Fuentes a usar */
+@font-face {
+    font-family: 'StarTrekFont';
+    src: url('assets/fonts/startrek_font.ttf') format('truetype');
+    /* Opcional: font-weight / font-style si tienes variantes */
+}
+
 
 /* Contenedor de los botones móviles */
 #mobile-controls {
