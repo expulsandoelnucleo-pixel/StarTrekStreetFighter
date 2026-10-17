@@ -27,12 +27,22 @@ const musicTracks = {
     ARENA_1_PUENTE: createAudioTrack('arena_1_puente.mp3'),
     ARENA_2_DS9: createAudioTrack('arena_2_ds9.mp3'),
     ARENA_3_KLINGON: createAudioTrack('arena_3_klingon.mp3'),
-    ARENA_4_ROMULUS: createAudioTrack('arena_4_romulus.mp3'),                           // TODO
+    ARENA_4_ROMULUS: createAudioTrack('arena_4_romulus.mp3'),
     ARENA_5_INGENIERIA: createAudioTrack('arena_5_ingenieria.mp3'),
     ARENA_6_PASILLO_BORG: createAudioTrack('arena_6_pasillo_borg.mp3'),
     ARENA_7_SALA_TRANSPORTADOR: createAudioTrack('arena_7_sala_transportador.mp3'),
-    ARENA_8_PLANETA_TALOS: createAudioTrack('arena_8_planeta_talos.mp3'),               // TODO
-    ARENA_9_DESIERTO_REMOTO: createAudioTrack('arena_9_desierto_remoto.mp3')
+    ARENA_8_PLANETA_TALOS: createAudioTrack('arena_8_planeta_talos.mp3'),
+    ARENA_9_DESIERTO_REMOTO: createAudioTrack('arena_9_desierto_remoto.mp3'),
+    ARENA_10_RUINAS_ANTIGUAS: createAudioTrack('arena_10_ruinas_antiguas.mp3'),
+    ARENA_11_ACADEMIA_FEDERACION: createAudioTrack('arena_11_academia_federacion.mp3'),
+    ARENA_12_HANGAR_LANZADERAS: createAudioTrack('arena_12_hangar_lanzaderas.mp3'),
+    ARENA_13_ASTEROIDES: createAudioTrack('arena_13_asteroides.mp3'),
+    ARENA_14_SELVA_EXOTICA: createAudioTrack('arena_14_selva_exotica.mp3'),
+    ARENA_15_OBSERVATORIO_ESTELAR: createAudioTrack('arena_15_observatorio_estelar.mp3'),
+    ARENA_16_PUENTE_DANADO: createAudioTrack('arena_16_puente_danado.mp3'),
+    ARENA_17_ESTACION_ORBITAL: createAudioTrack('arena_17_estacion_orbital.mp3'),
+    ARENA_18_TEMPLO_BORG: createAudioTrack('arena_18_templo_borg.mp3'),
+    ARENA_19_NUCLEO_BORG: createAudioTrack('arena_19_nucleo_borg.mp3')
 };
 
 // Aliases individuales por si alguna otra parte del juego busca estas variables globales
@@ -49,7 +59,17 @@ const {
     ARENA_6_PASILLO_BORG: arena6Music,
     ARENA_7_SALA_TRANSPORTADOR: arena7Music,
     ARENA_8_PLANETA_TALOS: arena8Music,
-    ARENA_9_DESIERTO_REMOTO: arena9Music
+    ARENA_9_DESIERTO_REMOTO: arena9Music,
+    ARENA_10_RUINAS_ANTIGUAS: arena10Music,
+    ARENA_11_ACADEMIA_FEDERACION: arena11Music,
+    ARENA_12_HANGAR_LANZADERAS: arena12Music,
+    ARENA_13_ASTEROIDES: arena13Music,
+    ARENA_14_SELVA_EXOTICA: arena14Music,
+    ARENA_15_OBSERVATORIO_ESTELAR: arena15Music,
+    ARENA_16_PUENTE_DANADO: arena16Music,
+    ARENA_17_ESTACION_ORBITAL: arena17Music,
+    ARENA_18_TEMPLO_BORG: arena18Music,
+    ARENA_19_NUCLEO_BORG: arena19Music
 } = musicTracks;
 
 let musicButton = null;
@@ -126,6 +146,16 @@ function getMusicScreen() {
             case 7: return 'ARENA_7_SALA_TRANSPORTADOR';
             case 8: return 'ARENA_8_PLANETA_TALOS';
             case 9: return 'ARENA_9_DESIERTO_REMOTO';
+            case 10: return 'ARENA_10_RUINAS_ANTIGUAS';
+            case 11: return 'ARENA_11_ACADEMIA_FEDERACION';
+            case 12: return 'ARENA_12_HANGAR_LANZADERAS';
+            case 13: return 'ARENA_13_ASTEROIDES';
+            case 14: return 'ARENA_14_SELVA_EXOTICA';
+            case 15: return 'ARENA_15_OBSERVATORIO_ESTELAR';
+            case 16: return 'ARENA_16_PUENTE_DANADO';
+            case 17: return 'ARENA_17_ESTACION_ORBITAL';
+            case 18: return 'ARENA_18_TEMPLO_BORG';
+            case 19: return 'ARENA_19_NUCLEO_BORG';
         }
     }
     return 'OTHER';
@@ -163,7 +193,17 @@ async function playTrackForCurrentScreen() {
                 ARENA_6_PASILLO_BORG: '🔊 Música arena 6: Pasillo Borg',
                 ARENA_7_SALA_TRANSPORTADOR: '🔊 Música arena 7: Transportador',
                 ARENA_8_PLANETA_TALOS: '🔊 Música arena 8: Talos IV',
-                ARENA_9_DESIERTO_REMOTO: '🔊 Música arena 9: Desierto'
+                ARENA_9_DESIERTO_REMOTO: '🔊 Música arena 9: Desierto remoto',
+                ARENA_10_RUINAS_ANTIGUAS: '🔊 Música arena 10: Ruinas antiguas',
+                ARENA_11_ACADEMIA_FEDERACION: '🔊 Música arena 11: Academia federación',
+                ARENA_12_HANGAR_LANZADERAS: '🔊 Música arena 12: Hangar lanzaderas',
+                ARENA_13_ASTEROIDES: '🔊 Música arena 13: Asteroides',
+                ARENA_14_SELVA_EXOTICA: '🔊 Música arena 14: Selva exótica',
+                ARENA_15_OBSERVATORIO_ESTELAR: '🔊 Música arena 15: Observatorio estelar',
+                ARENA_16_PUENTE_DANADO: '🔊 Música arena 16: Puente dañado',
+                ARENA_17_ESTACION_ORBITAL: '🔊 Música arena 17: Estación orbital',
+                ARENA_18_TEMPLO_BORG: '🔊 Música arena 18: Templo Borg',
+                ARENA_19_NUCLEO_BORG: '🔊 Música arena 19: Núcleo Borg',
             };
             musicButton.textContent = labels[desiredState] || '🔊 Música automática';
             musicButton.style.borderColor = '#7CFC00';

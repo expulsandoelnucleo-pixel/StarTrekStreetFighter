@@ -58,7 +58,7 @@ const arenaImages = [
     loadImage('assets/arena_1_puente.png'),
     loadImage('assets/arena_2_ds9.png'),
     loadImage('assets/arena_3_klingon.png'),
-    loadImage('assets/arena_4-romulus.png'),
+    loadImage('assets/arena_4_romulus.png'),
     loadImage('assets/arena_5_ingenieria_enterprise.png'),
     loadImage('assets/arena_6_pasillo_borg.png'),
     loadImage('assets/arena_7_sala_transportador.png'),

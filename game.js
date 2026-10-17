@@ -4933,8 +4933,8 @@ function drawVsMachineRoster() {
     const humanIndex = humanPlayerIndex === 1 ? player1.charIndex : player2.charIndex;
     const machineIndex = humanPlayerIndex === 1 ? player2.charIndex : player1.charIndex;
 
-    text(menuSelectMachineRosterTitle, canvas.width / 2, 38, 22, '#00ffff', true);
-    text(menuSelectMachineRosterSubtitle, canvas.width / 2, canvas.height - 15, 11, '#00ffcc', true);
+    text(menuSelectMachineRosterTitle, canvas.width / 2, 38, 30, '#00ffff', true);
+    text(menuSelectMachineRosterSubtitle, canvas.width / 2, canvas.height - 15, 20, '#00ffcc', true);
 
     for (let i = 0; i < availableCharacters.length; i++) {
         const col = i % cols;
@@ -5008,20 +5008,20 @@ function drawCharacterSelect() {
 
     if (isVsMachine && !isStoryMode) {
         drawVsMachineRoster();
-        text(`${characterSelectKey2}${machineDifficulty}`, 400, 57, 10, '#ffcc00');
+        text(`${characterSelectKey2}${machineDifficulty}`, 400, 57, 13, '#ffcc00');
         return;
     }
 
-    text(characterSelectTitle, 400, 40, 23, '#00ffff', true);
+    text(characterSelectTitle, 400, 40, 26, '#00ffff', true);
     drawCharacterCard(player1, 200, 1);
     drawCharacterCard(player2, 600, 2);
     if (isVsMachine) {
-        text(characterSelectKey1, 400, 380, 12);
-        text(`${characterSelectKey2}${machineDifficulty}`, 400, 400, 12, '#ffcc00');
+        text(characterSelectKey1, 400, 380, 14);
+        text(`${characterSelectKey2}${machineDifficulty}`, 400, 400, 14, '#ffcc00');
     }
 
-    text(characterSelectKey3, 400, 420, 11);
-    text(characterSelectKey4, 400, 440, 11, '#00ffcc');
+    text(characterSelectKey3, 400, 420, 13);
+    text(characterSelectKey4, 400, 440, 13, '#00ffcc');
 }
 
 function drawCredits() {
