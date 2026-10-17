@@ -3174,6 +3174,11 @@ function applyHit(attacker, defender, damage, knockback) {
         });
     }
     screenShakeTimer = Math.max(screenShakeTimer, 9);
+
+    // Sonido del golpe
+    playHitSound(hitSound1);
+
+
     return true;
 }
 
@@ -4917,19 +4922,19 @@ function drawCharacterCard(p, centerX, index) {
 
 // Selector en cuadrícula para Player vs Máquina: todos los luchadores visibles.
 function drawVsMachineRoster() {
-    const cols = 8;
+    const cols = 6; // Reducimos de 8 a 6 columnas para hacer las cajas más anchas
     const rows = Math.ceil(availableCharacters.length / cols);
-    const marginX = 24;
-    const topY = 68;
-    const gapX = 6;
-    const gapY = 7;
+    const marginX = 40; // Margen lateral ampliado
+    const topY = 60;    // Margen superior
+    const gapX = 12;    // Separación horizontal entre cajas
+    const gapY = 12;    // Separación vertical entre cajas
     const cardW = (canvas.width - marginX * 2 - gapX * (cols - 1)) / cols;
-    const cardH = Math.min(82, (canvas.height - topY - 65 - gapY * (rows - 1)) / rows);
+    const cardH = Math.min(115, (canvas.height - topY - 65 - gapY * (rows - 1)) / rows); // Altura mayor (hasta 115px)
     const humanIndex = humanPlayerIndex === 1 ? player1.charIndex : player2.charIndex;
     const machineIndex = humanPlayerIndex === 1 ? player2.charIndex : player1.charIndex;
 
-    text(menuSelectMachineRosterTitle, canvas.width / 2, 42, 21, '#00ffff', true);
-    text(menuSelectMachineRosterSubtitle, canvas.width / 2, canvas.height - 13, 9, '#00ffcc', true);
+    text(menuSelectMachineRosterTitle, canvas.width / 2, 38, 22, '#00ffff', true);
+    text(menuSelectMachineRosterSubtitle, canvas.width / 2, canvas.height - 15, 11, '#00ffcc', true);
 
     for (let i = 0; i < availableCharacters.length; i++) {
         const col = i % cols;
@@ -4945,19 +4950,20 @@ function drawVsMachineRoster() {
         ctx.fillStyle = isHuman ? 'rgba(0,180,255,0.22)' : (isMachine ? 'rgba(255,140,0,0.16)' : 'rgba(5,18,34,0.86)');
         ctx.fillRect(x, y, cardW, cardH);
         ctx.strokeStyle = color;
-        ctx.lineWidth = (isHuman || isMachine) ? 2 : 1;
+        ctx.lineWidth = (isHuman || isMachine) ? 3 : 1;
         ctx.strokeRect(x, y, cardW, cardH);
 
         if (ch.guardImg && ch.guardImg.complete && ch.guardImg.naturalWidth > 0) {
-            const iw = 36;
-            const ih = cardH - 24;
-            ctx.drawImage(ch.guardImg, x + (cardW - iw) / 2, y + 3, iw, ih);
+            const iw = cardW * 0.55; // Sprite del personaje ampliado proporcionalmente
+            const ih = cardH - 28;
+            ctx.drawImage(ch.guardImg, x + (cardW - iw) / 2, y + 4, iw, ih);
         }
-        text(ch.name, x + cardW / 2, y + cardH - 8, 10, isHuman ? '#7df7ff' : (isMachine ? '#ffc078' : '#ffffff'), true);
+        // Texto del nombre más grande y legible (13px en lugar de 10px)
+        text(ch.name, x + cardW / 2, y + cardH - 8, 13, isHuman ? '#7df7ff' : (isMachine ? '#ffc078' : '#ffffff'), true);
         if (isHuman || isMachine) {
             ctx.fillStyle = color;
             ctx.beginPath();
-            ctx.arc(x + cardW - 7, y + 7, 3, 0, Math.PI * 2);
+            ctx.arc(x + cardW - 9, y + 9, 4, 0, Math.PI * 2);
             ctx.fill();
         }
         ctx.restore();
@@ -4965,14 +4971,14 @@ function drawVsMachineRoster() {
 }
 
 function selectRosterCharacterAt(x, y) {
-    const cols = 8;
-    const marginX = 24;
-    const topY = 68;
-    const gapX = 6;
-    const gapY = 7;
+    const cols = 6; // Debe coincidir exactamente con drawVsMachineRoster
+    const marginX = 40;
+    const topY = 60;
+    const gapX = 12;
+    const gapY = 12;
     const rows = Math.ceil(availableCharacters.length / cols);
     const cardW = (canvas.width - marginX * 2 - gapX * (cols - 1)) / cols;
-    const cardH = Math.min(82, (canvas.height - topY - 65 - gapY * (rows - 1)) / rows);
+    const cardH = Math.min(115, (canvas.height - topY - 65 - gapY * (rows - 1)) / rows);
     const col = Math.floor((x - marginX) / (cardW + gapX));
     const row = Math.floor((y - topY) / (cardH + gapY));
     if (col < 0 || col >= cols || row < 0 || row >= rows)
@@ -4989,7 +4995,6 @@ function selectRosterCharacterAt(x, y) {
     const machine = humanPlayerIndex === 1 ? player2 : player1;
     human.charIndex = idx;
     updatePlayerAttributes(human);
-    // Evita que la máquina use el mismo personaje: avanza al siguiente disponible.
     if (machine.charIndex === idx) {
         machine.charIndex = (idx + 1) % availableCharacters.length;
         updatePlayerAttributes(machine);

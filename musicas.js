@@ -2,6 +2,13 @@
 // GESTIÓN DE MÚSICA CENTRALIZADA
 // ============================================================
 
+// Precargamos el sonido del golpe
+const hitSound1 = new Audio('assets/audios/hit1.mp3'); // Cambia la ruta por la de tu archivo mp3
+hitSound1.volume = 0.6; // Opcional: ajusta el volumen (de 0.0 a 1.0)
+const hitSound2 = new Audio('assets/audios/hit2.mp3'); // Cambia la ruta por la de tu archivo mp3
+hitSound2.volume = 0.6; // Opcional: ajusta el volumen (de 0.0 a 1.0)
+
+
 // Función auxiliar para inicializar pistas con las propiedades comunes
 function createAudioTrack(filename) {
     const audio = new Audio(`./assets/audios/${filename}`);
@@ -193,6 +200,23 @@ function unlockAudioFromGesture() {
     audioUnlocked = true;
     playTrackForCurrentScreen();
 }
+
+
+
+// Sonido del golpe
+function playHitSound(soundObject) {
+    if (!soundObject) return;
+
+    // Clonamos el objeto recibido para permitir superposición sin cortar el audio
+    const soundClone = soundObject.cloneNode();
+    soundClone.volume = soundObject.volume;
+
+    soundClone.play().catch(error => {
+        console.log("El navegador bloqueó la reproducción automática:", error);
+    });
+}
+
+
 
 document.addEventListener('pointerdown', unlockAudioFromGesture, true);
 document.addEventListener('keydown', unlockAudioFromGesture, true);
