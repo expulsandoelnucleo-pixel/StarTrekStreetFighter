@@ -861,9 +861,9 @@ const characterSelectKey4 = 'ESPACIO: CONFIRMAR | X: VOLVER';
 // Credits
 const creditsTitle = 'CRÉDITOS';
 const creditsSubtitle = 'Star Trek: Expulsando el núcleo';
-const creditsText1 = 'Creado con JavaScript y Canvas';
-const creditsText2 = 'Un regalo sin ánimo de lucro';
-const creditsText3 = 'Con cariño, el hermano de Ramón.';
+const creditsText1 = 'Creado con JavaScript y Canvas y mucho cariño';
+const creditsText2 = 'Un regalo sin ánimo de lucro para vosotros';
+const creditsText3 = 'Con cariño, el hermano de Ramón y Emilio.';
 const creditsKeys = 'X / ESC: VOLVER';
 
 // Intro

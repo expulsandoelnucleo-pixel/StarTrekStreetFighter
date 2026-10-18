@@ -4,6 +4,11 @@
 // STAR TREK: EXPULSANDO EL NÚCLEO
 // ============================================================
 const GAME_FONT = "'StarTrekFont', monospace";
+const GAME_FONTDS9 = "'StarTrekDs9', monospace";
+const GAME_FONTKLINGON = "'StarTrekKlingon', monospace";
+const GAME_FONTROMULAN = "'StarTrekRomulan', monospace";
+const GAME_FONTTNG = "'StarTrekTng', monospace";
+
 
 const canvas = document.getElementById('gameCanvas');
 if (!canvas)
@@ -1588,13 +1593,13 @@ function drawTrainingBridgeBackdrop() {
         ctx.fillRect(w * 0.36 + i * w * 0.023, h * 0.795, 9, 3);
     }
     ctx.fillStyle = '#8aa0b3';
-    ctx.font = 'bold 11px ${GAME_FONT}';
+    ctx.font = `bold 11px ${GAME_FONT}`;
     ctx.textAlign = 'center';
     ctx.fillText(trainingBridge, w / 2, h * 0.972);
 }
 
 function wrapCanvasText(str, centerX, startY, maxWidth, lineHeight, color) {
-    ctx.font = '13px ${GAME_FONT}';
+    ctx.font = `13px ${GAME_FONT}`;
     ctx.textAlign = 'center';
     ctx.fillStyle = color;
     const words = str.split(/\s+/);
@@ -4755,9 +4760,9 @@ function overlay(alpha = 0.8) {
     ctx.fillRect(0, 0, canvas.width, canvas.height);
 }
 
-function text(str, x, y, size = 16, color = '#fff', bold = false) {
+function text(str, x, y, size = 16, color = '#fff', bold = false, font = GAME_FONT) {
     ctx.fillStyle = color;
-    ctx.font = `${bold ? 'bold ' : ''}${size}px ${GAME_FONT}`;
+    ctx.font = `${bold ? 'bold ' : ''}${size}px ${font}`;
     ctx.textAlign = 'center';
     ctx.fillText(str, x, y);
 }
@@ -4828,22 +4833,22 @@ function drawMainMenu() {
     drawTitleBackground();
     overlay(0.45);
 
-    text(menuTitle, canvas.width / 2, 150, 36, '#00ffff', true);
-    text(menuSubtitle, canvas.width / 2, 195, 23, '#ffcc00', true);
-    text(menuKeys1, canvas.width / 2, 370, 18, '#00ffcc', true);
-    text(menuKeys2, canvas.width / 2, 410, 14);
+    text(menuTitle, canvas.width / 2, 250, 56, '#00ffff', true);
+    text(menuSubtitle, canvas.width / 2, 290, 33, '#ffcc00', true);
+    text(menuKeys1, canvas.width / 2, 470, 28, '#00ffcc');
+    text(menuKeys2, canvas.width / 2, 510, 24);
 }
 
 function drawModeSelect() {
     drawTitleBackground();
     overlay(0.84);
 
-    text(menuSelectModeTitle, 400, 90, 25, '#00ffff', true);
-    text(menuSelectModeKeys1, 400, 165, 18, '#ffcc00', true);
-    text(menuSelectModeKeys2, 400, 220, 17, '#ffcc00', true);
-    text(menuSelectModeKeys3, 400, 275, 17, '#00ffcc', true);
-    text(menuSelectModeKeys4, 400, 330, 13, '#8df4ff', true);
-    text(menuSelectModeKeys5, 400, 405, 13);
+    text(menuSelectModeTitle, 500, 210, 35, '#00ffff', true);
+    text(menuSelectModeKeys1, 500, 285, 28, '#ffcc00');
+    text(menuSelectModeKeys2, 500, 340, 27, '#ffcc00');
+    text(menuSelectModeKeys3, 500, 395, 27, '#00ffcc');
+    text(menuSelectModeKeys4, 500, 450, 23, '#8df4ff');
+    text(menuSelectModeKeys5, 500, 525, 23);
 }
 
 // ------------------------------------------------------------
@@ -4883,7 +4888,7 @@ function drawCharacterCard(p, centerX, index) {
     const heading = isVsMachine
         ? (humanPlayerIndex === index ? menuSelectPlayer1 : menuSelectPlayer2)
         : `${menuSelectPlayerNumber}${index}`;
-    text(heading, centerX, 78, 14, color, true);
+    text(heading, centerX, 78, 20, color, true);
 
     if (c.guardImg.complete && c.guardImg.naturalWidth > 0) {
         const spriteWidth = 140;
@@ -4912,12 +4917,12 @@ function drawCharacterCard(p, centerX, index) {
         ctx.restore();
     }
 
-    text(c.name, centerX, 320, 20, '#fff', true);
-    text(c.role, centerX, 343, 11, '#00ffcc');
+    text(c.name, centerX, 320, 24, '#fff', true);
+    text(c.role, centerX, 343, 16, '#00ffcc');
     text(`${menuSelectPlayerCharacter}${p.charIndex + 1}/${availableCharacters.length}`,
         centerX,
         365,
-        12);
+        16);
 }
 
 // Selector en cuadrícula para Player vs Máquina: todos los luchadores visibles.
@@ -4933,8 +4938,8 @@ function drawVsMachineRoster() {
     const humanIndex = humanPlayerIndex === 1 ? player1.charIndex : player2.charIndex;
     const machineIndex = humanPlayerIndex === 1 ? player2.charIndex : player1.charIndex;
 
-    text(menuSelectMachineRosterTitle, canvas.width / 2, 38, 30, '#00ffff', true);
-    text(menuSelectMachineRosterSubtitle, canvas.width / 2, canvas.height - 15, 20, '#00ffcc', true);
+    text(menuSelectMachineRosterTitle, canvas.width / 2, 38, 40, '#00ffff', true);
+    text(menuSelectMachineRosterSubtitle, canvas.width / 2, canvas.height - 15, 24, '#00ffcc');
 
     for (let i = 0; i < availableCharacters.length; i++) {
         const col = i % cols;
@@ -5008,31 +5013,31 @@ function drawCharacterSelect() {
 
     if (isVsMachine && !isStoryMode) {
         drawVsMachineRoster();
-        text(`${characterSelectKey2}${machineDifficulty}`, 400, 57, 13, '#ffcc00');
+        text(`${characterSelectKey2}${machineDifficulty}`, 400, 57, 18, '#ffcc00');
         return;
     }
 
-    text(characterSelectTitle, 400, 40, 26, '#00ffff', true);
-    drawCharacterCard(player1, 200, 1);
-    drawCharacterCard(player2, 600, 2);
+    text(characterSelectTitle, 500, 40, 26, '#00ffff', true);
+    drawCharacterCard(player1, 300, 1);
+    drawCharacterCard(player2, 700, 2);
     if (isVsMachine) {
-        text(characterSelectKey1, 400, 380, 14);
-        text(`${characterSelectKey2}${machineDifficulty}`, 400, 400, 14, '#ffcc00');
+        text(characterSelectKey1, 500, 380, 14);
+        text(`${characterSelectKey2}${machineDifficulty}`, 500, 520, 18, '#ffcc00');
     }
 
-    text(characterSelectKey3, 400, 420, 13);
-    text(characterSelectKey4, 400, 440, 13, '#00ffcc');
+    text(characterSelectKey3, 500, 440, 24);
+    text(characterSelectKey4, 500, 470, 24, '#00ffcc');
 }
 
 function drawCredits() {
     drawTitleBackground();
     overlay(0.85);
-    text(creditsTitle, 500, 90, 45, '#00ffff', true);
-    text(creditsSubtitle, 400, 145, 16, '#ffcc00');
-    text(creditsText1, 400, 185, 14);
-    text(creditsText2, 400, 240, 14, '#00ffcc');
-    text(creditsText3, 400, 300, 14, '#ff9900');
-    text(creditsKeys, 400, 390, 14);
+    text(creditsTitle, 500, 90, 85, '#00ffff', true, GAME_FONT);
+    text(creditsSubtitle, 500, 185, 36, '#ffcc00', GAME_FONTDS9);
+    text(creditsText1, 500, 325, 24);
+    text(creditsText2, 500, 380, 24, '#00ffcc');
+    text(creditsText3, 500, 440, 24, '#ff9900');
+    text(creditsKeys, 500, 510, 24);
 }
 
 // ------------------------------------------------------------
@@ -5041,13 +5046,13 @@ function drawCredits() {
 function drawIntro() {
     drawTitleBackground();
     overlay(0.88);
-    text(introTitle, 400, 90, 23, '#00ffff', true);
-    text(`${introSubTitle}${getHumanPlayer().name}`, 400, 145, 18, '#ffcc00', true);
-    text(introLine1, 400, 195, 14);
-    text(introLine2, 400, 225, 14);
-    text(introLine3, 400, 270, 15, '#ff7777', true);
-    text(introLine4, 400, 305, 13);
-    text(introLine5, 400, 385, 15, '#00ffcc', true);
+    text(introTitle, 500, 90, 23, '#00ffff', true);
+    text(`${introSubTitle}${getHumanPlayer().name}`, 500, 145, 18, '#ffcc00', true);
+    text(introLine1, 500, 195, 14);
+    text(introLine2, 500, 225, 14);
+    text(introLine3, 500, 270, 15, '#ff7777', true);
+    text(introLine4, 500, 305, 13);
+    text(introLine5, 500, 385, 15, '#00ffcc', true);
 }
 
 // ------------------------------------------------------------
@@ -5341,7 +5346,7 @@ function drawGameOver() {
     }
 
     overlay(0.82);
-    text(roundWinnerMessage, canvas.width / 2, canvas.height / 2 - 30, 21, '#ffcc00', true);
+    text(roundWinnerMessage, canvas.width / 2, canvas.height / 2 - 30, 50, '#ffcc00', true);
 
     if (isStoryMode) {
         const boutWinner = getRoundWinner();
@@ -5357,9 +5362,9 @@ function drawGameOver() {
             headline = `${endCombatLose} ${storySeriesHumanWins}-${storySeriesMachineWins}`;
         }
         text(headline, canvas.width / 2, canvas.height / 2 + 10, 15, '#ffffff', true);
-        text(`${endCombatLine1A} ${storyPhase}/${TOTAL_MISIONES} ${endCombatLine1B} ${storySeriesRoundsPlayed}/3`, canvas.width / 2, canvas.height / 2 + 34, 13, '#ffcc00', true);
-        text(`${endCombatLine2} ${storySeriesHumanWins}-${storySeriesMachineWins}`, canvas.width / 2, canvas.height / 2 + 56, 13, '#00ffcc', true);
-        text(seriesWinner === 1 ? endCombatLine3A : endCombatLine3B, canvas.width / 2, canvas.height / 2 + 82, 13, '#00ffcc', true);
+        text(`${endCombatLine1A} ${storyPhase}/${TOTAL_MISIONES} ${endCombatLine1B} ${storySeriesRoundsPlayed}/3`, canvas.width / 2, canvas.height / 2 + 34, 13, '#ffcc00');
+        text(`${endCombatLine2} ${storySeriesHumanWins}-${storySeriesMachineWins}`, canvas.width / 2, canvas.height / 2 + 56, 13, '#00ffcc');
+        text(seriesWinner === 1 ? endCombatLine3A : endCombatLine3B, canvas.width / 2, canvas.height / 2 + 82, 13, '#00ffcc');
     } else {
         text(endCombatLine4, canvas.width / 2, canvas.height / 2 + 30, 14, '#00ffcc');
     }
@@ -5696,6 +5701,17 @@ function gameLoop() {
 // ------------------------------------------------------------
 // INICIO DEL JUEGO
 // ------------------------------------------------------------
-document.fonts.load("16px StarTrekFont").then(() => {
+Promise.all([
+    document.fonts.load(`16px 'StarTrekFont'`),
+    document.fonts.load(`16px 'StarTrekFontDS9'`),
+    document.fonts.load(`16px 'StarTrekFontKlingon'`),
+    document.fonts.load(`16px 'StarTrekFontRomulan'`),
+    document.fonts.load(`16px 'StarTrekFontTNG'`)
+]).then(() => {
+    console.log('Todas las fuentes se han cargado correctamente.');
+    requestAnimationFrame(gameLoop);
+}).catch((err) => {
+    console.error('Error al cargar alguna de las fuentes:', err);
+// Iniciar de todos modos por si acaso
     requestAnimationFrame(gameLoop);
 });
