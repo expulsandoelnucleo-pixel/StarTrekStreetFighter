@@ -3057,6 +3057,13 @@ function setWinnerMessageByHealth() {
         const humanPerfect =
             humanWon && getHumanPlayer().health >= getHumanPlayer().startingHealth;
 
+        // Sonido Win/Lose 
+        if (humanWon) {
+            playSound(soundWin);
+        } else {
+            playSound(soundLose);
+        }
+
         roundWinnerMessage = humanPerfect
             ? winnerMessagePerfect
             : humanWon
@@ -3181,7 +3188,7 @@ function applyHit(attacker, defender, damage, knockback) {
     screenShakeTimer = Math.max(screenShakeTimer, 9);
 
     // Sonido del golpe
-    playHitSound(hitSound1);
+    playSound(hitSound1);
 
 
     return true;

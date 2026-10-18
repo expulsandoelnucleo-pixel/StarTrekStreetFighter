@@ -7,6 +7,16 @@ const hitSound1 = new Audio('assets/audios/hit1.mp3'); // Cambia la ruta por la 
 hitSound1.volume = 0.6; // Opcional: ajusta el volumen (de 0.0 a 1.0)
 const hitSound2 = new Audio('assets/audios/hit2.mp3'); // Cambia la ruta por la de tu archivo mp3
 hitSound2.volume = 0.6; // Opcional: ajusta el volumen (de 0.0 a 1.0)
+// You win
+const soundWin = new Audio('assets/audios/you-win-street-fighter.mp3'); // Cambia la ruta por la de tu archivo mp3
+soundWin.volume = 0.6;
+// You lose
+const soundLose = new Audio('assets/audios/you-lose.mp3'); // Cambia la ruta por la de tu archivo mp3
+soundLose.volume = 0.6;
+// Fight
+const soundFight = new Audio('assets/audios/fight.mp3'); // Cambia la ruta por la de tu archivo mp3
+soundFight.volume = 0.6;
+
 
 
 // Función auxiliar para inicializar pistas con las propiedades comunes
@@ -244,7 +254,7 @@ function unlockAudioFromGesture() {
 
 
 // Sonido del golpe
-function playHitSound(soundObject) {
+function playSound(soundObject) {
     if (!soundObject) return;
 
     // Clonamos el objeto recibido para permitir superposición sin cortar el audio
