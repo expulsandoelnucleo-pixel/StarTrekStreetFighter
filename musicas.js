@@ -24,7 +24,12 @@ soundStart2.volume = 0.6;
 const soundStart3 = new Audio('assets/audios/3.mp3');
 soundStart3.volume = 0.6;
 
-
+// Easter egg Tribbles
+const soundTribbles = new Audio('assets/audios/tribbles.mp3');
+soundTribbles.volume = 0.6;
+// Easter egg Spock
+const soundSpock = new Audio('assets/audios/spock.mp3');
+soundSpock.volume = 0.6;
 
 
 

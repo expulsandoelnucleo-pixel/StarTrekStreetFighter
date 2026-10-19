@@ -4372,6 +4372,7 @@ window.addEventListener('keydown', (e) => {
         if (easterEggKeySequence.length === TRIBBLES_SECRET_SEQUENCE.length &&
             easterEggKeySequence.every((key, index) => key === TRIBBLES_SECRET_SEQUENCE[index])) {
             gameState = 'TRIBBLES_EASTER_EGG';
+            playSound(soundTribbles);
             easterEggKeySequence = [];
             easterEggLetterBuffer = '';
             return;
@@ -4380,6 +4381,7 @@ window.addEventListener('keydown', (e) => {
             easterEggLetterBuffer = (easterEggLetterBuffer + e.key.toUpperCase()).slice(-4);
             if (easterEggLetterBuffer === 'LLAP') {
                 gameState = 'SPOCK_EASTER_EGG';
+                playSound(soundSpock);
                 easterEggKeySequence = [];
                 easterEggLetterBuffer = '';
                 return;
