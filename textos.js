@@ -689,6 +689,7 @@ const storyDetailsTitle19 = 'CAPÍTULO 19: NÚCLEO BORG';
 const storyDetailsDescription19 = 'El núcleo transmite la señal que enfrenta a los compañeros. La tripulación debe abrirse paso hasta el emisor, liberar a Locutus y apagar la red antes de que toda la Flota quede conectada.';
 
 // WinnerMessage
+const startFight = 'FIGHT !!'
 const winnerMessageDraw = 'DRAW';
 const winnerMessagePerfect = 'PERFECT!';
 const winnerMessageWin = 'YOU WIN!';

@@ -99,6 +99,7 @@ let gameOverFrame = 0;
 const GAME_OVER_PAUSE_FRAMES = 5 * 60;
 
 let frameCount = 0;
+let matchStartFrame = 0;
 let screenShakeTimer = 0;
 let impactEffects = [];
 let currentArena = 1;
@@ -3143,6 +3144,7 @@ function resetMatch(shouldPlaySound = true) {
     // --- SONIDOS AL EMPEZAR EL COMBATE ---
     if (shouldPlaySound) {
         matchStartDelay = 120;
+        matchStartFrame = frameCount;
         playSound(soundFight);
     } else {
         matchStartDelay = 0;
@@ -5713,6 +5715,24 @@ function updateAndDrawCombat() {
     // --- COMPROBAR SI ESTÁ EN PAUSA DE INICIO ---
     if (matchStartDelay > 0) {
         matchStartDelay--;
+
+        drawBackground();
+        drawSprite(player1);
+        drawSprite(player2);
+        drawHUD();
+        const elapsed = frameCount - matchStartFrame;
+        textWithAnimation(
+            "FIGHT",                     // Texto a mostrar (puedes usar una variable si lo tienes traducido)
+            canvas.width / 2,
+            canvas.height / 2,
+            10,                          // Tamaño inicial pequeño
+            240,                         // Tamaño máximo al que llega
+            120,                         // Duración total (coincide con matchStartDelay)
+            elapsed,
+            '#ffcc00',                   // Color dorado/amarillo trekkie
+            true                         // Negrita
+        );
+        return;
     } else if (!gameOver) {
         if (frameCount % 60 === 0 && matchTimeLeft > 0) {
             matchTimeLeft--;
