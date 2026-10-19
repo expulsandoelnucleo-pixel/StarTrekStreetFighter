@@ -106,6 +106,7 @@ let matchTimeLeft = 120;
 let timeText = '02:00';
 let roundWinnerMessage = '';
 let picardVictory = false;
+let matchStartDelay = 0;
 
 // Juicio final de Q: desafío táctico para expulsar el núcleo a tiempo.
 let qTrialTimer = 60;
@@ -2963,7 +2964,7 @@ function setArenaCombatants(arenaNumber) {
     screenShakeTimer = 0;
 }
 
-function resetMatch() {
+function resetMatch(shouldPlaySound = true) {
     impactEffects = [];
     screenShakeTimer = 0;
     for (const p of[player1, player2]) {
@@ -3024,6 +3025,14 @@ function resetMatch() {
     roundWinnerMessage = '';
     screenShakeTimer = 0;
     resetMachineAI();
+
+    // --- SONIDOS AL EMPEZAR EL COMBATE ---
+    if (shouldPlaySound) {
+        matchStartDelay = 120;
+        playSound(soundFight);
+    } else {
+        matchStartDelay = 0;
+    }
 }
 
 function getRoundWinner() {
@@ -4643,7 +4652,7 @@ window.addEventListener('keydown', (e) => {
         } else if (
             e.key.toLowerCase() === 'x' ||
             e.key === 'Escape') {
-            resetMatch();
+            //resetMatch();
             gameState = 'MENU';
         }
 
@@ -5516,7 +5525,10 @@ function drawRetry() {
 }
 
 function updateAndDrawCombat() {
-    if (!gameOver) {
+    // --- COMPROBAR SI ESTÁ EN PAUSA DE INICIO ---
+    if (matchStartDelay > 0) {
+        matchStartDelay--;
+    } else if (!gameOver) {
         if (frameCount % 60 === 0 && matchTimeLeft > 0) {
             matchTimeLeft--;
 

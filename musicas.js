@@ -5,17 +5,26 @@
 // Precargamos el sonido del golpe
 const hitSound1 = new Audio('assets/audios/hit1.mp3'); // Cambia la ruta por la de tu archivo mp3
 hitSound1.volume = 0.6; // Opcional: ajusta el volumen (de 0.0 a 1.0)
-const hitSound2 = new Audio('assets/audios/hit2.mp3'); // Cambia la ruta por la de tu archivo mp3
-hitSound2.volume = 0.6; // Opcional: ajusta el volumen (de 0.0 a 1.0)
+const hitSound2 = new Audio('assets/audios/hit2.mp3');
+hitSound2.volume = 0.6;
 // You win
-const soundWin = new Audio('assets/audios/you-win-street-fighter.mp3'); // Cambia la ruta por la de tu archivo mp3
-soundWin.volume = 0.6;
+const soundWin = new Audio('assets/audios/you-win-street-fighter.mp3');
+soundWin.volume = 0.9;
 // You lose
-const soundLose = new Audio('assets/audios/you-lose.mp3'); // Cambia la ruta por la de tu archivo mp3
-soundLose.volume = 0.6;
+const soundLose = new Audio('assets/audios/you-lose.mp3');
+soundLose.volume = 0.9;
 // Fight
-const soundFight = new Audio('assets/audios/fight.mp3'); // Cambia la ruta por la de tu archivo mp3
+const soundFight = new Audio('assets/audios/fight.mp3');
 soundFight.volume = 0.6;
+// Contadores 1, 2, 3
+const soundStart1 = new Audio('assets/audios/1.mp3');
+soundStart1.volume = 0.6;
+const soundStart2 = new Audio('assets/audios/2.mp3');
+soundStart2.volume = 0.6;
+const soundStart3 = new Audio('assets/audios/3.mp3');
+soundStart3.volume = 0.6;
+
+
 
 
 
