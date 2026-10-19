@@ -4,9 +4,9 @@
 
 // Precargamos el sonido del golpe
 const hitSound1 = new Audio('assets/audios/hit1.mp3'); // Cambia la ruta por la de tu archivo mp3
-hitSound1.volume = 0.6; // Opcional: ajusta el volumen (de 0.0 a 1.0)
+hitSound1.volume = 0.4; // Opcional: ajusta el volumen (de 0.0 a 1.0)
 const hitSound2 = new Audio('assets/audios/hit2.mp3');
-hitSound2.volume = 0.6;
+hitSound2.volume = 0.4;
 // You win
 const soundWin = new Audio('assets/audios/you-win-street-fighter.mp3');
 soundWin.volume = 0.9;

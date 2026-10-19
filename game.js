@@ -116,6 +116,7 @@ let qTrialStep = 0;
 let qTrialMessage = '';
 let qTrialOutcome = '';
 let qTrialFrame = 0;
+let qTrialResultFrame = 0;
 
 let isStoryMode = false;
 let isVsMachine = false;
@@ -128,6 +129,7 @@ let storyPhase = 1;
 let campaignAttempts = 3;
 let campaignCompleted = false;
 let campaignFailed = false;
+let campaignEndFrame = 0;
 // Final alternativo de historia: solo para quien complete la campaña como Picard.
 let picardNexusStep = 0;
 
@@ -285,7 +287,7 @@ const intelligenceQuestionBank = [{
     }, {
         id: 18,
         question: intelligenceQuestQuestion18,
-        options: [intelligenceQuestQuestion18Option1, intelligenceQuestQuestion18Option2, intelligenceQuestQuestion18Option2, intelligenceQuestQuestion18Option4],
+        options: [intelligenceQuestQuestion18Option1, intelligenceQuestQuestion18Option2, intelligenceQuestQuestion18Option3, intelligenceQuestQuestion18Option4],
         answer: 2,
         explanation: intelligenceQuestQuestion18Explanation
     }, {
@@ -293,7 +295,7 @@ const intelligenceQuestionBank = [{
         question: intelligenceQuestQuestion19,
         options: [intelligenceQuestQuestion19Option1, intelligenceQuestQuestion19Option2, intelligenceQuestQuestion19Option3, intelligenceQuestQuestion19Option4],
         answer: 1,
-        explanation: intelligenceQuestQuestion20Explanation
+        explanation: intelligenceQuestQuestion19Explanation
     }, {
         id: 20,
         question: intelligenceQuestQuestion20,
@@ -576,26 +578,31 @@ const starTrekTriviaQuestionBank = [{
         answer: 2,
         explanation: triviaQuestion45Explanation
     }, {
+        id: 46,
         question: triviaQuestion46,
         options: [triviaQuestion46Option1, triviaQuestion46Option2, triviaQuestion46Option3, triviaQuestion46Option4],
         answer: 0,
         explanation: triviaQuestion46Explanation
     }, {
+        id: 47,
         question: triviaQuestion47,
         options: [triviaQuestion47Option1, triviaQuestion47Option2, triviaQuestion47Option3, triviaQuestion47Option4],
         answer: 3,
         explanation: triviaQuestion47Explanation
     }, {
+        id: 48,
         question: triviaQuestion48,
         options: [triviaQuestion48Option1, triviaQuestion48Option2, triviaQuestion48Option3, triviaQuestion48Option4],
         answer: 1,
         explanation: triviaQuestion48Explanation
     }, {
+        id: 49,
         question: triviaQuestion49,
         options: [triviaQuestion49Option1, triviaQuestion49Option2, triviaQuestion49Option3, triviaQuestion49Option4],
         answer: 0,
         explanation: triviaQuestion49Explanation
     }, {
+        id: 50,
         question: triviaQuestion50,
         options: [triviaQuestion50Option1, triviaQuestion50Option2, triviaQuestion50Option3, triviaQuestion50Option4],
         answer: 2,
@@ -794,6 +801,7 @@ function damageStarshipPlayer() {
     if (g.lives <= 0) {
         g.lives = 0;
         g.over = true;
+        g.overFrame = g.frame;
     }
 }
 
@@ -912,6 +920,7 @@ function updateStarshipMode() {
                     if (g.score >= trainingScoreTarget) {
                         g.missionComplete = true;
                         g.over = true;
+                        g.overFrame = g.frame;
                     }
                 }
                 break;
@@ -1130,11 +1139,33 @@ function drawStarshipMode() {
         ctx.fillStyle = 'rgba(0, 4, 14, 0.80)';
         ctx.fillRect(0, 0, w, h);
         if (g.missionComplete) {
-            text(hudStarshipModeText5, w / 2, h / 2 - 40, 25, '#ffdf70', true);
+            //text(hudStarshipModeText5, w / 2, h / 2 - 40, 25, '#ffdf70', true);
+            textWithAnimation(
+                hudStarshipModeText5,
+                w / 2,
+                h / 2 - 40,
+                10,            // Tamaño inicial pequeño
+                125,           // Tamaño final
+                25,
+                (g.frame - (g.overFrame || g.frame)),
+                '#ffdf70',
+                true
+            );
             text(`${hudStarshipModeText6A}: ${g.score}${hudStarshipModeText6B}`, w / 2, h / 2 - 5, 16, '#ffffff', true);
             text(hudStarshipModeText7, w / 2, h / 2 + 32, 13, '#78f7ff', true);
         } else {
-            text(hudStarshipModeText8, w / 2, h / 2 - 36, 29, '#ff625b', true);
+            //text(hudStarshipModeText8, w / 2, h / 2 - 36, 29, '#ff625b', true);
+            textWithAnimation(
+                hudStarshipModeText8,
+                w / 2,
+                h / 2 - 36,
+                10,            // Tamaño inicial pequeño
+                129,            // Tamaño final
+                25,
+                (g.frame - (g.overFrame || g.frame)),
+                '#ff625b',
+                true
+            );
             text(`${hudStarshipModeText9}${g.score}`, w / 2, h / 2 + 2, 18, '#ffffff', true);
             text(hudStarshipModeText10, w / 2, h / 2 + 36, 14, '#78f7ff', true);
         }
@@ -1324,6 +1355,7 @@ function updateStarshipRace() {
     if (g.progress >= g.finishDistance || fastestRival >= g.finishDistance) {
         g.over = true;
         g.won = g.progress >= g.finishDistance && g.progress >= fastestRival;
+        g.overFrame = g.frame;
         for (const k in keys)
             keys[k] = false;
     }
@@ -1508,7 +1540,18 @@ function drawStarshipRace() {
     if (g.over) {
         ctx.fillStyle = 'rgba(1,6,17,0.82)';
         ctx.fillRect(0, 0, w, h);
-        text(g.won ? starshipRaceEndWin1 : starshipRaceEndLoose1, w / 2, h / 2 - 35, 26, g.won ? '#ffdc72' : '#ff716d', true);
+        //text(g.won ? starshipRaceEndWin1 : starshipRaceEndLoose1, w / 2, h / 2 - 35, 26, g.won ? '#ffdc72' : '#ff716d', true);
+        textWithAnimation(
+            g.won ? starshipRaceEndWin1 : starshipRaceEndLoose1,
+            w / 2,
+            h / 2 - 35,
+            10,            // Tamaño inicial pequeño
+            126,            // Tamaño final
+            25,
+            (g.frame - (g.overFrame || g.frame)),
+            g.won ? '#ffdc72' : '#ff716d',
+            true
+        );
         text(g.won ? starshipRaceEndWin2 : starshipRaceEndLoose2, w / 2, h / 2, 14, '#ffffff');
         text(starshipRaceEndText1 + (g.won ? starshipRaceEndText2 : starshipRaceEndText3), w / 2, h / 2 + 40, 13, '#7eeeff', true);
         text(starshipRaceEndText4, w / 2, h / 2 + 67, 11, '#c5e7f5');
@@ -2001,6 +2044,7 @@ function updateHolodeckLevel() {
         if (g.lives <= 0) {
             g.lives = 0;
             g.over = true;
+            g.overFrame = g.frame;
         }
     }
     for (const coin of g.coins) {
@@ -2033,6 +2077,7 @@ function updateHolodeckLevel() {
                 if (g.lives <= 0) {
                     g.lives = 0;
                     g.over = true;
+                    g.overFrame = g.frame;
                 }
             }
         }
@@ -2765,116 +2810,116 @@ const galaxyNodes = [
     {
         id: 1, 
         name: 'Puente de la U.S.S. Enterprise',
-        x: 60,
-        y: 100
+        x: 100,
+        y: 65
     },
     {
         id: 2, 
         name: 'Estación Espacial 9',
-        x: 173,
-        y: 100
+        x: 200,
+        y: 95
     },
     {
         id: 3, 
         name: 'Nave Klingon',
-        x: 286,
-        y: 100
+        x: 356,
+        y: 95
     },
     {
         id: 4, 
         name: 'Terraza Romulana',
-        x: 399,
-        y: 100
+        x: 504,
+        y: 95
     },
     {
         id: 5, 
         name: 'Ingeniería de la Enterprise',
-        x: 512,
-        y: 100
+        x: 652,
+        y: 95
     },
     {
         id: 6, 
         name: 'Pasillo Borg',
-        x: 625,
-        y: 100
+        x: 800,
+        y: 95
     },
     {
         id: 7, 
         name: 'Sala del Transportador',
-        x: 738,
-        y: 100
+        x: 950,
+        y: 95
     },
     {
         id: 8, 
         name: 'Planeta Talos IV',
-        x: 740,
-        y: 185
+        x: 950,
+        y: 207
     },
     {
         id: 9,
         name: 'Desierto Remoto',
-        x: 616,
-        y: 185
+        x: 772,
+        y: 207
     },
     {
         id: 10, 
         name: 'Ruinas Antiguas',
-        x: 492,
-        y: 185
+        x: 594,
+        y: 207
     },
     {
         id: 11, 
         name: 'Academia de la Federación',
-        x: 368,
-        y: 185
+        x: 416,
+        y: 207
     },
     {
         id: 12, 
         name: 'Hangar de Lanzaderas',
-        x: 244,
-        y: 185
+        x: 238,
+        y: 207
     },
     {
         id: 13, 
         name: 'Cinturón de Asteroides',
-        x: 120,
-        y: 185
+        x: 60,
+        y: 207
     },
     {
         id: 14, 
         name: 'Selva Exótica',
         x: 60,
-        y: 270
+        y: 320
     },
     {
         id: 15, 
         name: 'Observatorio Estelar',
-        x: 196,
-        y: 270
+        x: 238,
+        y: 320
     },
     {
         id: 16, 
         name: 'Puente Dañado',
-        x: 332,
-        y: 270
+        x: 416,
+        y: 320
     },
     {
         id: 17, 
         name: 'Estación Orbital',
-        x: 468,
-        y: 270
+        x: 594,
+        y: 320
     },
     {
         id: 18, 
         name: 'Templo Borg',
-        x: 604,
-        y: 270
+        x: 772,
+        y: 320
     },
     {
         id: 19,
         name: 'Núcleo Borg',
-        x: 740,
-        y: 270
+        x: 930,
+        y: 360
     }
 ];
 
@@ -3625,15 +3670,20 @@ function drawStoryDialogue() {
     ctx.fillStyle = '#020713';
     ctx.fillRect(0, 0, w, h);
     drawParticles(true);
-    text(starTrekExpulsandoElNucleo, w / 2, 44, 13, '#75edff', true);
-    text(d.title, w / 2, 86, 20, '#ffcf70', true);
+    text(starTrekExpulsandoElNucleo, w / 2, 44, 25, '#75edff', true);
+    text(d.title, w / 2, 110, 40, '#ffcf70', true);
     ctx.fillStyle = 'rgba(6,20,38,.94)';
     ctx.strokeStyle = '#49dff4';
     ctx.lineWidth = 2;
-    ctx.fillRect(55, 135, w - 110, 190);
-    ctx.strokeRect(55, 135, w - 110, 190);
+
+    const boxY = 165;
+    const boxHeight = 200;
+
+    ctx.fillRect(55, boxY, w - 110, boxHeight);
+    ctx.strokeRect(55, boxY, w - 110, boxHeight);
     const line = storyDialogueLines[storyDialogueIndex] || [storyModeSpeakerComputer, ''];
-    text(line[0], w / 2, 177, 15, '#78efff', true);
+    // Nombre del emisor (Computadora / Personaje) (ampliado de 15 a 18)
+    text(line[0], w / 2, boxY + 50, 25, '#78efff', false);
     const words = line[1].split(' ');
     let rows = [],
     row = '';
@@ -3646,8 +3696,8 @@ function drawStoryDialogue() {
     }
     if (row)
         rows.push(row);
-    rows.slice(0, 4).forEach((r, i) => text(r, w / 2, 215 + i * 24, 13, '#ffffff'));
-    text(`${storyDialogueIndex + 1}/${storyDialogueLines.length} · ${storyDialoguePressSpace}`, w / 2, h - 42, 12, '#00ffcc', true);
+    rows.slice(0, 4).forEach((r, i) => text(r, w / 2, boxY + 90 + i * 30, 23, '#ffffff'));
+    text(`${storyDialogueIndex + 1}/${storyDialogueLines.length} · ${storyDialoguePressSpace}`, w / 2, h - 42, 22, '#00ffcc', false);
 }
 
 function beginCampaign() {
@@ -3975,7 +4025,8 @@ function chooseQTrialAction(action) {
     } else if (qTrialStep === 2 && action === 3) {
         qTrialOutcome = 'WIN';
         qTrialMessage = qTrialMessageAction3;
-        campaignCompleted = true;
+        campaignCompleted = true
+        qTrialResultFrame = frameCount;
         gameState = 'Q_TRIAL_RESULT';
         return;
     } else {
@@ -3999,6 +4050,7 @@ function updateQTrial() {
         qTrialTimer = 0;
         qTrialOutcome = 'LOSE';
         qTrialMessage = qTrialMessageOver;
+        qTrialResultFrame = frameCount;
         gameState = 'Q_TRIAL_RESULT';
     }
 }
@@ -4012,6 +4064,7 @@ function drawQTrial() {
     bg.addColorStop(1, '#260d2d');
     ctx.fillStyle = bg;
     ctx.fillRect(0, 0, w, h);
+
     // Estrellas y marco táctico
     for (let i = 0; i < 70; i++) {
         const x = (i * 137 + 31) % w,
@@ -4024,8 +4077,9 @@ function drawQTrial() {
     ctx.strokeStyle = '#66eaff';
     ctx.lineWidth = 2;
     ctx.strokeRect(24, 22, w - 48, h - 44);
-    text(qTrialMessageCourt, w / 2, 55, 27, '#ffe28a', true);
-    text(qTrialMessageExpulse, w / 2, 83, 13, '#82eaff', true);
+
+    text(qTrialMessageCourt, w / 2, 55, 34, '#ffe28a', true);
+    text(qTrialMessageExpulse, w / 2, 83, 23, '#82eaff', false);
     // Retrato de Q desde assets/q_talk.png
     const qBoxX = w / 2 - 105,
     qBoxY = 98,
@@ -4041,9 +4095,10 @@ function drawQTrial() {
         drawH = qTalkImage.naturalHeight * ratio;
         ctx.drawImage(qTalkImage, w / 2 - drawW / 2, qBoxY + (qBoxH - drawH) / 2, drawW, drawH);
     } else {
-        text(qTrialQ, w / 2, 137, 35, '#e7d1ff', true);
+        text(qTrialQ, w / 2, 137, 35, '#e7d1ff', false);
     }
-    text(qTrialInteligence, w / 2, 190, 13, '#f4eaff');
+    text(qTrialInteligence, w / 2, 190, 18, '#f4eaff');
+
     // Temporizador y barra
     const seconds = Math.max(0, qTrialTimer);
     text(`${qTrialTime}${String(Math.floor(seconds / 60)).padStart(2, '0')}:${String(seconds % 60).padStart(2, '0')}`, w / 2, 220, 22, seconds <= 10 ? '#ff5d66' : '#ffd36b', true);
@@ -4053,26 +4108,30 @@ function drawQTrial() {
     ctx.fillRect(w * 0.2, 232, w * 0.6 * Math.max(0, qTrialTimer / 60), 12);
     ctx.strokeStyle = '#d8f8ff';
     ctx.strokeRect(w * 0.2, 232, w * 0.6, 12);
-    text(`${qTrialEnergyQuantity}${qTrialPower}`, w / 2, 272, 14, '#8df5ff', true);
+    text(`${qTrialEnergyQuantity}${qTrialPower}`, w / 2, 272, 14, '#8df5ff', false);
+
     const tasks = [
         qTrialTask1,
         qTrialTask2,
         qTrialTask3
     ];
+
     for (let i = 0; i < tasks.length; i++) {
-        const y = 305 + i * 38;
+        const y = 318 + i * 46;
         ctx.fillStyle = i < qTrialStep ? 'rgba(40,190,130,0.22)' : 'rgba(15,30,48,0.85)';
-        ctx.fillRect(w * 0.14, y - 20, w * 0.72, 29);
+        ctx.fillRect(w * 0.14, y - 20, w * 0.72, 38);
         ctx.strokeStyle = i < qTrialStep ? '#55f0b0' : '#527b99';
-        ctx.strokeRect(w * 0.14, y - 20, w * 0.72, 29);
-        text((i < qTrialStep ? '✓ ' : '') + tasks[i], w / 2, y, 12, i < qTrialStep ? '#79ffc7' : '#e4f6ff', true);
+        ctx.strokeRect(w * 0.14, y - 20, w * 0.72, 38);
+        text((i < qTrialStep ? '✓ ' : '') + tasks[i], w / 2, y+6, 18, i < qTrialStep ? '#79ffc7' : '#e4f6ff', false);
     }
+    const boxBottomY = h - 135;
     ctx.fillStyle = 'rgba(1,5,15,0.92)';
-    ctx.fillRect(w * 0.1, h - 82, w * 0.8, 48);
+    ctx.fillRect(w * 0.1, boxBottomY, w * 0.8, 52);
     ctx.strokeStyle = '#66eaff';
-    ctx.strokeRect(w * 0.1, h - 82, w * 0.8, 48);
-    text(qTrialMessage, w / 2, h - 62, 11, '#ffffff', true);
-    text(qTrialKeyOptions, w / 2, h - 18, 10, '#8df5ff', true);
+    ctx.strokeRect(w * 0.1, boxBottomY, w * 0.8, 52);
+
+    text(qTrialMessage, w / 2, boxBottomY + 31, 18, '#ffffff', false);
+    text(qTrialKeyOptions, w / 2, h - 32, 18, '#8df5ff', false);
 }
 
 function drawQTrialResult() {
@@ -4082,10 +4141,21 @@ function drawQTrialResult() {
     ctx.fillRect(0, 0, w, h);
     overlay(0.72);
     const won = qTrialOutcome === 'WIN';
-    text(won ? qTrialResultWin1 : qTrialResultLose1, w / 2, h / 2 - 48, 30, won ? '#7dffbe' : '#ff6474', true);
-    text(won ? qTrialResultWin2 : qTrialResultLose2, w / 2, h / 2 - 8, 14, '#ffffff', true);
-    text(won ? qTrialResultWin3 : qTrialResultLose3, w / 2, h / 2 + 24, 12, '#d7c8ff', true);
-    text(qTrialKeyToMenu, w / 2, h / 2 + 65, 13, '#8df5ff', true);
+    //text(won ? qTrialResultWin1 : qTrialResultLose1, w / 2, h / 2 - 48, 30, won ? '#7dffbe' : '#ff6474', true);
+    textWithAnimation(
+        won ? qTrialResultWin1 : qTrialResultLose1,
+        w / 2,
+        h / 2 - 48,
+        10,            // Tamaño inicial pequeño
+        130,            // Tamaño final
+        25,
+        (frameCount - qTrialResultFrame),
+        won ? '#7dffbe' : '#ff6474',
+        true
+    );
+    text(won ? qTrialResultWin2 : qTrialResultLose2, w / 2, h / 2 - 8, 24, '#ffffff', false);
+    text(won ? qTrialResultWin3 : qTrialResultLose3, w / 2, h / 2 + 24, 22, '#d7c8ff', false);
+    text(qTrialKeyToMenu, w / 2, h / 2 + 65, 22, '#8df5ff', false);
 }
 
 function updateShuttleMinigame() {
@@ -4246,8 +4316,19 @@ function drawShuttleMinigame() {
 function drawShuttleResult() {
     drawShuttleMinigame();
     overlay(0.72);
-    text(shuttleResult, canvas.width / 2, canvas.height / 2 - 12, 28,
-        shuttleResult === shuttleMinigameHudTextDestroyed ? '#ffcf4a' : '#ff755e', true);
+    //text(shuttleResult, canvas.width / 2, canvas.height / 2 - 12, 28,
+    //    shuttleResult === shuttleMinigameHudTextDestroyed ? '#ffcf4a' : '#ff755e', true);
+    textWithAnimation(
+        shuttleResult,
+        canvas.width / 2,
+        canvas.height / 2 - 12,
+        10,            // Tamaño inicial pequeño
+        110,           // Tamaño final
+        25,
+        (frameCount - shuttleResultTimer),
+        shuttleResult === shuttleMinigameHudTextDestroyed ? '#ffcf4a' : '#ff755e',
+        true
+    );
     text(shuttleResult === shuttleMinigameHudTextDestroyed ? 'BONUS +10' : shuttleMinigameHudTextContinues,
         canvas.width / 2, canvas.height / 2 + 22, 15, '#ffffff', true);
     text(shuttleMinigameHudTextKeyToContinue, canvas.width / 2, canvas.height / 2 + 58, 13, '#8df4ff', true);
@@ -4843,6 +4924,23 @@ function text(str, x, y, size = 16, color = '#fff', bold = false, font = GAME_FO
     ctx.fillText(str, x, y);
 }
 
+// Dibuja un texto animado interpolando su tamaño entre initialSize y finalSize a lo largo de 'duration' fotogramas.
+// Si duration es 0 o no se pasa, o el tiempo transcurrido es mayor que la duración, se usa finalSize.
+function textWithAnimation(str, x, y, initialSize, finalSize, durationFrames, elapsedFrames, color = '#fff', bold = false, font = GAME_FONT) {
+    let currentSize = finalSize;
+    if (durationFrames > 0) {
+        const progress = Math.min(1, Math.max(0, elapsedFrames / durationFrames));
+        // Interpolación lineal entre el tamaño inicial y el final
+        currentSize = initialSize + (finalSize - initialSize) * progress;
+    }
+
+    ctx.save();
+    text(str, x, y, Math.round(currentSize), color, bold, font);
+    ctx.restore();
+}
+
+
+
 // ------------------------------------------------------------
 // ------------------------------------------------------------
 // EASTER EGGS SECRETOS
@@ -5122,13 +5220,13 @@ function drawCredits() {
 function drawIntro() {
     drawTitleBackground();
     overlay(0.88);
-    text(introTitle, 500, 90, 23, '#00ffff', true);
-    text(`${introSubTitle}${getHumanPlayer().name}`, 500, 145, 18, '#ffcc00', true);
-    text(introLine1, 500, 195, 14);
-    text(introLine2, 500, 225, 14);
-    text(introLine3, 500, 270, 15, '#ff7777', true);
-    text(introLine4, 500, 305, 13);
-    text(introLine5, 500, 385, 15, '#00ffcc', true);
+    text(introTitle, 500, 90, 64, '#00ffff', true);
+    text(`${introSubTitle}${getHumanPlayer().name}`, 500, 160, 28, '#ffcc00', true);
+    text(introLine1, 500, 220, 24);
+    text(introLine2, 500, 270, 24);
+    text(introLine3, 500, 320, 25, '#ff7777', true);
+    text(introLine4, 500, 370, 23);
+    text(introLine5, 500, 560, 25, '#00ffcc', true);
 }
 
 // ------------------------------------------------------------
@@ -5170,9 +5268,9 @@ function drawStoryMap() {
     ctx.fillRect(0, 0, canvas.width, canvas.height);
     drawParticles(true);
 
-    text(storyMapTitle, 400, 30, 17, '#00ffff', true);
+    text(storyMapTitle, canvas.width / 2, 30, 37, '#00ffff', false);
     text(`${storyMapSubtitleA} ${storyPhase}/${TOTAL_MISIONES} ${storyMapSubtitleB} ${campaignAttempts}/3`,
-        400, 57, 14, '#ffcc00', true);
+        canvas.width / 2, 57, 24, '#ffcc00', true);
 
     ctx.strokeStyle = 'rgba(0,255,255,0.4)';
     ctx.setLineDash([5, 5]);
@@ -5194,7 +5292,7 @@ function drawStoryMap() {
         ctx.arc(
             n.x,
             n.y,
-            nodeNumber === storyPhase ? 11 : 7,
+            nodeNumber === storyPhase ? 13 : 10,
             0,
             Math.PI * 2);
 
@@ -5206,8 +5304,8 @@ function drawStoryMap() {
             : '#4b5563';
         ctx.fill();
 
-        text(String(nodeNumber), n.x, n.y + 4, 9, '#030712', true);
-        text(n.name, n.x, n.y + 20, 7, '#fff');
+        text(String(nodeNumber), n.x, n.y + 4, 20, '#030712', true);
+        text(n.name, n.x, n.y + 20, 15, '#fff', false);
     });
 
     const target = galaxyNodes[storyPhase - 1];
@@ -5215,12 +5313,12 @@ function drawStoryMap() {
     shuttleY += (target.y - shuttleY) * 0.1;
     text('▲', shuttleX, shuttleY - 13, 15, '#00ffcc', true);
     const info = storyDetails[storyPhase];
-    text(info.title, 400, 330, 14, '#ffcc00', true);
-    text(info.desc, 400, 355, 11);
-    text(storyMapKeys, 400, 385, 13, '#00ffcc', true);
+    text(info.title, canvas.width / 2, 430, 24, '#ffcc00');
+    text(info.desc, canvas.width / 2, 455, 22);
+    text(storyMapKeys, canvas.width / 2, 500, 23, '#00ffcc');
 
     if (storyDecisionText) {
-        text(storyDecisionText, 400, 420, 9, '#fff');
+        text(storyDecisionText, canvas.width / 2, 540, 9, '#fff');
     }
 
 }
@@ -5422,7 +5520,23 @@ function drawGameOver() {
     }
 
     overlay(0.82);
-    text(roundWinnerMessage, canvas.width / 2, canvas.height / 2 - 30, 50, '#ffcc00', true);
+    //text(roundWinnerMessage, canvas.width / 2, canvas.height / 2 - 30, 50, '#ffcc00', true);
+    // Fotogramas transcurridos desde que aparece la pantalla de resultado
+    const animElapsed = (frameCount - gameOverFrame) - GAME_OVER_PAUSE_FRAMES;
+    const animDuration = 30; // Duración de la animación (30 fotogramas = 0.5 segundos a 60fps)
+
+    // Va creciendo desde un tamaño inicial (10px) hasta el tamaño final (50px)
+    textWithAnimation(
+        roundWinnerMessage,
+        canvas.width / 2,
+        canvas.height / 2 - 30,
+        10,           // Tamaño inicial (pequeño)
+        150,           // Tamaño final (grande)
+        animDuration,
+        animElapsed,
+        '#ffcc00',
+        false
+    );
 
     if (isStoryMode) {
         const boutWinner = getRoundWinner();
@@ -5437,12 +5551,12 @@ function drawGameOver() {
         } else {
             headline = `${endCombatLose} ${storySeriesHumanWins}-${storySeriesMachineWins}`;
         }
-        text(headline, canvas.width / 2, canvas.height / 2 + 10, 15, '#ffffff', true);
-        text(`${endCombatLine1A} ${storyPhase}/${TOTAL_MISIONES} ${endCombatLine1B} ${storySeriesRoundsPlayed}/3`, canvas.width / 2, canvas.height / 2 + 34, 13, '#ffcc00');
-        text(`${endCombatLine2} ${storySeriesHumanWins}-${storySeriesMachineWins}`, canvas.width / 2, canvas.height / 2 + 56, 13, '#00ffcc');
-        text(seriesWinner === 1 ? endCombatLine3A : endCombatLine3B, canvas.width / 2, canvas.height / 2 + 82, 13, '#00ffcc');
+        text(headline, canvas.width / 2, canvas.height / 2 + 10, 25, '#ffffff', true);
+        text(`${endCombatLine1A} ${storyPhase}/${TOTAL_MISIONES} ${endCombatLine1B} ${storySeriesRoundsPlayed}/3`, canvas.width / 2, canvas.height / 2 + 55, 23, '#ffcc00');
+        text(`${endCombatLine2} ${storySeriesHumanWins}-${storySeriesMachineWins}`, canvas.width / 2, canvas.height / 2 + 80, 23, '#00ffcc');
+        text(seriesWinner === 1 ? endCombatLine3A : endCombatLine3B, canvas.width / 2, canvas.height / 2 + 110, 23, '#00ffcc');
     } else {
-        text(endCombatLine4, canvas.width / 2, canvas.height / 2 + 30, 14, '#00ffcc');
+        text(endCombatLine4, canvas.width / 2, canvas.height / 2 + 30, 24, '#00ffcc');
     }
 }
 
@@ -5543,13 +5657,24 @@ function drawCampaignEnd(completed) {
     drawTitleBackground();
     overlay(0.88);
 
-    text(
+    //text(
+    //    completed ? campaignEndDone : campaignEndFailed,
+    //    400,
+    //    160,
+    //    27,
+    //    completed ? '#00ffcc' : '#ff4444',
+    //    true);
+    textWithAnimation(
         completed ? campaignEndDone : campaignEndFailed,
         400,
         160,
-        27,
+        10,            // Tamaño inicial pequeño
+        127,            // Tamaño final
+        30,
+        (frameCount - campaignEndFrame),
         completed ? '#00ffcc' : '#ff4444',
-        true);
+        true
+    );
 
     if (completed) {
         text(campaignEndCompletedTitle, 400, 205, 15);
@@ -5742,6 +5867,7 @@ function gameLoop() {
                 drawPicardNexusEnding();
                 break;
             case 'CAMPAIGN_COMPLETE':
+                campaignEndFrame = frameCount;
                 drawCampaignEnd(true);
                 break;
             case 'CAMPAIGN_FAILED':

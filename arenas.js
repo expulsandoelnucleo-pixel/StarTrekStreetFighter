@@ -124,7 +124,7 @@ const arenaCombatants = [
     [availableCharacters[7].id, availableCharacters[10].id],
     [availableCharacters[11].id, availableCharacters[12].id],
     [availableCharacters[13].id, availableCharacters[14].id],
-    [availableCharacters[15].id1, availableCharacters[3].id],
+    [availableCharacters[15].id, availableCharacters[3].id],
     [availableCharacters[4].id, availableCharacters[8].id],
     [availableCharacters[8].id, availableCharacters[17].id],
     [availableCharacters[9].id, availableCharacters[18].id],
