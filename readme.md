@@ -11,7 +11,7 @@ El motor de la nave está en peligro y Q ha lanzado un desafío final. En este j
 El título cuenta con múltiples modos de juego diseñados tanto para partidas rápidas como para una experiencia de campaña profunda con diálogos originales, decisiones tácticas, simulaciones de vuelo y pruebas de conocimientos trekkies.
 
 ### ✨ Características Principales
-* **Modo Historia / Campaña:** Supera 8 misiones consecutivas al mejor de tres combates, toma decisiones tácticas y enfréntate al juicio final de Q (¡o desbloquea el final secreto en el Nexus con Picard!).
+* **Modo Historia / Campaña:** Supera 19 misiones consecutivas al mejor de tres combates, toma decisiones tácticas y enfréntate al juicio final de Q (¡o desbloquea el final secreto en el Nexus con Picard!).
 * **Combate 1v1:** Modos VS Local y VS Máquina (con 3 niveles de dificultad: Fácil, Normal y Difícil).
 * **Modo Entrenamiento / Academia:** Incluye el Puente de Mando, galería de tiro láser, circuitos de plataformas en el Holodeck, trivias de Star Trek y la simulación del Kobayashi Maru.
 * **Minigames Arcade:** Destruye la lanzadera enemiga en el hangar o compite en carreras espaciales de naves.

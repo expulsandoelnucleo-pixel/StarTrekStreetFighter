@@ -1,18 +1,8 @@
 Temas musicales
 
-Quedan por poner los correctos:
- - arena_4_romulus.mp3
- - arena_8_planeta_talos.mp3
 
 Quedan por hacer los sonidos de golpes
 Supongo que habría que añadir:
  - cuando Picard gana, un sonido de flauta
  - easter egg de Spock, una música
  - easter egg de Tribbles, una música 
-
-
-No se si hay que borrar los ficheros
- - aleix.mp3
- - A.aguacate,mp3
- - fotd.mp3
- - y todos los demás que no son "arena_..."

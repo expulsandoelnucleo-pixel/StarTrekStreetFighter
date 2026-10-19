@@ -51,7 +51,7 @@ const enterprisePilotImage = loadProjectAsset('enterprise_pilot.png');
 const starshipAttackersImage = loadProjectAsset('atacantes.png');
 
 // ------------------------------------------------------------
-// OCHO ARENAS
+// 19 ARENAS DE LA CAMPAÑA
 // Las imágenes deben estar en la carpeta assets.
 // ------------------------------------------------------------
 const arenaImages = [
@@ -82,17 +82,17 @@ const arenaNames = [
     'Nave Klingon',
     'Terraza Romulana',
     'Ingeniería de la Enterprise',
-    'Corredor Borg',
+    'Pasillo Borg',
     'Sala del Transportador',
-    'Talos IV',
-    'Desierto de Ceti Alpha',
-    'Ruinas del Imperio',
-    'Academia de la Flota',
+    'Planeta Talos IV',
+    'Desierto Remoto',
+    'Ruinas Antiguas',
+    'Academia de la Federación',
     'Hangar de Lanzaderas',
     'Cinturón de Asteroides',
-    'Selva Alienígena',
+    'Selva Exótica',
     'Observatorio Estelar',
-    'Puente en Ruinas',
+    'Puente Dañado',
     'Estación Orbital',
     'Templo Borg',
     'Núcleo Borg',

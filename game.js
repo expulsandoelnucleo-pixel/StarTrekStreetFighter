@@ -84,6 +84,7 @@ const player1 = makePlayer(100, 0, 1);
 const player2 = makePlayer(460, 1, -1);
 
 let gameState = 'MENU';
+let gameOver = false;
 
 // Easter eggs secretos del menú principal.
 const TRIBBLES_SECRET_SEQUENCE = [
@@ -93,7 +94,6 @@ const TRIBBLES_SECRET_SEQUENCE = [
 let easterEggKeySequence = [];
 let easterEggLetterBuffer = '';
 
-let gameOver = false;
 // Mostrar al personaje derrotado en el suelo durante 5 segundos antes del rótulo de resultado.
 let gameOverFrame = 0;
 const GAME_OVER_PAUSE_FRAMES = 5 * 60;
@@ -2761,87 +2761,154 @@ const energyParticles = Array.from({
     }));
 
 // Ocho destinos de campaña, uno por misión.
-const galaxyNodes = [{
-        id: 1,
-        name: 'Academia de la Flota',
-        x: 90,
-        y: 145
-    }, {
-        id: 2,
-        name: 'Zona de entrenamiento',
-        x: 190,
-        y: 225
-    }, {
-        id: 3,
-        name: 'Estación en peligro',
-        x: 290,
-        y: 145
-    }, {
-        id: 4,
-        name: 'Emergencia estelar',
-        x: 390,
-        y: 225
-    }, {
-        id: 5,
-        name: 'Núcleo estelar',
-        x: 490,
-        y: 145
-    }, {
-        id: 6,
-        name: 'Minas de Dilithium',
-        x: 590,
-        y: 225
-    }, {
-        id: 7,
-        name: 'Ingeniería Enterprise',
-        x: 690,
-        y: 145
-    }, {
-        id: 8,
-        name: 'Talos IV',
-        x: 750,
-        y: 255
+const galaxyNodes = [
+    {
+        id: 1, 
+        name: 'Puente de la U.S.S. Enterprise',
+        x: 60,
+        y: 100
+    },
+    {
+        id: 2, 
+        name: 'Estación Espacial 9',
+        x: 173,
+        y: 100
+    },
+    {
+        id: 3, 
+        name: 'Nave Klingon',
+        x: 286,
+        y: 100
+    },
+    {
+        id: 4, 
+        name: 'Terraza Romulana',
+        x: 399,
+        y: 100
+    },
+    {
+        id: 5, 
+        name: 'Ingeniería de la Enterprise',
+        x: 512,
+        y: 100
+    },
+    {
+        id: 6, 
+        name: 'Pasillo Borg',
+        x: 625,
+        y: 100
+    },
+    {
+        id: 7, 
+        name: 'Sala del Transportador',
+        x: 738,
+        y: 100
+    },
+    {
+        id: 8, 
+        name: 'Planeta Talos IV',
+        x: 740,
+        y: 185
+    },
+    {
+        id: 9,
+        name: 'Desierto Remoto',
+        x: 616,
+        y: 185
+    },
+    {
+        id: 10, 
+        name: 'Ruinas Antiguas',
+        x: 492,
+        y: 185
+    },
+    {
+        id: 11, 
+        name: 'Academia de la Federación',
+        x: 368,
+        y: 185
+    },
+    {
+        id: 12, 
+        name: 'Hangar de Lanzaderas',
+        x: 244,
+        y: 185
+    },
+    {
+        id: 13, 
+        name: 'Cinturón de Asteroides',
+        x: 120,
+        y: 185
+    },
+    {
+        id: 14, 
+        name: 'Selva Exótica',
+        x: 60,
+        y: 270
+    },
+    {
+        id: 15, 
+        name: 'Observatorio Estelar',
+        x: 196,
+        y: 270
+    },
+    {
+        id: 16, 
+        name: 'Puente Dañado',
+        x: 332,
+        y: 270
+    },
+    {
+        id: 17, 
+        name: 'Estación Orbital',
+        x: 468,
+        y: 270
+    },
+    {
+        id: 18, 
+        name: 'Templo Borg',
+        x: 604,
+        y: 270
+    },
+    {
+        id: 19,
+        name: 'Núcleo Borg',
+        x: 740,
+        y: 270
     }
 ];
 
 let shuttleX = galaxyNodes[0].x;
 let shuttleY = galaxyNodes[0].y;
 
-// Ocho misiones, con dificultad creciente y combate final más difícil.
-const storyDetails = {
-    1: {
-        title: storyDetailsTitle1,
-        desc: storyDetailsDescription1
-    },
-    2: {
-        title: storyDetailsTitle2,
-        desc: storyDetailsDescription2
-    },
-    3: {
-        title: storyDetailsTitle3,
-        desc: storyDetailsDescription3
-    },
-    4: {
-        title: storyDetailsTitle4,
-        desc: storyDetailsDescription4
-    },
-    5: {
-        title: storyDetailsTitle5,
-        desc: storyDetailsDescription5
-    },
-    6: {
-        title: storyDetailsTitle6,
-        desc: storyDetailsDescription6
-    },
-    7: {
-        title: storyDetailsTitle7,
-        desc: storyDetailsDescription7
-    },
-    8: {
-        title: storyDetailsTitle8,
-        desc: storyDetailsDescription8
-    }
-};
+const storyMissionDetails = [
+    [storyDetailsTitle1, storyDetailsDescription1],
+    [storyDetailsTitle2, storyDetailsDescription2],
+    [storyDetailsTitle3, storyDetailsDescription3],
+    [storyDetailsTitle4, storyDetailsDescription4],
+    [storyDetailsTitle5, storyDetailsDescription5],
+    [storyDetailsTitle6, storyDetailsDescription6],
+    [storyDetailsTitle7, storyDetailsDescription7],
+    [storyDetailsTitle8, storyDetailsDescription8],
+    [storyDetailsTitle9, storyDetailsDescription9],
+    [storyDetailsTitle10, storyDetailsDescription10],
+    [storyDetailsTitle11, storyDetailsDescription11],
+    [storyDetailsTitle12, storyDetailsDescription12],
+    [storyDetailsTitle13, storyDetailsDescription13],
+    [storyDetailsTitle14, storyDetailsDescription14],
+    [storyDetailsTitle15, storyDetailsDescription15],
+    [storyDetailsTitle16, storyDetailsDescription16],
+    [storyDetailsTitle17, storyDetailsDescription17],
+    [storyDetailsTitle18, storyDetailsDescription18],
+    [storyDetailsTitle19, storyDetailsDescription19]
+];
+
+
+// Una entrada narrativa por arena de la campaña.
+const storyDetails = Object.fromEntries(storyMissionDetails.map(([title, desc], index) => [
+    index + 1,
+    { title, desc }
+]));
 
 const machineSettings = {
     FACIL: {
@@ -3437,70 +3504,59 @@ function canHumanControlPlayer(index) {
 // ------------------------------------------------------------
 // MODO HISTORIA
 // ------------------------------------------------------------
-const STORY_DIALOGUES = {
-    1: {
-        title: storyModeChapter1Title,
-        before: [[storyModeSpeakerComputer, storyModeChapter1Before1],
-                [storyModeSpeakerData, storyModeChapter1Before2],
-                [storyModeSpeakerPicard, storyModeChapter1Before3]],
-        afterWin: [storyModeSpeakerData, storyModeChapter1AfterWin],
-        afterLose: [storyModeSpeakerPicard, storyModeChapter1AfterLose]
-    },
-    2: {
-        title: storyModeChapter2Title,
-        before: [[storyModeSpeakerRiker, storyModeChapter2Before1],
-                [storyModeSpeakerSpock, storyModeChapter2Before2]],
-        afterWin: [storyModeSpeakerRiker, storyModeChapter2AfterWin],
-        afterLose: [storyModeSpeakerSpock, storyModeChapter2AfterLose]
-    },
-    3: {
-        title: storyModeChapter3Title,
-        before: [[storyModeSpeakerUhura, storyModeChapter3Before1],
-                [storyModeSpeakerPicard, storyModeChapter3Before2],
-                [storyModeSpeakerData, storyModeChapter3Before3]],
-        afterWin: [storyModeSpeakerUhura, storyModeChapter3AfterWin],
-        afterLose: [storyModeSpeakerUhura, storyModeChapter3AfterLose]
-    },
-    4: {
-        title: storyModeChapter4Title,
-        before: [[storyModeSpeakerScotty, storyModeChapter4Before1],
-                [storyModeSpeakerPicard, storyModeChapter4Before2]],
-        afterWin: [storyModeSpeakerScotty, storyModeChapter4AfterWin],
-        afterLose: [storyModeSpeakerScotty, storyModeChapter4AfterLose]
-    },
-    5: {
-        title: storyModeChapter5Title,
-        before: [[storyModeSpeakerData, storyModeChapter5Before1],
-                [storyModeSpeakerSevenOfNine, storyModeChapter5Before2],
-                [storyModeSpeakerPicard, storyModeChapter5Before3]],
-        afterWin: [storyModeSpeakerSevenOfNine, storyModeChapter5AfterWin],
-        afterLose: [storyModeSpeakerData, storyModeChapter5AfterLose]
-    },
-    6: {
-        title: storyModeChapter6Title,
-        before: [[storyModeSpeakerWorf, storyModeChapter6Before1],
-                [storyModeSpeakerSevenOfNine, storyModeChapter6Before2],
-                [storyModeSpeakerPicard, storyModeChapter6Before3]],
-        afterWin: [storyModeSpeakerData, storyModeChapter6AfterWin],
-        afterLose: [storyModeSpeakerSevenOfNine, storyModeChapter6AfterLose]
-    },
-    7: {
-        title: storyModeChapter7Title,
-        before: [[storyModeSpeakerKhan, storyModeChapter7Before1],
-                [storyModeSpeakerPicard, storyModeChapter7Before2],
-                [storyModeSpeakerData, storyModeChapter7Before3]],
-        afterWin: [storyModeSpeakerData, storyModeChapter7AfterWin],
-        afterLose: [storyModeSpeakerKhan, storyModeChapter7AfterLose]
-    },
-    8: {
-        title: storyModeChapter8Title,
-        before: [[storyModeSpeakerSevenOfNine, storyModeChapter8Before1],
-                [storyModeSpeakerLocutus, storyModeChapter8Before2],
-                [storyModeSpeakerPicard, storyModeChapter8Before3]],
-        afterWin: [storyModeSpeakerData, storyModeChapter8AfterWin],
-        afterLose: [storyModeSpeakerLocutus, storyModeChapter8AfterLose]
+const storyMissionSpeakers = [
+    [storyModeSpeakerComputer, storyModeSpeakerData, storyModeSpeakerPicard],
+    [storyModeSpeakerRiker, storyModeSpeakerSpock, storyModeSpeakerPicard],
+    [storyModeSpeakerUhura, storyModeSpeakerSulu, storyModeSpeakerData],
+    [storyModeSpeakerPicard, storyModeSpeakerSpock, storyModeSpeakerData],
+    [storyModeSpeakerScotty, storyModeSpeakerData, storyModeSpeakerPicard],
+    [storyModeSpeakerWorf, storyModeSpeakerSevenOfNine, storyModeSpeakerPicard],
+    [storyModeSpeakerData, storyModeSpeakerRiker, storyModeSpeakerPicard],
+    [storyModeSpeakerPicard, storyModeSpeakerData, storyModeSpeakerSpock],
+    [storyModeSpeakerSpock, storyModeSpeakerRiker, storyModeSpeakerPicard],
+    [storyModeSpeakerData, storyModeSpeakerSevenOfNine, storyModeSpeakerPicard],
+    [storyModeSpeakerRiker, storyModeSpeakerData, storyModeSpeakerPicard],
+    [storyModeSpeakerScotty, storyModeSpeakerRiker, storyModeSpeakerData],
+    [storyModeSpeakerSulu, storyModeSpeakerData, storyModeSpeakerPicard],
+    [storyModeSpeakerMcCoy, storyModeSpeakerWorf, storyModeSpeakerPicard],
+    [storyModeSpeakerUhura, storyModeSpeakerData, storyModeSpeakerPicard],
+    [storyModeSpeakerRiker, storyModeSpeakerData, storyModeSpeakerPicard],
+    [storyModeSpeakerWorf, storyModeSpeakerData, storyModeSpeakerPicard],
+    [storyModeSpeakerKhan, storyModeSpeakerLocutus, storyModeSpeakerPicard],
+    [storyModeSpeakerData, storyModeSpeakerLocutus, storyModeSpeakerPicard]
+];
+
+const storyMissionDialogues = [
+    [storyModeChapter1Before1, storyModeChapter1Before2, storyModeChapter1Before3],
+    [storyModeChapter2Before1, storyModeChapter2Before2, storyModeChapter2Before3],
+    [storyModeChapter3Before1, storyModeChapter3Before2, storyModeChapter3Before3],
+    [storyModeChapter4Before1, storyModeChapter4Before2, storyModeChapter4Before3],
+    [storyModeChapter5Before1, storyModeChapter5Before2, storyModeChapter5Before3],
+    [storyModeChapter6Before1, storyModeChapter6Before2, storyModeChapter6Before3],
+    [storyModeChapter7Before1, storyModeChapter7Before2, storyModeChapter7Before3],
+    [storyModeChapter8Before1, storyModeChapter8Before2, storyModeChapter8Before3],
+    [storyModeChapter9Before1, storyModeChapter9Before2, storyModeChapter9Before3],
+    [storyModeChapter10Before1, storyModeChapter10Before2, storyModeChapter10Before3],
+    [storyModeChapter11Before1, storyModeChapter11Before2, storyModeChapter11Before3],
+    [storyModeChapter12Before1, storyModeChapter12Before2, storyModeChapter12Before3],
+    [storyModeChapter13Before1, storyModeChapter13Before2, storyModeChapter13Before3],
+    [storyModeChapter14Before1, storyModeChapter14Before2, storyModeChapter14Before3],
+    [storyModeChapter15Before1, storyModeChapter15Before2, storyModeChapter15Before3],
+    [storyModeChapter16Before1, storyModeChapter16Before2, storyModeChapter16Before3],
+    [storyModeChapter17Before1, storyModeChapter17Before2, storyModeChapter17Before3],
+    [storyModeChapter18Before1, storyModeChapter18Before2, storyModeChapter18Before3],
+    [storyModeChapter19Before1, storyModeChapter19Before2, storyModeChapter19Before3]
+]
+
+const STORY_DIALOGUES = Object.fromEntries(storyMissionDialogues.map((lines, index) => [
+    index + 1,
+    {
+        title: storyDetails[index + 1].title.replace(':', ' ·'),
+        before: lines.map((line, lineIndex) => [storyMissionSpeakers[index][lineIndex], line]),
+        afterWin: [storyModeSpeakerData, storyDialogueAfterWin],
+        afterLose: [storyModeSpeakerData, storyDialogueAfterLose]
     }
-};
+]));
 let storyDialogueLines = [];
 let storyDialogueIndex = 0;
 let storyDialogueAfter = false;
@@ -3508,10 +3564,8 @@ function startStoryDialogue(after = false) {
     const d = STORY_DIALOGUES[storyPhase] || STORY_DIALOGUES[TOTAL_MISIONES];
     if (after) {
         const won = getStorySeriesWinner() === 1;
-        const reportTitle = won ? storyDialogueContinue : storyDialogueContinue;
-        const outcome = won
-            ? (storyPhase === 7 ? storyDialogueKhan1 : storyPhase === 8 ? storyDialogueKhan2 : storyDialogueKhan3)
-            : (storyPhase === 7 ? storyDialogueKhan4 : storyPhase === 8 ? storyDialogueKhan5 : storyDialogueKhan6);
+        const reportTitle = won ? storyDialogueConsequence : storyDialogueContinue;
+        const outcome = won ? storyDialogueAfterWin : storyDialogueAfterLose;
         const characterReport = won ? d.afterWin : d.afterLose;
         storyDialogueLines = [[reportTitle, outcome], characterReport];
     } else {
@@ -3740,7 +3794,7 @@ function advanceStory() {
         return;
     }
 
-    // Tras las misiones 4 y 8 se intercala la fase arcade de lanzadera.
+    // Los bonus de lanzadera se intercalan después de las misiones 4 y 19.
     if (storyPhase === 4 || storyPhase === TOTAL_MISIONES) {
         beginShuttleMinigame();
         return;
@@ -4104,7 +4158,7 @@ function hitShuttle() {
 function drawShuttleMinigame() {
     const w = canvas.width,
     h = canvas.height;
-    // El hangar solo se dibuja en el minijuego; las ocho arenas originales no cambian.
+    // El hangar solo se dibuja en el minijuego; las 19 arenas de historia mantienen su orden.
     if (shuttleHangarBackground.complete && shuttleHangarBackground.naturalWidth > 0) {
         ctx.drawImage(shuttleHangarBackground, 0, 0, w, h);
         // Ligero velo para mantener legibles el HUD y los efectos del minijuego.
@@ -5054,16 +5108,16 @@ function drawCharacterSelect() {
 function drawCredits() {
     drawTitleBackground();
     overlay(0.85);
-    text(creditsTitle, 500, 90, 85, '#00ffff', true, GAME_FONT);
-    text(creditsSubtitle, 500, 185, 36, '#ffcc00', GAME_FONTDS9);
-    text(creditsText1, 500, 325, 24);
-    text(creditsText2, 500, 380, 24, '#00ffcc');
-    text(creditsText3, 500, 440, 24, '#ff9900');
+    text(creditsTitle, 500, 90, 85, '#00ffff', false, GAME_FONT);
+    text(creditsSubtitle, 500, 185, 36, '#ffcc00', false, GAME_FONTDS9);
+    text(creditsText1, 500, 325, 24, '#ffcc00', false, GAME_FONTKLINGON);
+    text(creditsText2, 500, 380, 24, '#00ffcc', false, GAME_FONTROMULAN);
+    text(creditsText3, 500, 440, 24, '#ff9900', false, GAME_FONTTNG);
     text(creditsKeys, 500, 510, 24);
 }
 
 // ------------------------------------------------------------
-// INTRODUCCIÓN DE LA CAMPAÑA: OCHO MISIONES
+// INTRODUCCIÓN DE LA CAMPAÑA: 19 MISIONES
 // ------------------------------------------------------------
 function drawIntro() {
     drawTitleBackground();
@@ -5109,14 +5163,14 @@ function drawDecision() {
 }
 
 // ------------------------------------------------------------
-// MAPA DE LAS OCHO MISIONES
+// MAPA DE LAS 19 MISIONES
 // ------------------------------------------------------------
 function drawStoryMap() {
     ctx.fillStyle = '#030712';
     ctx.fillRect(0, 0, canvas.width, canvas.height);
     drawParticles(true);
 
-    text('', 400, 30, 17, '#00ffff', true);
+    text(storyMapTitle, 400, 30, 17, '#00ffff', true);
     text(`${storyMapSubtitleA} ${storyPhase}/${TOTAL_MISIONES} ${storyMapSubtitleB} ${campaignAttempts}/3`,
         400, 57, 14, '#ffcc00', true);
 
@@ -5153,7 +5207,7 @@ function drawStoryMap() {
         ctx.fill();
 
         text(String(nodeNumber), n.x, n.y + 4, 9, '#030712', true);
-        text(n.name, n.x, n.y + 20, 8, '#fff');
+        text(n.name, n.x, n.y + 20, 7, '#fff');
     });
 
     const target = galaxyNodes[storyPhase - 1];

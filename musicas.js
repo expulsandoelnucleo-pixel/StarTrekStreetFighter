@@ -145,7 +145,7 @@ function stopAllGameMusic() {
 }
 
 function getMusicScreen() {
-    if (gameOver) return 'OTHER';
+    if (typeof gameOver !== 'undefined' && gameOver) return 'OTHER';
     if (typeof isFightOver !== 'undefined' && isFightOver) return 'OTHER';
     if (typeof fightFinished !== 'undefined' && fightFinished) return 'OTHER';
     if (typeof matchOver !== 'undefined' && matchOver) return 'OTHER';
