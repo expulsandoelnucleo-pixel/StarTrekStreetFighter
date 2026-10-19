@@ -168,7 +168,12 @@ const jesusPunch = loadImage('assets/jesus_kick.png');
 // Emilio
 const emilioGuard = loadImage('assets/emilio_guard.png');
 const emilioPunch = loadImage('assets/emilio_kick.png');
-
+// Ramón
+const ramonGuard = loadImage('assets/ramon_guard.png');
+const ramonPunch = loadImage('assets/ramon_kick.png');
+// Txús
+const txusGuard = loadImage('assets/txus_guard.png');
+const txusPunch = loadImage('assets/txus_kick.png');
 
 
 // Y luego creas tu array usando la clase:
@@ -413,6 +418,23 @@ const availableCharacters = [
             guardImg: emilioGuard,
             punchImg: emilioPunch,
             role: 'AKA Anónimo Aguacate',
+        }
+    ),
+    new Character(
+        {
+            id: 23,
+            name: 'RAMON',
+            guardImg: ramonGuard,
+            punchImg: ramonPunch,
+            role: 'Bro 1',
+        }
+    ), new Character(
+        {
+            id: 24,
+            name: 'TXUS',
+            guardImg: txusGuard,
+            punchImg: txusPunch,
+            role: 'Bro2',
         }
     )
   // ... y así con el resto de personajes

@@ -144,7 +144,7 @@ let storySeriesHumanHealthTotal = 0;
 let storySeriesMachineHealthTotal = 0;
 let storyRoundRecorded = false;
 
-// Minijuego arcade de destrucción de lanzadera cada cuatro misiones.
+// Bonus arcade independiente de las 19 misiones de historia.
 let shuttleMaxHealth = 300;
 let shuttleHealth = 300;
 let shuttleTimer = 60 * 60;
@@ -157,6 +157,8 @@ let shuttleResult = '';
 let shuttleResultTimer = 0;
 let shuttleSparks = [];
 let shuttleBonus = 0;
+// Fase narrativa exacta a la que se debe volver tras el bonus de lanzadera.
+let shuttleResumeStoryPhase = null;
 
 // Modo entrenamiento: puente, combate espacial, holodeck, razonamiento y Preguntas Trekkies.
 let starshipGame = null;
@@ -3503,7 +3505,7 @@ let storyDialogueLines = [];
 let storyDialogueIndex = 0;
 let storyDialogueAfter = false;
 function startStoryDialogue(after = false) {
-    const d = STORY_DIALOGUES[storyPhase] || STORY_DIALOGUES[8];
+    const d = STORY_DIALOGUES[storyPhase] || STORY_DIALOGUES[TOTAL_MISIONES];
     if (after) {
         const won = getStorySeriesWinner() === 1;
         const reportTitle = won ? storyDialogueContinue : storyDialogueContinue;
@@ -3565,7 +3567,7 @@ function continueStoryDialogue() {
 function drawStoryDialogue() {
     const w = canvas.width,
     h = canvas.height,
-    d = STORY_DIALOGUES[storyPhase] || STORY_DIALOGUES[8];
+    d = STORY_DIALOGUES[storyPhase] || STORY_DIALOGUES[TOTAL_MISIONES];
     ctx.fillStyle = '#020713';
     ctx.fillRect(0, 0, w, h);
     drawParticles(true);
@@ -3720,6 +3722,10 @@ function advanceStory() {
             return;
         // La serie la ha ganado el jugador. Mostrar la escena posterior antes de avanzar.
         resetStorySeries();
+        if (storyPhase === 4 || storyPhase === TOTAL_MISIONES) {
+            beginShuttleMinigame();
+            return;
+        }
         startStoryDialogue(true);
         return;
     } else if (!humanWonStoryPhase()) {

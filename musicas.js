@@ -67,7 +67,7 @@ const musicTracks = {
 // Aliases individuales por si alguna otra parte del juego busca estas variables globales
 const {
     MENU: menuMusic,
-    MODE_SELECT: modeMusic,
+    MODE_SELECT: modeSelect,
     CHARACTER_SELECT: selectionMusic,
     CREDITS: endingMusic,
     ARENA_1_PUENTE: arena1Music,
