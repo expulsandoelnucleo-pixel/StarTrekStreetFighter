@@ -5722,7 +5722,7 @@ function updateAndDrawCombat() {
         drawHUD();
         const elapsed = frameCount - matchStartFrame;
         textWithAnimation(
-            "FIGHT",                     // Texto a mostrar (puedes usar una variable si lo tienes traducido)
+            startFight,
             canvas.width / 2,
             canvas.height / 2,
             10,                          // Tamaño inicial pequeño
