@@ -106,6 +106,7 @@ let currentArena = 1;
 let matchTimeLeft = 120;
 let timeText = '02:00';
 let roundWinnerMessage = '';
+let roundWinnerHasTwoLines = false;
 let picardVictory = false;
 let matchStartDelay = 0;
 
@@ -3192,12 +3193,14 @@ function setWinnerMessageByHealth() {
         roundWinnerMessage = humanPerfect
             ? winnerMessagePerfect
             : humanWon
-            ? winnerMessageWin
-            : winnerMessageLose;
+                ? winnerMessageWin
+                : winnerMessageLose;
+        roundWinnerHasTwoLines = false;
     } else {
         roundWinnerMessage = w === 1
             ? `¡${player1.name} ${winnerMessageWhoWins}`
             : `¡${player2.name} ${winnerMessageWhoWins}`;
+        roundWinnerHasTwoLines = true;
     }
 }
 
@@ -5027,8 +5030,8 @@ function drawMainMenu() {
     drawTitleBackground();
     overlay(0.45);
 
-    text(menuTitle, canvas.width / 2, 250, 56, '#00ffff', true);
-    text(menuSubtitle, canvas.width / 2, 290, 33, '#ffcc00', true);
+    text(menuTitle, canvas.width / 2, 260, 86, 'Red', false, GAME_FONTTNG);
+    text(menuSubtitle, canvas.width / 2, 310, 33, '#ffcc00', false, GAME_FONTDS9);
     text(menuKeys1, canvas.width / 2, 470, 28, '#00ffcc');
     text(menuKeys2, canvas.width / 2, 510, 24);
 }
@@ -5365,18 +5368,19 @@ function drawHUD() {
     ctx.fillRect(45, 50, 2 * clamp(player1.energy || 0, 0, player1.maxEnergy || 100), 8);
     ctx.fillRect(canvas.width - 255, 50, 2 * clamp(player2.energy || 0, 0, player2.maxEnergy || 100), 8);
 
-    text(player1.name, 145, 25, 12, '#fff', true);
-    text(player2.name, canvas.width - 155, 25, 12, '#fff', true);
-    text(timeText, canvas.width / 2, 39, 16, '#ffcc00', true);
+    text(player1.name, 145, 25, 18, '#fff', false);
+    text(player2.name, canvas.width - 155, 25, 18, '#fff', false);
+    text(timeText, canvas.width / 2, 39, 26, '#ffcc00', false, GAME_FONTKLINGON);
     if (isStoryMode) {
         text(`${hudStoryModeText1A} ${storyPhase}/${TOTAL_MISIONES} ${hudStoryModeText1B} ${campaignAttempts}/3`,
-            canvas.width / 2, 65, 12, '#ffcc00', true);
-        text(`${hudStoryModeText2A} ${storySeriesHumanWins}-${storySeriesMachineWins} ${hudStoryModeText2B} ${Math.min(storySeriesRoundsPlayed + 1, 3)}/3`, canvas.width / 2, 82, 10, '#8df4ff', true);
+            canvas.width / 2, 65, 18, '#ffcc00', false);
+        text(`${hudStoryModeText2A} ${storySeriesHumanWins}-${storySeriesMachineWins} ${hudStoryModeText2B} ${Math.min(storySeriesRoundsPlayed + 1, 3)}/3`,
+            canvas.width / 2, 82, 16, '#8df4ff', false);
     } else {
         const arenaName = arenaNames[currentArena - 1] || 'Arena';
 
         text(`${hudNoStoryModeText1A} ${currentArena}/${TOTAL_ARENAS}: ${arenaName} ${hudNoStoryModeText1B}`,
-            canvas.width / 2, 65, 10, '#ffcc00');
+            canvas.width / 2, 65, 18, '#ffcc00');
     }
 
     if (getCharacter(player1).name === 'RIKER' || getCharacter(player2).name === 'RIKER') {
@@ -5545,18 +5549,53 @@ function drawGameOver() {
     const animElapsed = (frameCount - gameOverFrame) - GAME_OVER_PAUSE_FRAMES;
     const animDuration = 30; // Duración de la animación (30 fotogramas = 0.5 segundos a 60fps)
 
-    // Va creciendo desde un tamaño inicial (10px) hasta el tamaño final (50px)
-    textWithAnimation(
-        roundWinnerMessage,
-        canvas.width / 2,
-        canvas.height / 2 - 30,
-        10,           // Tamaño inicial (pequeño)
-        150,           // Tamaño final (grande)
-        animDuration,
-        animElapsed,
-        '#ffcc00',
-        false
-    );
+    // Comprobamos si es un mensaje de victoria por jugador (que contiene el salto de línea \n)
+    //const cuantoSubir = roundWinnerHasTwoLines ? 65 : 30;
+    //const centerY = (canvas.height / 2) - cuantoSubir;
+
+    if (roundWinnerHasTwoLines) {
+        const ganadorTexto = roundWinnerMessage.split('\n')[0] || roundWinnerMessage;
+
+        // Nombre del jugador
+        textWithAnimation(
+            ganadorTexto,
+            canvas.width / 2,
+            (canvas.height / 2) - 85,
+            10,           // Tamaño inicial (pequeño)
+            150,           // Tamaño final (grande)
+            animDuration,
+            animElapsed,
+            '#ffcc00',
+            false
+        );
+
+        // Resultado
+        textWithAnimation(
+            winnerMessageWhoWins,
+            canvas.width / 2,
+            (canvas.height / 2) + 35,
+            10,           // Tamaño inicial (pequeño)
+            150,           // Tamaño final (grande)
+            animDuration,
+            animElapsed,
+            '#ffcc00',
+            false
+        );
+    }
+    else {
+        // Va creciendo desde un tamaño inicial (10px) hasta el tamaño final (50px)
+        textWithAnimation(
+            roundWinnerMessage,
+            canvas.width / 2,
+            (canvas.height / 2),
+            10,           // Tamaño inicial (pequeño)
+            150,           // Tamaño final (grande)
+            animDuration,
+            animElapsed,
+            '#ffcc00',
+            false
+        );
+    }
 
     if (isStoryMode) {
         const boutWinner = getRoundWinner();
@@ -5576,7 +5615,7 @@ function drawGameOver() {
         text(`${endCombatLine2} ${storySeriesHumanWins}-${storySeriesMachineWins}`, canvas.width / 2, canvas.height / 2 + 80, 23, '#00ffcc');
         text(seriesWinner === 1 ? endCombatLine3A : endCombatLine3B, canvas.width / 2, canvas.height / 2 + 110, 23, '#00ffcc');
     } else {
-        text(endCombatLine4, canvas.width / 2, canvas.height / 2 + 30, 24, '#00ffcc');
+        text(endCombatLine4, canvas.width / 2, canvas.height / 2 + 60, 24, '#00ffcc');
     }
 }
 

@@ -694,7 +694,7 @@ const winnerMessageDraw = 'DRAW';
 const winnerMessagePerfect = 'PERFECT!';
 const winnerMessageWin = 'YOU WIN!';
 const winnerMessageLose = 'YOU LOSE!';
-const winnerMessageWhoWins = ' GANA EL COMBATE!';
+const winnerMessageWhoWins = '\nGANA EL COMBATE!';
 
 // MODO HISTORIA
 // Who talks
