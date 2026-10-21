@@ -4375,6 +4375,7 @@ window.addEventListener('keydown', (e) => {
             playSound(soundTribbles);
             easterEggKeySequence = [];
             easterEggLetterBuffer = '';
+            tribbleEasterEggCache = null;
             return;
         }
         if (e.key.length === 1 && /^[a-z]$/i.test(e.key)) {
@@ -4979,30 +4980,45 @@ function drawTribble(x, y, r, variant = 0) {
     ctx.restore();
 }
 
+let tribbleEasterEggCache = null;
+
 function drawTribbleEasterEgg() {
     drawTitleBackground();
     overlay(0.48);
-    for (let i = 0; i < 42; i++) {
-        const x = 22 + ((i * 137) % Math.max(1, canvas.width - 44));
-        const y = 130 + ((i * 59) % Math.max(1, canvas.height - 180));
-        const r = 10 + (i % 5) * 2;
-        drawTribble(x, y, r, i % 4);
+    // Pintamos aleatoriamente a los Tribbles
+    if (!tribbleEasterEggCache) {
+        tribbleEasterEggCache = [];
+        const total = 65; // Número de tribbles en pantalla
+        for (let i = 0; i < total; i++) {
+            tribbleEasterEggCache.push({
+                x: 30 + Math.random() * (canvas.width - 60),
+                y: 110 + Math.random() * (canvas.height - 180),
+                r: 10 + Math.random() * 18, // Tamaños variados aleatorios
+                variant: Math.floor(Math.random() * 4) // Color aleatorio
+            });
+        }
     }
-    text(tribblesEasterEgg1, canvas.width / 2, 65, 27, '#ffcf72', true);
-    text(tribblesEasterEgg2, canvas.width / 2, 100, 11, '#ffffff', true);
-    text(tribblesEasterEgg3, canvas.width / 2, canvas.height - 57, 12, '#fff1d6');
-    text(tribblesEasterEgg4, canvas.width / 2, canvas.height - 27, 12, '#8df4ff', true);
+
+    // Dibujamos los tribbles usando la caché generada al entrar
+    for (const t of tribbleEasterEggCache) {
+        drawTribble(t.x, t.y, t.r, t.variant);
+    }
+
+    text(tribblesEasterEgg1, canvas.width / 2, 65, 37, '#ffcf72', false);
+    text(tribblesEasterEgg2, canvas.width / 2, 100, 30, '#ffffff', false);
+    text(tribblesEasterEgg3, canvas.width / 2, canvas.height - 100, 32, '#fff1d6');
+    text(tribblesEasterEgg4, canvas.width / 2, canvas.height - 27, 32, '#8df4ff', false);
 }
 
 function drawSpockEasterEgg() {
     drawTitleBackground();
     overlay(0.72);
-    text(spockEasterEgg1, canvas.width / 2, 100, 22, '#8df4ff', true);
-    text(spockEasterEgg2, canvas.width / 2, 235, 104, '#7ce7ff', true);
-    text(spockEasterEgg3, canvas.width / 2, 315, 24, '#ffcf72', true);
-    text(spockEasterEgg4, canvas.width / 2, 360, 14, '#ffffff');
-    text(spockEasterEgg5, canvas.width / 2, 393, 13, '#8df4ff', true);
-    text(spockEasterEgg6, canvas.width / 2, canvas.height - 30, 12, '#8df4ff', true);
+    text(spockEasterEgg1, canvas.width / 2, 100, 64, '#8df4ff', false);
+    text(spockEasterEgg2, canvas.width / 2, 235, 104, '#7ce7ff', false);
+    text(spockEasterEgg3, canvas.width / 2, 315, 54, '#ffcf72', false);
+    text(spockEasterEgg4, canvas.width / 2, 370, 54, '#ffffff', false);
+    text(spockEasterEgg5, canvas.width / 2, 423, 50, '#8df4ff', false);
+    text(spockEasterEgg6, canvas.width / 2, canvas.height - 30, 32, '#8df4ff', false);
 }
 
 // MENÚS
