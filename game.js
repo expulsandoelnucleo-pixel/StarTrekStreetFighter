@@ -649,7 +649,7 @@ const kobayashiMaruChoices = [{
 // Personaje elegido solo para el circuito del holodeck; no cambia la selección
 // de los modos de combate ni el personaje que usa la historia.
 let trainingCharacterIndex = 0;
-const trainingScoreTarget = 500;
+const trainingScoreTarget = 3000;
 let trainingCircuitIndex = 0;
 const holodeckCourses = [{
         name: holodeckCourseName1,
@@ -1132,46 +1132,50 @@ function drawStarshipMode() {
     // HUD.
     ctx.fillStyle = 'rgba(0, 8, 20, 0.7)';
     ctx.fillRect(0, 0, w, 43);
-    text(hudStarshipModeText1, 150, 27, 16, '#7eeeff', true);
-    text(`${hudStarshipModeText2}${String(g.score).padStart(6, '0')}`, w / 2, 27, 15, '#ffffff', true);
-    text(`${hudStarshipModeText3}${'◆ '.repeat(g.lives).trim()}`, w - 88, 27, 15, '#ffcf70', true);
-    text(hudStarshipModeText4, w / 2, h - 10, 10, '#b4d7e8', true);
+    text(hudStarshipModeText1, 150, 27, 36, '#7eeeff', false);
+    text(`${hudStarshipModeText2}${String(g.score).padStart(6, '0')}`, w / 2, 27, 30, '#ffffff', false);
+    text(`${hudStarshipModeText3}${'◆ '.repeat(g.lives).trim()}`, w - 88, 27, 30, '#ffcf70', false);
+    text(hudStarshipModeText4, w / 2, h - 10, 24, '#b4d7e8', false);
 
     if (g.over) {
         ctx.fillStyle = 'rgba(0, 4, 14, 0.80)';
         ctx.fillRect(0, 0, w, h);
+
+        if (!g.overFrame) g.overFrame = g.frame;
+        const elapsed = g.frame - g.overFrame;
+
         if (g.missionComplete) {
             //text(hudStarshipModeText5, w / 2, h / 2 - 40, 25, '#ffdf70', true);
             textWithAnimation(
-                hudStarshipModeText5,
+                hudStarshipModeText5 + '*****',
                 w / 2,
-                h / 2 - 40,
+                h / 2 - 80,
                 10,            // Tamaño inicial pequeño
                 125,           // Tamaño final
                 25,
-                (g.frame - (g.overFrame || g.frame)),
+                elapsed,
                 '#ffdf70',
-                true
+                false
             );
-            text(`${hudStarshipModeText6A}: ${g.score}${hudStarshipModeText6B}`, w / 2, h / 2 - 5, 16, '#ffffff', true);
-            text(hudStarshipModeText7, w / 2, h / 2 + 32, 13, '#78f7ff', true);
+            text(`${hudStarshipModeText6A}: ${g.score}${hudStarshipModeText6B}`, w / 2, h / 2 - 5, 36, '#ffffff', false);
+            text(hudStarshipModeText7, w / 2, h / 2 + 32, 33, '#78f7ff', false);
         } else {
             //text(hudStarshipModeText8, w / 2, h / 2 - 36, 29, '#ff625b', true);
             textWithAnimation(
                 hudStarshipModeText8,
                 w / 2,
-                h / 2 - 36,
+                h / 2 - 80,
                 10,            // Tamaño inicial pequeño
                 129,            // Tamaño final
                 25,
-                (g.frame - (g.overFrame || g.frame)),
+                elapsed,
                 '#ff625b',
-                true
+                false
             );
-            text(`${hudStarshipModeText9}${g.score}`, w / 2, h / 2 + 2, 18, '#ffffff', true);
-            text(hudStarshipModeText10, w / 2, h / 2 + 36, 14, '#78f7ff', true);
+            text(`${hudStarshipModeText9}${g.score}`, w / 2, h / 2 + 2, 28, '#ffffff', false);
+            text(hudStarshipModeText10, w / 2, h / 2 + 36, 24, '#78f7ff', false);
         }
-        text(hudStarshipModeText11, w / 2, h / 2 + 63, 12, '#c8dbe8');
+        text(hudStarshipModeText11, w / 2, h / 2 + 63, 22, '#c8dbe8');
     }
 }
 
@@ -1527,18 +1531,18 @@ function drawStarshipRace() {
     const pct = Math.min(100, Math.floor(g.progress / g.finishDistance * 100));
     ctx.fillStyle = 'rgba(0,8,20,0.82)';
     ctx.fillRect(0, 0, w, 47);
-    text(starshipRaceInstructions1, w / 2, 19, 15, '#7eeeff', true);
-    text(`${starshipRaceInstructions2} ${pct}%`, w * 0.22, 38, 11, '#ffffff', true);
+    text(starshipRaceInstructions1, w / 2, 19, 24, '#7eeeff', false);
+    text(`${starshipRaceInstructions2} ${pct}%`, w * 0.22, 38, 24, '#ffffff', false);
     ctx.fillStyle = '#19394d';
     ctx.fillRect(w * 0.36, 29, w * 0.28, 9);
     ctx.fillStyle = '#58e9ff';
     ctx.fillRect(w * 0.36, 29, w * 0.28 * pct / 100, 9);
-    text(`${starshipRaceInstructions3} ${place}/4`, w * 0.80, 38, 12, '#ffdc72', true);
-    text(starshipRaceInstructions4, w / 2, h - 10, 9, '#c5e7f5', true);
+    text(`${starshipRaceInstructions3} ${place}/4`, w * 0.80, 38, 24, '#ffdc72', false);
+    text(starshipRaceInstructions4, w / 2, h - 10, 24, '#c5e7f5', false);
     if (g.offTrack && !g.over)
-        text(starshipRaceInstructions5, w / 2, h - 34, 12, '#ffbb67', true);
+        text(starshipRaceInstructions5, w / 2, h - 34, 12, '#ffbb67', false);
     else if (g.lastImpact && g.player.hitTimer > 0)
-        text(g.lastImpact, w / 2, h - 34, 12, '#ff8e77', true);
+        text(g.lastImpact, w / 2, h - 34, 12, '#ff8e77', false);
     if (g.over) {
         ctx.fillStyle = 'rgba(1,6,17,0.82)';
         ctx.fillRect(0, 0, w, h);
@@ -1554,9 +1558,9 @@ function drawStarshipRace() {
             g.won ? '#ffdc72' : '#ff716d',
             true
         );
-        text(g.won ? starshipRaceEndWin2 : starshipRaceEndLoose2, w / 2, h / 2, 14, '#ffffff');
-        text(starshipRaceEndText1 + (g.won ? starshipRaceEndText2 : starshipRaceEndText3), w / 2, h / 2 + 40, 13, '#7eeeff', true);
-        text(starshipRaceEndText4, w / 2, h / 2 + 67, 11, '#c5e7f5');
+        text(g.won ? starshipRaceEndWin2 : starshipRaceEndLoose2, w / 2, h / 2, 24, '#ffffff');
+        text(starshipRaceEndText1 + (g.won ? starshipRaceEndText2 : starshipRaceEndText3), w / 2, h / 2 + 40, 23, '#7eeeff', false);
+        text(starshipRaceEndText4, w / 2, h / 2 + 67, 21, '#c5e7f5');
     }
 }
 
@@ -1646,8 +1650,8 @@ function drawTrainingBridgeBackdrop() {
     ctx.fillText(trainingBridge, w / 2, h * 0.972);
 }
 
-function wrapCanvasText(str, centerX, startY, maxWidth, lineHeight, color) {
-    ctx.font = `13px ${GAME_FONT}`;
+function wrapCanvasText(str, centerX, startY, maxWidth, lineHeight, color, font = GAME_FONT) {
+    ctx.font = `25px ${font}`;
     ctx.textAlign = 'center';
     ctx.fillStyle = color;
     const words = str.split(/\s+/);
@@ -1670,28 +1674,28 @@ function drawTrainingBridge() {
     drawTrainingBridgeBackdrop();
     ctx.fillStyle = 'rgba(2, 8, 19, 0.78)';
     ctx.fillRect(38, 24, canvas.width - 76, 80);
-    text(trainingBridgeAcademy, canvas.width / 2, 52, 17, '#79edff', true);
-    text(trainingBridgeModus, canvas.width / 2, 78, 12, '#ffd66b', true);
+    text(trainingBridgeAcademy, canvas.width / 2, 52, 37, '#79edff', false);
+    text(trainingBridgeModus, canvas.width / 2, 78, 22, '#ffd66b', false);
     const d = trainingDialogue[trainingDialogueIndex];
     ctx.fillStyle = 'rgba(3, 12, 25, 0.91)';
-    ctx.fillRect(52, canvas.height * 0.66, canvas.width - 104, 112);
+    ctx.fillRect(52, canvas.height * 0.64, canvas.width - 104, 126);
     ctx.strokeStyle = '#64dff4';
     ctx.lineWidth = 2;
-    ctx.strokeRect(52, canvas.height * 0.66, canvas.width - 104, 112);
-    text(d.speaker, canvas.width / 2, canvas.height * 0.66 + 25, 13, '#ffd66b', true);
-    wrapCanvasText(d.text, canvas.width / 2, canvas.height * 0.66 + 52, canvas.width - 150, 17, '#ffffff');
+    ctx.strokeRect(52, canvas.height * 0.64, canvas.width - 104, 126);
+    text(d.speaker, canvas.width / 2, canvas.height * 0.64 + 25, 22, '#ffd66b', false);
+    wrapCanvasText(d.text, canvas.width / 2, canvas.height * 0.64 + 58, canvas.width - 150, 22, '#ffffff');
     // Muestra un personaje real del elenco en el puente y permite escoger
     // quién hará el circuito del holodeck. El selector es exclusivo del entrenamiento.
     const selected = availableCharacters[trainingCharacterIndex] || availableCharacters[0];
     const previewX = canvas.width * 0.74;
     const previewY = canvas.height * 0.31;
     ctx.fillStyle = 'rgba(2, 10, 22, 0.68)';
-    ctx.fillRect(previewX - 67, previewY - 57, 134, 120);
+    ctx.fillRect(previewX - 75, previewY - 65, 150, 130);
     ctx.strokeStyle = '#69dff1';
     ctx.lineWidth = 1.5;
-    ctx.strokeRect(previewX - 67, previewY - 57, 134, 120);
+    ctx.strokeRect(previewX - 75, previewY - 65, 150, 130);
     if (imageIsReady(selected.guardImg)) {
-        const previewW = 38;
+        const previewW = 130;
         const previewH = previewW * selected.guardImg.naturalHeight / selected.guardImg.naturalWidth;
         ctx.drawImage(selected.guardImg, previewX - previewW / 2, previewY - previewH / 2 - 4, previewW, previewH);
     } else {
@@ -1703,22 +1707,22 @@ function drawTrainingBridge() {
         ctx.fillRect(previewX - 10, previewY + 22, 8, 14);
         ctx.fillRect(previewX + 2, previewY + 22, 8, 14);
     }
-    text(selected.name, previewX, previewY + 48, 12, '#ffdc72', true);
-    text(trainingBridgeInstructions1, previewX, previewY + 76, 9, '#8ff5ff', true);
-    text(trainingBridgeInstructions2, canvas.width / 2, canvas.height - 16, 9, '#8ff5ff', true);
-    text(`${trainingDialogueIndex + 1} / ${trainingDialogue.length}`, canvas.width - 70, 125, 11, '#c6d8e6');
+    text(selected.name, previewX, previewY + 48, 22, '#ffdc72', false);
+    text(trainingBridgeInstructions1, previewX, previewY + 86, 22, '#8ff5ff', false);
+    text(trainingBridgeInstructions2, canvas.width / 2, canvas.height - 16, 20, '#8ff5ff', false);
+    text(`${trainingDialogueIndex + 1} / ${trainingDialogue.length}`, canvas.width - 70, 125, 28, '#c6d8e6');
 }
 
 function drawTrainingMissionBriefing() {
     drawTrainingBridgeBackdrop();
     overlay(0.55);
-    text(trainingMissionBriefing1, canvas.width / 2, 66, 24, '#7feeff', true);
-    text(trainingMissionBriefing2, canvas.width / 2, 112, 19, '#ffdc72', true);
-    text(trainingMissionBriefing3, canvas.width / 2, 163, 14, '#ffffff');
-    text(trainingMissionBriefing4, canvas.width / 2, 211, 13, '#8ff5ff', true);
-    text(trainingMissionBriefing5, canvas.width / 2, 241, 13, '#8ff5ff', true);
-    text(trainingMissionBriefing6, canvas.width / 2, 294, 12, '#d4e6f0');
-    text(trainingMissionBriefing7, canvas.width / 2, 382, 11, '#ffdc72', true);
+    text(trainingMissionBriefing1, canvas.width / 2, 66, 40, '#7feeff', true);
+    text(trainingMissionBriefing2, canvas.width / 2, 115, 32, '#ffdc72', false);
+    text(trainingMissionBriefing3, canvas.width / 2, 175, 24, '#ffffff');
+    text(trainingMissionBriefing4, canvas.width / 2, 235, 23, '#8ff5ff', false);
+    text(trainingMissionBriefing5, canvas.width / 2, 275, 23, '#8ff5ff', false);
+    text(trainingMissionBriefing6, canvas.width / 2, 380, 22, '#d4e6f0');
+    text(trainingMissionBriefing7, canvas.width / 2, 522, 28, '#ffdc72', false);
 }
 
 // Galería de tiro previa al pilotaje. Se apunta con WASD/flechas y se dispara
@@ -1744,10 +1748,10 @@ function beginTrainingShootingRange() {
         frame: 0,
         aimX: w / 2,
         aimY: h * 0.66,
-        shots: 16,
+        shots: 300,  // TODO -- BAJAR ESTO a 30 disparos
         hits: 0,
-        requiredHits: 8,
-        timeLeft: 60 * 45,
+        requiredHits: 2, // TODO -- SUBIR ESTo a 8 aciertos
+        timeLeft: 60 * 300,//45, // TODO -- BAJAR ESTO a 45 segundos
         over: false,
         passed: false,
         feedback: '',
@@ -1841,8 +1845,8 @@ function drawTrainingShootingRange() {
     // Overlay que transforma el puente en una galería táctica de la Flota.
     ctx.fillStyle = 'rgba(2,8,18,0.58)';
     ctx.fillRect(25, 24, w - 50, h - 48);
-    text(trainingShootingRangeText1, w / 2, 46, 13, '#82eeff', true);
-    text(trainingShootingRangeText2, w / 2, 76, 20, '#ffdc72', true);
+    text(trainingShootingRangeText1, w / 2, 46, 43, '#82eeff', false);
+    text(trainingShootingRangeText2, w / 2, 82, 40, '#ffdc72', false);
     if (!g)
         return;
     // Líneas de telémetro en el fondo.
@@ -1919,18 +1923,18 @@ function drawTrainingShootingRange() {
     ctx.restore();
     ctx.fillStyle = 'rgba(1,7,17,0.86)';
     ctx.fillRect(35, 88, w - 70, 35);
-    text(`${trainingShootingRangeHits}${g.hits}/${g.requiredHits}${trainingShootingRangeShoots}${g.shots}${trainingShootingRangeTime}${Math.ceil(g.timeLeft / 60)}s`, w / 2, 110, 13, '#ffffff', true);
+    text(`${trainingShootingRangeHits}${g.hits}/${g.requiredHits}${trainingShootingRangeShoots}${g.shots}${trainingShootingRangeTime}${Math.ceil(g.timeLeft / 60)}s`, w / 2, 110, 23, '#ffffff', false);
     if (g.feedbackTimer > 0)
-        text(g.feedback, w / 2, h - 78, 13, g.feedback.startsWith('¡') ? '#8dffc9' : '#ff9b9b', true);
+        text(g.feedback, w / 2, h - 78, 23, g.feedback.startsWith('¡') ? '#8dffc9' : '#ff9b9b', false);
     if (g.over) {
         ctx.fillStyle = 'rgba(0,4,12,0.84)';
         ctx.fillRect(0, 0, w, h);
-        text(g.passed ? trainingShootingRangeWin : trainingShootingRangeFail, w / 2, h / 2 - 45, 24, g.passed ? '#ffdc72' : '#ff716d', true);
-        text(`${trainingShootingRangeDoneA}${g.hits}/${g.requiredHits}${trainingShootingRangeDoneB}${g.shots}`, w / 2, h / 2 - 8, 14, '#ffffff', true);
-        text(g.passed ? trainingShootingRangePrecise : trainingShootingRangeNoPrecise, w / 2, h / 2 + 22, 12, '#d6e9f4');
-        text(g.passed ? trainingShootingRangeKeyNext : trainingShootingRangeKeyRepeat, w / 2, h / 2 + 54, 12, '#8ff5ff', true);
+        text(g.passed ? trainingShootingRangeWin : trainingShootingRangeFail, w / 2, h / 2 - 45, 54, g.passed ? '#ffdc72' : '#ff716d', false);
+        text(`${trainingShootingRangeDoneA}${g.hits}/${g.requiredHits}${trainingShootingRangeDoneB}${g.shots}`, w / 2, h / 2, 34, '#ffffff', false);
+        text(g.passed ? trainingShootingRangePrecise : trainingShootingRangeNoPrecise, w / 2, h / 2 + 42, 32, '#d6e9f4');
+        text(g.passed ? trainingShootingRangeKeyNext : trainingShootingRangeKeyRepeat, w / 2, h / 2 + 80, 32, '#8ff5ff', false);
     }
-    text(trainingShootingRangeInstructions, w / 2, h - 18, 10, '#b6d9e8', true);
+    text(trainingShootingRangeInstructions, w / 2, h - 18, 22, '#b6d9e8', false);
 }
 
 function beginHolodeckLevel(circuitIndex = trainingCircuitIndex) {
@@ -2442,22 +2446,22 @@ function drawHolodeckLevel() {
         ctx.lineTo(goalX + 5, h - 111);
         ctx.closePath();
         ctx.fill();
-        text('META', goalX + 23, h - 157, 11, '#153c58', true);
+        text('META', goalX + 23, h - 157, 11, '#153c58', false);
     }
     ctx.fillStyle = 'rgba(3,20,40,0.78)';
     ctx.fillRect(0, 0, w, 38);
-    text(`${holodeckLevelTitle}${g.circuitIndex + 1}/${holodeckCourses.length}: ${g.courseName}`, w / 2, 24, 14, '#ffffff', true);
-    text(`${holodeckLevelLives}${'◆ '.repeat(g.lives).trim()}`, 95, 61, 13, '#d33f47', true);
-    text(`${holodeckLevelStars}${g.collected}/${g.coins.length}`, w - 112, 61, 13, g.theme === 'classic' ? '#60420b' : '#ffffff', true);
-    text(holodeckLevelInstructions, w / 2, h - 12, 10, g.theme === 'volcano' ? '#ffffff' : '#153c58', true);
+    text(`${holodeckLevelTitle}${g.circuitIndex + 1}/${holodeckCourses.length}: ${g.courseName}`, w / 2, 24, 24, '#ffffff', false);
+    text(`${holodeckLevelLives}${'◆ '.repeat(g.lives).trim()}`, 95, 61, 23, '#d33f47', false);
+    text(`${holodeckLevelStars}${g.collected}/${g.coins.length}`, w - 112, 61, 23, g.theme === 'classic' ? '#60420b' : '#ffffff', false);
+    text(holodeckLevelInstructions, w / 2, h - 12, 20, g.theme === 'volcano' ? '#ffffff' : '#153c58', false);
     if (g.over || g.complete) {
         ctx.fillStyle = 'rgba(4,12,27,0.82)';
         ctx.fillRect(0, 0, w, h);
         const isLastCircuit = g.circuitIndex >= holodeckCourses.length - 1;
-        text(g.complete ? `${holodeckLevelCompleted1}${g.circuitIndex + 1}${holodeckLevelCompleted2}` : holodeckLevelFail, w / 2, h / 2 - 42, 23, g.complete ? '#ffe071' : '#ff746d', true);
-        text(`${g.courseName}${holodeckLevelPoints}${g.score}`, w / 2, h / 2 - 7, 14, '#ffffff', true);
-        text(`${holodeckLevelStars}${g.collected}/${g.coins.length}`, w / 2, h / 2 + 17, 12, '#d4e6f0', true);
-        text(g.complete ? (isLastCircuit ? holodeckLevelKeyStart : `${holodeckLevelKeyNext}${g.circuitIndex + 2}`) : holodeckLevelKeyRepeat, w / 2, h / 2 + 46, 12, '#8ff5ff', true);
+        text(g.complete ? `${holodeckLevelCompleted1}${g.circuitIndex + 1}${holodeckLevelCompleted2}` : holodeckLevelFail, w / 2, h / 2 - 42, 23, g.complete ? '#ffe071' : '#ff746d', false);
+        text(`${g.courseName}${holodeckLevelPoints}${g.score}`, w / 2, h / 2 - 7, 14, '#ffffff', false);
+        text(`${holodeckLevelStars}${g.collected}/${g.coins.length}`, w / 2, h / 2 + 17, 12, '#d4e6f0', false);
+        text(g.complete ? (isLastCircuit ? holodeckLevelKeyStart : `${holodeckLevelKeyNext}${g.circuitIndex + 2}`) : holodeckLevelKeyRepeat, w / 2, h / 2 + 46, 12, '#8ff5ff', false);
         text(holodeckLevelKeyMenu, w / 2, h / 2 + 70, 11, '#c8dbe8');
     }
 }
@@ -4281,7 +4285,7 @@ function drawShuttleMinigame() {
         ctx.fillRect(shuttleDrawX, shuttleDrawY + 30, shuttleDrawWidth, 70);
         ctx.fillStyle = '#d62828';
         ctx.fillRect(shuttleDrawX + 100, shuttleDrawY + 65, shuttleDrawWidth - 180, 10);
-        text(shuttleMinigameErrorAsset, w / 2, h * 0.31, 13, '#ffcf4a', true);
+        text(shuttleMinigameErrorAsset, w / 2, h * 0.31, 33, '#ffcf4a', true);
     }
     // El minijuego usa el personaje que el jugador seleccionó para la campaña.
     // Al pulsar ESPACIO/INTRO se muestra brevemente su sprite de ataque.
@@ -4299,10 +4303,10 @@ function drawShuttleMinigame() {
         ctx.drawImage(playerImage, playerDrawX, playerDrawY, playerDrawWidth, playerDrawHeight);
     }
     // HUD arcade
-    text(shuttleMinigameHudText, w / 2, 34, 25, '#ffcf4a', true);
-    text(shuttleMinigameHudTextOrder, w / 2, 62, 15, '#ffffff', true);
-    text(`${shuttleMinigameHudTextTime}${String(Math.ceil(shuttleTimer / 60)).padStart(2, '0')}`, w - 90, 35, 18, '#ffcf4a', true);
-    text(`${shuttleMinigameHudTextHits}${shuttleHits}`, 78, 35, 16, '#8df4ff', true);
+    text(shuttleMinigameHudText, w / 2, 34, 35, '#ffcf4a', false);
+    text(shuttleMinigameHudTextOrder, w / 2, 62, 25, '#ffffff', false);
+    text(`${shuttleMinigameHudTextTime}${String(Math.ceil(shuttleTimer / 60)).padStart(2, '0')}`, w - 90, 35, 18, '#ffcf4a', false);
+    text(`${shuttleMinigameHudTextHits}${shuttleHits}`, 78, 35, 26, '#8df4ff', false);
     ctx.fillStyle = '#273744';
     ctx.fillRect(w * 0.35, 82, w * 0.42, 18);
     ctx.fillStyle = shuttleHealth > (shuttleMaxHealth * 0.4) ? '#41d66b' : '#ff573d';
@@ -4315,7 +4319,7 @@ function drawShuttleMinigame() {
         ctx.fillRect(spark.x, spark.y, 4, 4);
     }
     ctx.globalAlpha = 1;
-    text(shuttleMinigameHudTextKeys, w / 2, h - 25, 12, '#d6e7ef', true);
+    text(shuttleMinigameHudTextKeys, w / 2, h - 25, 23, '#d6e7ef', false);
 }
 
 function drawShuttleResult() {
@@ -4335,8 +4339,8 @@ function drawShuttleResult() {
         true
     );
     text(shuttleResult === shuttleMinigameHudTextDestroyed ? 'BONUS +10' : shuttleMinigameHudTextContinues,
-        canvas.width / 2, canvas.height / 2 + 22, 15, '#ffffff', true);
-    text(shuttleMinigameHudTextKeyToContinue, canvas.width / 2, canvas.height / 2 + 58, 13, '#8df4ff', true);
+        canvas.width / 2, canvas.height / 2 + 22, 35, '#ffffff', false);
+    text(shuttleMinigameHudTextKeyToContinue, canvas.width / 2, canvas.height / 2 + 58, 23, '#8df4ff', false);
 }
 
 // ------------------------------------------------------------
