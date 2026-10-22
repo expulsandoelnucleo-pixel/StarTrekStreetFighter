@@ -94,6 +94,8 @@ const TRIBBLES_SECRET_SEQUENCE = [
 let easterEggKeySequence = [];
 let easterEggLetterBuffer = '';
 
+let qEasterEggActive = false;
+
 // Mostrar al personaje derrotado en el suelo durante 5 segundos antes del rótulo de resultado.
 let gameOverFrame = 0;
 const GAME_OVER_PAUSE_FRAMES = 5 * 60;
@@ -2926,6 +2928,40 @@ function drawTrainingComplete() {
     text(`${trainingComplete3A}${intelligenceScore}/${intelligenceQuestions.length}${trainingComplete3B}${triviaScore}/${starTrekTriviaQuestions.length}`, canvas.width / 2, 235, 30, '#ffdc72', false);
     text(trainingComplete4, canvas.width / 2, 295, 30, '#7feeff');
     text(trainingComplete5, canvas.width / 2, 385, 26, '#ffdc72', false);
+
+    // Easster Eggde Q
+    if (qEasterEggActive) {
+        ctx.save();
+
+        // Fondo semitransparente para el mensaje secreto
+        ctx.fillStyle = 'rgba(2, 6, 16, 0.96)';
+        ctx.fillRect(50, 95, canvas.width - 100, 420);
+
+        // Borde dorado
+        ctx.strokeStyle = '#ffdc72';
+        ctx.lineWidth = 2;
+        ctx.strokeRect(50, 95, canvas.width - 100, 420);
+
+        ctx.restore();
+
+        // Retrato de Q (qTalkImage)
+        const qBoxX = canvas.width / 2 - 60;
+        const qBoxY = 145;
+        const qBoxW = 120;
+        const qBoxH = 180;
+        if (qTalkImage.complete && qTalkImage.naturalWidth > 0) {
+            const ratio = Math.min((qBoxW - 8) / qTalkImage.naturalWidth, (qBoxH - 8) / qTalkImage.naturalHeight);
+            const drawW = qTalkImage.naturalWidth * ratio,
+                drawH = qTalkImage.naturalHeight * ratio;
+            ctx.drawImage(qTalkImage, canvas.width / 2 - drawW / 2, qBoxY + (qBoxH - drawH) / 2, drawW, drawH);
+        }
+
+        // Texto del Easter Egg
+        text(qEasterEgg1, canvas.width / 2, 125, 30, '#ffdc72');
+        text(qEasterEgg2, canvas.width / 2, 380, 22, '#ffffff');
+        text(qEasterEgg3, canvas.width / 2, 420, 22, '#ffffff');
+        text(qEasterEgg4, canvas.width / 2, 480, 24, '#7feeff', false);
+    }
 }
 
 // Ventajas y consecuencias de las decisiones de la historia.
@@ -4430,7 +4466,7 @@ window.addEventListener('keydown', (e) => {
         e.preventDefault();
     }
 
-    if (gameState === 'TRIBBLES_EASTER_EGG' || gameState === 'SPOCK_EASTER_EGG') {
+    if (gameState === 'TRIBBLES_EASTER_EGG' || gameState === 'SPOCK_EASTER_EGG' || gameState === 'EEN_EASTER_EGG') {
         if (e.key === ' ' || e.key === 'Enter' || e.key.toLowerCase() === 'x' || e.key === 'Escape') {
             gameState = 'MENU';
             easterEggKeySequence = [];
@@ -4458,6 +4494,13 @@ window.addEventListener('keydown', (e) => {
             if (easterEggLetterBuffer === 'LLAP') {
                 gameState = 'SPOCK_EASTER_EGG';
                 playSound(soundSpock);
+                easterEggKeySequence = [];
+                easterEggLetterBuffer = '';
+                return;
+            }
+            if (easterEggLetterBuffer.endsWith('EEN')) {
+                gameState = 'EEN_EASTER_EGG';
+                playSound(soundEen); 
                 easterEggKeySequence = [];
                 easterEggLetterBuffer = '';
                 return;
@@ -4546,6 +4589,14 @@ window.addEventListener('keydown', (e) => {
     }
 
     if (gameState === 'TRAINING_COMPLETE') {
+        // Easter Egg Q
+        if (e.key.toLowerCase() === 'q') {
+            qEasterEggActive = !qEasterEggActive;
+            if (qEasterEggActive) {
+                playSound(soundQ);
+            }
+            return;
+        }
         if (e.key === ' ' || e.key === 'Enter' || e.key === 'Escape' || e.key.toLowerCase() === 'x')
             gameState = 'MODE_SELECT';
         return;
@@ -5095,6 +5146,28 @@ function drawSpockEasterEgg() {
     text(spockEasterEgg5, canvas.width / 2, 423, 50, '#8df4ff', false);
     text(spockEasterEgg6, canvas.width / 2, canvas.height - 30, 32, '#8df4ff', false);
 }
+
+function drawEenEasterEgg() {
+    drawTitleBackground();
+    overlay(0.75);
+    text(eenEasterEgg1, canvas.width / 2, 80, 56, '#ffcf72', false);
+    const imgBoxX = canvas.width / 2 - 100;
+    const imgBoxY = 110;
+    const imgBoxW = 250;
+    const imgBoxH = 270;
+
+    if (eenImage.complete && eenImage.naturalWidth > 0) {
+        const ratio = Math.min(imgBoxW / eenImage.naturalWidth, imgBoxH / eenImage.naturalHeight);
+        const drawW = eenImage.naturalWidth * ratio;
+        const drawH = eenImage.naturalHeight * ratio;
+        ctx.drawImage(eenImage, canvas.width / 2 - drawW / 2, imgBoxY + (imgBoxH - drawH) / 2, drawW, drawH);
+    }
+
+    text(eenEasterEgg2, canvas.width / 2, 430, 28, '#ffffff', false);
+    text(eenEasterEgg3, canvas.width / 2, 470, 22, '#7feeff', false);
+    text(eenEasterEgg4, canvas.width / 2, canvas.height - 30, 20, '#8df4ff', false);
+}
+
 
 // MENÚS
 // ------------------------------------------------------------
@@ -5938,6 +6011,9 @@ function gameLoop() {
                 break;
             case 'SPOCK_EASTER_EGG':
                 drawSpockEasterEgg();
+                break;
+            case 'EEN_EASTER_EGG':
+                drawEenEasterEgg();
                 break;
             case 'MENU':
                 drawMainMenu();

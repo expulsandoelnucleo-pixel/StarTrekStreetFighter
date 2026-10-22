@@ -39,6 +39,8 @@ const titleScreenImage = loadImage('assets/title_screen.png');
 
 const qTalkImage = loadProjectAsset('q_talk.png');
 
+const eenImage = loadImage('assets/een_logo.jpg');
+
 // Assets del minijuego Galileo. Coloca los tres PNG en la carpeta assets.
 const galileoIntacta = loadImage('assets/galileo_intacta.png');
 const galileoDanada = loadImage('assets/galileo_danada.png');

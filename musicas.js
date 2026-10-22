@@ -30,6 +30,14 @@ soundTribbles.volume = 0.6;
 // Easter egg Spock
 const soundSpock = new Audio('assets/audios/spock.mp3');
 soundSpock.volume = 0.6;
+// Easter egg Q
+const soundQ = new Audio('assets/audios/q_immortal.mp3');
+soundQ.volume = 0.6;
+const soundQAllGoodThings = new Audio('assets/audios/q_allgoodthings.mp3');
+soundQAllGoodThings.volume = 0.6;
+// Easter egg EEN
+const soundEen = new Audio('assets/audios/een.mp3');
+soundEen.volume = 0.6;
 
 
 

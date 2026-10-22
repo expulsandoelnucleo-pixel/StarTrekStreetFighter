@@ -887,6 +887,16 @@ const spockEasterEgg3 = 'LARGA VIDA Y PROSPERIDAD';
 const spockEasterEgg4 = 'La lógica indica que has encontrado un secreto.';
 const spockEasterEgg5 = '— SPOCK';
 const spockEasterEgg6 = 'ESPACIO / INTRO / X: VOLVER AL MENÚ';
+// Q
+const qEasterEgg1 = '⚠️ TRANSMISIÓN DEL CONTINUUM Q ⚠️';
+const qEasterEgg2 = '«¿Creías que una simple simulación de la Flota Estelar me engañaría?»'
+const qEasterEgg3 = '«¡Qué seres tan predecibles y entrañables!»';
+const qEasterEgg4 = '[ Rango Oculto: Juez del Tribunal Q ]';
+// Expulsando el Núcleo
+const eenEasterEgg1 = 'EXPULSANDO EL NÚCLEO';
+const eenEasterEgg2 = '¡Si no conoces el podcast, ya tardas en oirlo!';
+const eenEasterEgg3 = 'Busca "EXPULSANDO EL NÚCLEO" en tu gestor de podcasts';
+const eenEasterEgg4 = 'ESPACIO / INTRO / X: VOLVER AL MENÚ';
 
 // MENÚS
 const menuTitle = 'STAR TREK';
