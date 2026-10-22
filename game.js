@@ -1141,24 +1141,24 @@ function drawStarshipMode() {
         ctx.fillStyle = 'rgba(0, 4, 14, 0.80)';
         ctx.fillRect(0, 0, w, h);
 
-        if (!g.overFrame) g.overFrame = g.frame;
-        const elapsed = g.frame - g.overFrame;
+        if (!g.overFrame) g.overFrame = frameCount;
+        const elapsed = frameCount - g.overFrame;
 
         if (g.missionComplete) {
             //text(hudStarshipModeText5, w / 2, h / 2 - 40, 25, '#ffdf70', true);
             textWithAnimation(
-                hudStarshipModeText5 + '*****',
+                hudStarshipModeText5,
                 w / 2,
                 h / 2 - 80,
                 10,            // Tamaño inicial pequeño
-                125,           // Tamaño final
+                120,           // Tamaño final
                 25,
                 elapsed,
                 '#ffdf70',
                 false
             );
             text(`${hudStarshipModeText6A}: ${g.score}${hudStarshipModeText6B}`, w / 2, h / 2 - 5, 36, '#ffffff', false);
-            text(hudStarshipModeText7, w / 2, h / 2 + 32, 33, '#78f7ff', false);
+            text(hudStarshipModeText7, w / 2, h / 2 + 40, 33, '#78f7ff', false);
         } else {
             //text(hudStarshipModeText8, w / 2, h / 2 - 36, 29, '#ff625b', true);
             textWithAnimation(
@@ -1166,16 +1166,16 @@ function drawStarshipMode() {
                 w / 2,
                 h / 2 - 80,
                 10,            // Tamaño inicial pequeño
-                129,            // Tamaño final
+                125,            // Tamaño final
                 25,
                 elapsed,
                 '#ff625b',
                 false
             );
             text(`${hudStarshipModeText9}${g.score}`, w / 2, h / 2 + 2, 28, '#ffffff', false);
-            text(hudStarshipModeText10, w / 2, h / 2 + 36, 24, '#78f7ff', false);
+            text(hudStarshipModeText10, w / 2, h / 2 + 40, 24, '#78f7ff', false);
         }
-        text(hudStarshipModeText11, w / 2, h / 2 + 63, 22, '#c8dbe8');
+        text(hudStarshipModeText11, w / 2, h / 2 + 80, 22, '#c8dbe8');
     }
 }
 
@@ -1185,7 +1185,7 @@ function drawStarshipMode() {
 // contra tres rivales; salirse del trazado o golpear boyas resta distancia.
 // ------------------------------------------------------------
 const RACE_SCREEN_SCALE = 0.34;
-const RACE_FINISH_DISTANCE = 8200;
+const RACE_FINISH_DISTANCE = 20000;
 const RACE_TRACK_WIDTH = () => Math.min(canvas.width * 0.68, 500);
 
 function raceTrackCenterAt(distance) {
@@ -1546,21 +1546,25 @@ function drawStarshipRace() {
     if (g.over) {
         ctx.fillStyle = 'rgba(1,6,17,0.82)';
         ctx.fillRect(0, 0, w, h);
+
+        if (!g.overFrame) g.overFrame = frameCount;
+        const elapsed = frameCount - g.overFrame;
+
         //text(g.won ? starshipRaceEndWin1 : starshipRaceEndLoose1, w / 2, h / 2 - 35, 26, g.won ? '#ffdc72' : '#ff716d', true);
         textWithAnimation(
             g.won ? starshipRaceEndWin1 : starshipRaceEndLoose1,
             w / 2,
             h / 2 - 35,
             10,            // Tamaño inicial pequeño
-            126,            // Tamaño final
+            120,            // Tamaño final
             25,
-            (g.frame - (g.overFrame || g.frame)),
+            elapsed,
             g.won ? '#ffdc72' : '#ff716d',
-            true
+            false
         );
-        text(g.won ? starshipRaceEndWin2 : starshipRaceEndLoose2, w / 2, h / 2, 24, '#ffffff');
-        text(starshipRaceEndText1 + (g.won ? starshipRaceEndText2 : starshipRaceEndText3), w / 2, h / 2 + 40, 23, '#7eeeff', false);
-        text(starshipRaceEndText4, w / 2, h / 2 + 67, 21, '#c5e7f5');
+        text(g.won ? starshipRaceEndWin2 : starshipRaceEndLoose2, w / 2, h / 2, 30, '#ffffff');
+        text(starshipRaceEndText1 + (g.won ? starshipRaceEndText2 : starshipRaceEndText3), w / 2, h / 2 + 45, 30, '#7eeeff', false);
+        text(starshipRaceEndText4, w / 2, h / 2 + 90, 30, '#c5e7f5');
     }
 }
 
@@ -1748,10 +1752,10 @@ function beginTrainingShootingRange() {
         frame: 0,
         aimX: w / 2,
         aimY: h * 0.66,
-        shots: 300,  // TODO -- BAJAR ESTO a 30 disparos
+        shots: 30,
         hits: 0,
-        requiredHits: 2, // TODO -- SUBIR ESTo a 8 aciertos
-        timeLeft: 60 * 300,//45, // TODO -- BAJAR ESTO a 45 segundos
+        requiredHits: 8,
+        timeLeft: 60 * 45,
         over: false,
         passed: false,
         feedback: '',
@@ -2453,16 +2457,30 @@ function drawHolodeckLevel() {
     text(`${holodeckLevelTitle}${g.circuitIndex + 1}/${holodeckCourses.length}: ${g.courseName}`, w / 2, 24, 24, '#ffffff', false);
     text(`${holodeckLevelLives}${'◆ '.repeat(g.lives).trim()}`, 95, 61, 23, '#d33f47', false);
     text(`${holodeckLevelStars}${g.collected}/${g.coins.length}`, w - 112, 61, 23, g.theme === 'classic' ? '#60420b' : '#ffffff', false);
-    text(holodeckLevelInstructions, w / 2, h - 12, 20, g.theme === 'volcano' ? '#ffffff' : '#153c58', false);
+    text(holodeckLevelInstructions, w / 2, h - 12, 26, g.theme === 'volcano' ? '#ffffff' : '#153c58', false);
     if (g.over || g.complete) {
         ctx.fillStyle = 'rgba(4,12,27,0.82)';
         ctx.fillRect(0, 0, w, h);
+
+        if (!g.overFrame) g.overFrame = frameCount;
+        const elapsed = frameCount - g.overFrame;
         const isLastCircuit = g.circuitIndex >= holodeckCourses.length - 1;
-        text(g.complete ? `${holodeckLevelCompleted1}${g.circuitIndex + 1}${holodeckLevelCompleted2}` : holodeckLevelFail, w / 2, h / 2 - 42, 23, g.complete ? '#ffe071' : '#ff746d', false);
-        text(`${g.courseName}${holodeckLevelPoints}${g.score}`, w / 2, h / 2 - 7, 14, '#ffffff', false);
-        text(`${holodeckLevelStars}${g.collected}/${g.coins.length}`, w / 2, h / 2 + 17, 12, '#d4e6f0', false);
-        text(g.complete ? (isLastCircuit ? holodeckLevelKeyStart : `${holodeckLevelKeyNext}${g.circuitIndex + 2}`) : holodeckLevelKeyRepeat, w / 2, h / 2 + 46, 12, '#8ff5ff', false);
-        text(holodeckLevelKeyMenu, w / 2, h / 2 + 70, 11, '#c8dbe8');
+        //text(g.complete ? `${holodeckLevelCompleted1}${g.circuitIndex + 1}${holodeckLevelCompleted2}` : holodeckLevelFail, w / 2, h / 2 - 42, 23, g.complete ? '#ffe071' : '#ff746d', false);
+        textWithAnimation(
+            g.complete ? `${holodeckLevelCompleted1}${g.circuitIndex + 1}${holodeckLevelCompleted2}` : holodeckLevelFail,
+            w / 2,
+            h / 2 - 80,
+            10,
+            120,
+            25,
+            elapsed,
+            g.complete ? '#ffe071' : '#ff746d',
+            false
+        );
+        text(`${g.courseName}${holodeckLevelPoints}${g.score}`, w / 2, h / 2 - 5, 36, '#ffffff', false);
+        text(`${holodeckLevelStars}${g.collected}/${g.coins.length}`, w / 2, h / 2 + 40, 33, '#d4e6f0', false);
+        text(g.complete ? (isLastCircuit ? holodeckLevelKeyStart : `${holodeckLevelKeyNext}${g.circuitIndex + 2}`) : holodeckLevelKeyRepeat, w / 2, h / 2 + 80, 22, '#8ff5ff', false);
+        text(holodeckLevelKeyMenu, w / 2, h / 2 + 115, 22, '#c8dbe8');
     }
 }
 
@@ -2753,43 +2771,69 @@ function drawTrainingQuiz(type) {
     const feedback = isIntelligence ? intelligenceFeedback : triviaFeedback;
     const q = questions[index];
     const title = isIntelligence ? trainingQuizIntelligence : trainingQuizQuestions;
-    text(trainingQuizAcademy, canvas.width / 2, 44, 13, '#8ceeff', true);
-    text(title, canvas.width / 2, 78, 22, '#ffdc72', true);
-    text(`${trainingQuizQuestionText}${index + 1} / ${questions.length}${trainingQuizCorrects}${score}`, canvas.width / 2, 105, 12, '#c4e5f0', true);
+    text(trainingQuizAcademy, canvas.width / 2, 40, 20, '#8ceeff', false);
+    text(title, canvas.width / 2, 85, 50, '#ffdc72', false);
+    text(`${trainingQuizQuestionText}${index + 1} / ${questions.length}${trainingQuizCorrects}${score}`, canvas.width / 2, 120, 20, '#c4e5f0', false);
     ctx.fillStyle = 'rgba(3, 13, 27, 0.94)';
-    ctx.fillRect(58, 120, canvas.width - 116, 74);
+    ctx.fillRect(58, 140, canvas.width - 116, 74);
     ctx.strokeStyle = '#51cfe9';
     ctx.lineWidth = 1.5;
-    ctx.strokeRect(58, 120, canvas.width - 116, 74);
-    wrapCanvasText(q.question, canvas.width / 2, 149, canvas.width - 150, 18, '#ffffff');
+    ctx.strokeRect(58, 140, canvas.width - 116, 74);
+    wrapCanvasText(q.question, canvas.width / 2, 172, canvas.width - 150, 22, '#ffffff');
     q.options.forEach((option, i) => {
-        const y = 204 + i * 43;
+        const y = 240 + i * 50;
         ctx.fillStyle = feedback && i === q.answer ? 'rgba(33, 116, 83, 0.88)' : 'rgba(12, 35, 56, 0.92)';
-        ctx.fillRect(90, y, canvas.width - 180, 34);
+        ctx.fillRect(90, y, canvas.width - 180, 40);
         ctx.strokeStyle = feedback && i === q.answer ? '#76f0a8' : '#416c83';
-        ctx.strokeRect(90, y, canvas.width - 180, 34);
-        text(`${i + 1}. ${option}`, canvas.width / 2, y + 22, 13, '#f3fbff', i === q.answer && !!feedback);
+        ctx.strokeRect(90, y, canvas.width - 180, 40);
+        text(`${i + 1}. ${option}`, canvas.width / 2, y + 26, 20, '#f3fbff', i === q.answer && !!feedback);
     });
     if (feedback) {
         ctx.fillStyle = 'rgba(2, 11, 21, 0.96)';
-        ctx.fillRect(45, 378, canvas.width - 90, 51);
+        ctx.fillRect(45, 320, canvas.width - 90, 75);
         ctx.strokeStyle = feedback.correct ? '#62e49b' : '#f0b75e';
-        ctx.strokeRect(45, 378, canvas.width - 90, 51);
-        wrapCanvasText(feedback.text, canvas.width / 2, 396, canvas.width - 120, 14, feedback.correct ? '#a8ffc9' : '#ffe0a0');
-        text(trainingQuizKeys1, canvas.width / 2, canvas.height - 7, 10, '#8ceeff', true);
+        ctx.strokeRect(45, 320, canvas.width - 90, 75);
+        // Cálculo dinámico para centrar verticalmente el texto (1 o 2 líneas) dentro de la caja (Y: 320 a 395)
+        ctx.font = `25px ${GAME_FONT}`;
+        const maxWidth = canvas.width - 120;
+        const words = feedback.text.split(/\s+/);
+        let line = '';
+        let lines = [];
+        for (const word of words) {
+            const test = line ? `${line} ${word}` : word;
+            if (ctx.measureText(test).width > maxWidth && line) {
+                lines.push(line);
+                line = word;
+            } else {
+                line = test;
+            }
+        }
+        if (line) lines.push(line);
+        const lineHeight = 18;
+        const totalTextHeight = lines.length * lineHeight;
+        const startY = 357.5 - (totalTextHeight / 2) + (lineHeight / 2);
+
+        let currentY = startY;
+        ctx.textAlign = 'center';
+        ctx.fillStyle = feedback.correct ? '#a8ffc9' : '#ffe0a0';
+        for (const l of lines) {
+            ctx.fillText(l, canvas.width / 2, currentY);
+            currentY += lineHeight;
+        }
+        text(trainingQuizKeys1, canvas.width / 2, canvas.height - 12, 20, '#8ceeff', false);
     } else {
-        text(trainingQuizKeys2, canvas.width / 2, canvas.height - 15, 11, '#8ceeff', true);
+        text(trainingQuizKeys2, canvas.width / 2, canvas.height - 15, 20, '#8ceeff', false);
     }
 }
 
 function drawTrainingComplete() {
     drawTrainingBridgeBackdrop();
     overlay(0.64);
-    text(trainingComplete1, canvas.width / 2, 150, 24, '#ffdc72', true);
+    text(trainingComplete1, canvas.width / 2, 150, 24, '#ffdc72', false);
     text(trainingComplete2, canvas.width / 2, 196, 13, '#ffffff');
-    text(`${trainingComplete3A}${intelligenceScore}/${intelligenceQuestions.length}${trainingComplete3B}${triviaScore}/${starTrekTriviaQuestions.length}`, canvas.width / 2, 226, 12, '#ffdc72', true);
+    text(`${trainingComplete3A}${intelligenceScore}/${intelligenceQuestions.length}${trainingComplete3B}${triviaScore}/${starTrekTriviaQuestions.length}`, canvas.width / 2, 226, 12, '#ffdc72', false);
     text(trainingComplete4, canvas.width / 2, 258, 12, '#7feeff');
-    text(trainingComplete5, canvas.width / 2, 315, 13, '#ffdc72', true);
+    text(trainingComplete5, canvas.width / 2, 315, 13, '#ffdc72', false);
 }
 
 // Ventajas y consecuencias de las decisiones de la historia.
@@ -2811,123 +2855,55 @@ const energyParticles = Array.from({
         opacity: Math.random() * 0.7 + 0.3
     }));
 
-// Ocho destinos de campaña, uno por misión.
-const galaxyNodes = [
-    {
-        id: 1, 
-        name: 'Puente de la U.S.S. Enterprise',
-        x: 100,
-        y: 65
-    },
-    {
-        id: 2, 
-        name: 'Estación Espacial 9',
-        x: 200,
-        y: 95
-    },
-    {
-        id: 3, 
-        name: 'Nave Klingon',
-        x: 356,
-        y: 95
-    },
-    {
-        id: 4, 
-        name: 'Terraza Romulana',
-        x: 504,
-        y: 95
-    },
-    {
-        id: 5, 
-        name: 'Ingeniería de la Enterprise',
-        x: 652,
-        y: 95
-    },
-    {
-        id: 6, 
-        name: 'Pasillo Borg',
-        x: 800,
-        y: 95
-    },
-    {
-        id: 7, 
-        name: 'Sala del Transportador',
-        x: 950,
-        y: 95
-    },
-    {
-        id: 8, 
-        name: 'Planeta Talos IV',
-        x: 950,
-        y: 207
-    },
-    {
-        id: 9,
-        name: 'Desierto Remoto',
-        x: 772,
-        y: 207
-    },
-    {
-        id: 10, 
-        name: 'Ruinas Antiguas',
-        x: 594,
-        y: 207
-    },
-    {
-        id: 11, 
-        name: 'Academia de la Federación',
-        x: 416,
-        y: 207
-    },
-    {
-        id: 12, 
-        name: 'Hangar de Lanzaderas',
-        x: 238,
-        y: 207
-    },
-    {
-        id: 13, 
-        name: 'Cinturón de Asteroides',
-        x: 60,
-        y: 207
-    },
-    {
-        id: 14, 
-        name: 'Selva Exótica',
-        x: 60,
-        y: 320
-    },
-    {
-        id: 15, 
-        name: 'Observatorio Estelar',
-        x: 238,
-        y: 320
-    },
-    {
-        id: 16, 
-        name: 'Puente Dañado',
-        x: 416,
-        y: 320
-    },
-    {
-        id: 17, 
-        name: 'Estación Orbital',
-        x: 594,
-        y: 320
-    },
-    {
-        id: 18, 
-        name: 'Templo Borg',
-        x: 772,
-        y: 320
-    },
-    {
-        id: 19,
-        name: 'Núcleo Borg',
-        x: 930,
-        y: 360
-    }
+// 19 destinos de campaña, uno por misión.
+const galaxyNodesHorizontal = [
+    { id: 1,    name: 'Puente de la U.S.S. Enterprise',     x: 100, y: 65 },
+    { id: 2,    name: 'Estación Espacial 9',                x: 200, y: 95},
+    { id: 3,    name: 'Nave Klingon',                       x: 356, y: 95},
+    { id: 4,    name: 'Terraza Romulana',                   x: 504, y: 95 },
+    { id: 5,    name: 'Ingeniería de la Enterprise',        x: 652, y: 95 },
+    { id: 6,    name: 'Pasillo Borg',                       x: 800, y: 95 },
+    { id: 7,    name: 'Sala del Transportador',             x: 950, y: 95},
+    { id: 8,    name: 'Planeta Talos IV',                   x: 950, y: 207 },
+    { id: 9,    name: 'Desierto Remoto',                    x: 772, y: 207 },
+    { id: 10,   name: 'Ruinas Antiguas',                    x: 594, y: 207 },
+    { id: 11,   name: 'Academia de la Federación',          x: 416, y: 207 },
+    { id: 12,   name: 'Hangar de Lanzaderas',               x: 238, y: 207 },
+    { id: 13,   name: 'Cinturón de Asteroides',             x: 60, y: 207 },
+    { id: 14,   name: 'Selva Exótica',                      x: 60, y: 320 },
+    { id: 15,   name: 'Observatorio Estelar',               x: 238, y: 320 },
+    { id: 16,   name: 'Puente Dañado',                      x: 416, y: 320 },
+    { id: 17,   name: 'Estación Orbital',                   x: 594, y: 320},
+    { id: 18,   name: 'Templo Borg',                        x: 772, y: 320 },
+    { id: 19,   name: 'Núcleo Borg',                        x: 930, y: 360 }
 ];
+// Ocho destinos de campaña, uno por misión (reorganizados en zigzag vertical)
+const galaxyNodesVertical = [
+    { id: 1,    name: 'Puente de la U.S.S. Enterprise',     x: 100, y: 80 },   // Arriba-Izquierda
+    { id: 2,    name: 'Estación Espacial 9',                x: 100, y: 220 },  // Baja 1
+    { id: 3,    name: 'Nave Klingon',                       x: 100, y: 360 },  // Baja 2 (Fondo)
+    { id: 4,    name: 'Terraza Romulana',                   x: 230, y: 360 },  // Salto a la derecha
+    { id: 5,    name: 'Ingeniería de la Enterprise',        x: 230, y: 220 },  // Sube 1
+    { id: 6,    name: 'Pasillo Borg',                       x: 230, y: 80 },   // Sube 2 (Arriba)
+    { id: 7,    name: 'Sala del Transportador',             x: 360, y: 80 },   // Salto a la derecha
+    { id: 8,    name: 'Planeta Talos IV',                   x: 360, y: 220 },  // Baja 1
+    { id: 9,    name: 'Desierto Remoto',                    x: 360, y: 360 },  // Baja 2 (Fondo)
+    { id: 10,   name: 'Ruinas Antiguas',                    x: 490, y: 360 },  // Salto a la derecha
+    { id: 11,   name: 'Academia de la Federación',          x: 490, y: 220 },  // Sube 1
+    { id: 12,   name: 'Hangar de Lanzaderas',               x: 490, y: 80 },   // Sube 2 (Arriba)
+    { id: 13,   name: 'Cinturón de Asteroides',             x: 620, y: 80 },   // Salto a la derecha
+    { id: 14,   name: 'Selva Exótica',                      x: 620, y: 220 },  // Baja 1
+    { id: 15,   name: 'Observatorio Estelar',               x: 620, y: 360 },  // Baja 2 (Fondo)
+    { id: 16,   name: 'Puente Dañado',                      x: 750, y: 360 },  // Salto a la derecha
+    { id: 17,   name: 'Estación Orbital',                   x: 750, y: 220 },  // Sube 1
+    { id: 18,   name: 'Templo Borg',                        x: 750, y: 80 },   // Sube 2 (Arriba)
+    { id: 19,   name: 'Núcleo Borg',                        x: 910, y: 220 }   // Meta final a la derecha
+];
+
+
+
+const galaxyNodes = galaxyNodesVertical;
+
 
 let shuttleX = galaxyNodes[0].x;
 let shuttleY = galaxyNodes[0].y;
