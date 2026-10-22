@@ -1575,36 +1575,72 @@ function drawStarshipRace() {
 
 function drawTrainingBridgeBackdrop() {
     const w = canvas.width,
-    h = canvas.height;
+        h = canvas.height;
     const bg = ctx.createLinearGradient(0, 0, 0, h);
     bg.addColorStop(0, '#09182a');
     bg.addColorStop(0.58, '#152d44');
     bg.addColorStop(1, '#050a13');
     ctx.fillStyle = bg;
     ctx.fillRect(0, 0, w, h);
+
     // Ventanal panorámico y espacio exterior.
     ctx.fillStyle = '#020916';
     ctx.fillRect(w * 0.12, h * 0.10, w * 0.76, h * 0.40);
-    for (let i = 0; i < 85; i++) {
-        const sx = ((i * 97) % 997) / 997 * w;
-        const sy = ((i * 53) % 193) / 193 * h * 0.48 + h * 0.10;
-        ctx.globalAlpha = 0.35 + ((i % 5) * 0.12);
-        ctx.fillStyle = i % 6 === 0 ? '#7de9ff' : '#ffffff';
-        ctx.fillRect(sx, sy, i % 4 === 0 ? 2 : 1, i % 4 === 0 ? 2 : 1);
-    }
-    ctx.globalAlpha = 1;
     ctx.save();
     ctx.beginPath();
     ctx.rect(w * 0.12, h * 0.10, w * 0.76, h * 0.40);
     ctx.clip();
-    ctx.fillStyle = 'rgba(18,106,176,0.34)';
-    ctx.beginPath();
-    ctx.ellipse(w * 0.63, h * 0.47, w * 0.36, h * 0.15, -0.12, 0, Math.PI * 2);
-    ctx.fill();
+
+    const windowWidth = w * 0.76;
+    const windowHeight = h * 0.40;
+
+    // Nivel 1: Estrellas lejanas (lentas, pequeñas y tenues)
+    for (let i = 0; i < 45; i++) {
+        const rx = Math.abs(Math.sin(i * 12.9898 + 1.1) * 43758.5453) % 1;
+        const ry = Math.abs(Math.sin(i * 78.233 + 2.3) * 43758.5453) % 1;
+
+        const rawX = (rx * windowWidth + frameCount * 0.05) % windowWidth;
+        const sx = w * 0.12 + rawX;
+        const sy = h * 0.10 + ry * windowHeight;
+
+        ctx.globalAlpha = 0.3;
+        ctx.fillStyle = '#ffffff';
+        ctx.fillRect(sx, sy, 1, 1);
+    }
+
+    // Nivel 2: Estrellas medianas (velocidad media)
+    for (let i = 0; i < 28; i++) {
+        const rx = Math.abs(Math.sin(i * 31.415 + 55.2) * 22159.876) % 1;
+        const ry = Math.abs(Math.sin(i * 64.882 + 11.4) * 22159.876) % 1;
+
+        const rawX = (rx * windowWidth + frameCount * 0.18) % windowWidth;
+        const sx = w * 0.12 + rawX;
+        const sy = h * 0.10 + ry * windowHeight;
+
+        ctx.globalAlpha = 0.65;
+        ctx.fillStyle = i % 3 === 0 ? '#7de9ff' : '#ffffff';
+        ctx.fillRect(sx, sy, 1.5, 1.5);
+    }
+
+    // Nivel 3: Estrellas cercanas / brillantes (más rápidas)
+    for (let i = 0; i < 15; i++) {
+        const rx = Math.abs(Math.sin(i * 93.123 + 129.5) * 15481.993) % 1;
+        const ry = Math.abs(Math.sin(i * 27.451 + 77.1) * 15481.993) % 1;
+
+        const rawX = (rx * windowWidth + frameCount * 0.40) % windowWidth;
+        const sx = w * 0.12 + rawX;
+        const sy = h * 0.10 + ry * windowHeight;
+
+        ctx.globalAlpha = 0.9;
+        ctx.fillStyle = '#7de9ff';
+        ctx.fillRect(sx, sy, 2.5, 2.5);
+    }
+
     ctx.restore();
     ctx.strokeStyle = '#4b758d';
     ctx.lineWidth = 8;
     ctx.strokeRect(w * 0.12, h * 0.10, w * 0.76, h * 0.40);
+
     // Estructura del puente, consolas y suelo.
     ctx.fillStyle = '#263b50';
     ctx.fillRect(0, h * 0.49, w, h * 0.18);
@@ -1633,6 +1669,7 @@ function drawTrainingBridgeBackdrop() {
         ctx.lineTo(x - 34, h);
         ctx.stroke();
     }
+
     // Consola de mando principal en primer plano.
     ctx.fillStyle = '#3b5366';
     ctx.beginPath();
@@ -2653,21 +2690,61 @@ function drawKobayashiShip(cx, cy, scale, kind = 'civilian', damage = false) {
 
 function drawKobayashiViewscren(hostiles = false) {
     const w = canvas.width,
-    h = canvas.height;
-    const x = w * 0.075,
-    y = h * 0.135,
-    vw = w * 0.85,
-    vh = h * 0.39;
+        h = canvas.height;
+    const x = 50,
+        y = 85,
+        vw = w - 100,
+        vh = 205;
     ctx.fillStyle = '#020914';
     ctx.fillRect(x, y, vw, vh);
-    // Estrellas estables para dar movimiento sin parpadeo aleatorio.
-    for (let i = 0; i < 78; i++) {
-        const sx = x + ((i * 73 + frameCount * (i % 3 + 1) * 0.23) % vw);
-        const sy = y + ((i * 41) % vh);
-        ctx.globalAlpha = 0.45 + (i % 4) * 0.13;
-        ctx.fillStyle = i % 7 === 0 ? '#ffb3a7' : '#e2f4ff';
-        ctx.fillRect(sx, sy, i % 5 === 0 ? 2 : 1, i % 5 === 0 ? 2 : 1);
+    ctx.save();
+    ctx.beginPath();
+    ctx.rect(x, y, vw, vh);
+    ctx.clip();
+
+    // Nivel 1: Estrellas lejanas (lentas, pequeñas y tenues)
+    for (let i = 0; i < 45; i++) {
+        const rx = Math.abs(Math.sin(i * 12.9898 + 1.1) * 43758.5453) % 1;
+        const ry = Math.abs(Math.sin(i * 78.233 + 2.3) * 43758.5453) % 1;
+
+        const rawX = (rx * vw + frameCount * 0.05) % vw;
+        const sx = x + rawX;
+        const sy = y + ry * vh;
+
+        ctx.globalAlpha = 0.3;
+        ctx.fillStyle = '#ffffff';
+        ctx.fillRect(sx, sy, 1, 1);
     }
+
+    // Nivel 2: Estrellas medianas (velocidad media)
+    for (let i = 0; i < 28; i++) {
+        const rx = Math.abs(Math.sin(i * 31.415 + 55.2) * 22159.876) % 1;
+        const ry = Math.abs(Math.sin(i * 64.882 + 11.4) * 22159.876) % 1;
+
+        const rawX = (rx * vw + frameCount * 0.18) % vw;
+        const sx = x + rawX;
+        const sy = y + ry * vh;
+
+        ctx.globalAlpha = 0.65;
+        ctx.fillStyle = i % 3 === 0 ? '#7de9ff' : '#ffffff';
+        ctx.fillRect(sx, sy, 1.5, 1.5);
+    }
+
+    // Nivel 3: Estrellas cercanas / brillantes (más rápidas)
+    for (let i = 0; i < 15; i++) {
+        const rx = Math.abs(Math.sin(i * 93.123 + 129.5) * 15481.993) % 1;
+        const ry = Math.abs(Math.sin(i * 27.451 + 77.1) * 15481.993) % 1;
+
+        const rawX = (rx * vw + frameCount * 0.40) % vw;
+        const sx = x + rawX;
+        const sy = y + ry * vh;
+
+        ctx.globalAlpha = 0.9;
+        ctx.fillStyle = '#7de9ff';
+        ctx.fillRect(sx, sy, 2.5, 2.5);
+    }
+
+    ctx.restore();
     ctx.globalAlpha = 1;
     // La nave de rescate permanece visible en la pantalla principal.
     drawKobayashiShip(x + vw * 0.64, y + vh * 0.52, 1.12, 'civilian', true);
@@ -2705,59 +2782,74 @@ function drawKobayashiViewscren(hostiles = false) {
 function drawKobayashiMaru() {
     drawTrainingBridgeBackdrop();
     const w = canvas.width,
-    h = canvas.height;
+        h = canvas.height;
     overlay(0.58);
     const alarmOn = Math.floor(frameCount / 18) % 2 === 0;
     if (alarmOn && kobayashiMaruStage >= 1 && kobayashiMaruStage <= 2) {
         ctx.fillStyle = 'rgba(235, 33, 53, 0.15)';
         ctx.fillRect(0, 0, w, h);
     }
+
+    // Cabecera superior
     ctx.fillStyle = kobayashiMaruStage >= 1 && kobayashiMaruStage <= 2 ? '#8b1728' : '#173a50';
-    ctx.fillRect(0, 0, w, 40);
-    text(kobayashiMaruInformation1, w / 2, 26, 17, '#ffffff', true);
+    ctx.fillRect(0, 0, w, 42);
+    text(kobayashiMaruInformation1, w / 2, 27, 20, '#ffffff', false);
+
     if (kobayashiMaruStage === 0) {
-        text(kobayashiMaruInformation2, w / 2, 66, 13, '#ff827f', true);
+        text(kobayashiMaruInformation2, w / 2, 70, 36, '#ff827f', false);
         drawKobayashiViewscren(false);
-        ctx.fillStyle = 'rgba(4, 12, 23, 0.94)';
-        ctx.fillRect(55, h * 0.56, w - 110, 91);
+
+        // Caja de texto reorganizada
+        ctx.fillStyle = 'rgba(4, 12, 23, 0.95)';
+        ctx.fillRect(50, 305, w - 100, 95);
         ctx.strokeStyle = '#f06b70';
-        ctx.lineWidth = 1.5;
-        ctx.strokeRect(55, h * 0.56, w - 110, 91);
-        wrapCanvasText(kobayashiMaruInformation3, w / 2, h * 0.56 + 24, w - 145, 16, '#f5f8fb');
-        text(kobayashiMaruInformation4, w / 2, h - 14, 10, '#8ff5ff', true);
+        ctx.lineWidth = 2;
+        ctx.strokeRect(50, 305, w - 100, 95);
+        wrapCanvasText(kobayashiMaruInformation3, w / 2, 330, w - 130, 20, '#ffffff');
+        text(kobayashiMaruInformation4, w / 2, h - 16, 24, '#8ff5ff', false);
+
     } else if (kobayashiMaruStage === 1) {
-        text(kobayashiMaruInformation5, w / 2, 65, 13, '#ffcf6b', true);
+        text(kobayashiMaruInformation5, w / 2, 70, 36, '#ffcf6b', false);
         drawKobayashiViewscren(false);
+
         ctx.fillStyle = 'rgba(4, 12, 23, 0.96)';
-        ctx.fillRect(55, h * 0.55, w - 110, 122);
+        ctx.fillRect(50, 295, w - 100, 140);
         ctx.strokeStyle = '#f06b70';
-        ctx.strokeRect(55, h * 0.55, w - 110, 122);
+        ctx.lineWidth = 2;
+        ctx.strokeRect(50, 295, w - 100, 140);
+
         kobayashiMaruChoices.forEach((choice, i) => {
-            const yy = h * 0.55 + 30 + i * 29;
-            text(`${i + 1}. ${choice.title} — ${choice.detail}`, w / 2, yy, 10, '#ffffff', i === 0);
+            const yy = 332 + i * 43;
+            text(`${i + 1}. ${choice.title} — ${choice.detail}`, w / 2, yy, 19, '#ffffff', i === 0);
         });
-        text(kobayashiMaruInformation6, w / 2, h - 13, 10, '#8ff5ff', true);
+        text(kobayashiMaruInformation6, w / 2, h - 16, 24, '#8ff5ff', false);
+
     } else if (kobayashiMaruStage === 2) {
-        text(kobayashiMaruInformation7, w / 2, 65, 13, '#ff777f', true);
+        text(kobayashiMaruInformation7, w / 2, 70, 36, '#ff777f', false);
         drawKobayashiViewscren(true);
+
         ctx.fillStyle = 'rgba(4, 9, 17, 0.96)';
-        ctx.fillRect(55, h * 0.56, w - 110, 90);
+        ctx.fillRect(50, 305, w - 100, 95);
         ctx.strokeStyle = '#f06b70';
-        ctx.strokeRect(55, h * 0.56, w - 110, 90);
-        wrapCanvasText(kobayashiMaruOutcome + kobayashiMaruInformation8, w / 2, h * 0.56 + 25, w - 145, 16, '#ffffff');
-        text(kobayashiMaruInformation9, w / 2, h - 13, 10, '#8ff5ff', true);
+        ctx.lineWidth = 2;
+        ctx.strokeRect(50, 305, w - 100, 95);
+        wrapCanvasText(kobayashiMaruOutcome + kobayashiMaruInformation8, w / 2, 330, w - 130, 20, '#ffffff');
+        text(kobayashiMaruInformation9, w / 2, h - 16, 24, '#8ff5ff', true);
+
     } else {
         drawKobayashiViewscren(true);
+
         ctx.fillStyle = 'rgba(2, 8, 17, 0.97)';
-        ctx.fillRect(54, h * 0.55, w - 108, 132);
+        ctx.fillRect(50, 298, w - 100, 115);
         ctx.strokeStyle = '#70d7ed';
-        ctx.lineWidth = 1.5;
-        ctx.strokeRect(54, h * 0.55, w - 108, 132);
-        text(kobayashiMaruInformation10, w / 2, h * 0.55 + 25, 15, '#ffdc72', true);
+        ctx.lineWidth = 2;
+        ctx.strokeRect(50, 298, w - 100, 115);
+
+        text(kobayashiMaruInformation10, w / 2, 322, 22, '#ffdc72', true);
         const selected = kobayashiMaruChoices[kobayashiMaruChoice];
-        text(selected ? `${kobayashiMaruInformation11}${selected.title}` : kobayashiMaruInformation12, w / 2, h * 0.55 + 49, 10, '#8ceeff', true);
-        wrapCanvasText(kobayashiMaruInformation13, w / 2, h * 0.55 + 73, w - 150, 16, '#ffffff');
-        text(kobayashiMaruInformation14, w / 2, h - 13, 10, '#ffdc72', true);
+        text(selected ? `${kobayashiMaruInformation11}${selected.title}` : kobayashiMaruInformation12, w / 2, 346, 20, '#8ceeff', false);
+        wrapCanvasText(kobayashiMaruInformation13, w / 2, 372, w - 130, 18, '#ffffff');
+        text(kobayashiMaruInformation14, w / 2, h - 16, 24, '#ffdc72', false);
     }
 }
 
@@ -2824,16 +2916,16 @@ function drawTrainingQuiz(type) {
     } else {
         text(trainingQuizKeys2, canvas.width / 2, canvas.height - 15, 20, '#8ceeff', false);
     }
-}
+} 
 
 function drawTrainingComplete() {
     drawTrainingBridgeBackdrop();
     overlay(0.64);
-    text(trainingComplete1, canvas.width / 2, 150, 24, '#ffdc72', false);
-    text(trainingComplete2, canvas.width / 2, 196, 13, '#ffffff');
-    text(`${trainingComplete3A}${intelligenceScore}/${intelligenceQuestions.length}${trainingComplete3B}${triviaScore}/${starTrekTriviaQuestions.length}`, canvas.width / 2, 226, 12, '#ffdc72', false);
-    text(trainingComplete4, canvas.width / 2, 258, 12, '#7feeff');
-    text(trainingComplete5, canvas.width / 2, 315, 13, '#ffdc72', false);
+    text(trainingComplete1, canvas.width / 2, 90, 30, '#ffdc72', false, GAME_FONTTNG);
+    text(trainingComplete2, canvas.width / 2, 165, 30, '#ffffff');
+    text(`${trainingComplete3A}${intelligenceScore}/${intelligenceQuestions.length}${trainingComplete3B}${triviaScore}/${starTrekTriviaQuestions.length}`, canvas.width / 2, 235, 30, '#ffdc72', false);
+    text(trainingComplete4, canvas.width / 2, 295, 30, '#7feeff');
+    text(trainingComplete5, canvas.width / 2, 385, 26, '#ffdc72', false);
 }
 
 // Ventajas y consecuencias de las decisiones de la historia.
