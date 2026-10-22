@@ -897,6 +897,12 @@ const eenEasterEgg1 = 'EXPULSANDO EL NÚCLEO';
 const eenEasterEgg2 = '¡Si no conoces el podcast, ya tardas en oirlo!';
 const eenEasterEgg3 = 'Busca "EXPULSANDO EL NÚCLEO" en tu gestor de podcasts';
 const eenEasterEgg4 = 'ESPACIO / INTRO / X: VOLVER AL MENÚ';
+// DS9 replay
+const ds9EasterEgg1 = 'Star Trek DS9 Replay';
+const ds9EasterEgg2 = '¡Si no conoces el podcast, ya tardas en oirlo!';
+const ds9EasterEgg3 = 'Busca "Star Trek Replay" en tu gestor de podcasts';
+const ds9EasterEgg4 = 'ESPACIO / INTRO / X: VOLVER AL MENÚ';
+
 
 // MENÚS
 const menuTitle = 'STAR TREK';

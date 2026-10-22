@@ -38,7 +38,9 @@ soundQAllGoodThings.volume = 0.6;
 // Easter egg EEN
 const soundEen = new Audio('assets/audios/een.mp3');
 soundEen.volume = 0.6;
-
+// Easter egg DS9
+const soundDs9 = new Audio('assets/audios/ds9.mp3');
+soundDs9.volume = 0.6;
 
 
 // Función auxiliar para inicializar pistas con las propiedades comunes

@@ -4466,7 +4466,7 @@ window.addEventListener('keydown', (e) => {
         e.preventDefault();
     }
 
-    if (gameState === 'TRIBBLES_EASTER_EGG' || gameState === 'SPOCK_EASTER_EGG' || gameState === 'EEN_EASTER_EGG') {
+    if (gameState === 'TRIBBLES_EASTER_EGG' || gameState === 'SPOCK_EASTER_EGG' || gameState === 'EEN_EASTER_EGG' || gameState === 'DS9_EASTER_EGG') {
         if (e.key === ' ' || e.key === 'Enter' || e.key.toLowerCase() === 'x' || e.key === 'Escape') {
             gameState = 'MENU';
             easterEggKeySequence = [];
@@ -4489,7 +4489,7 @@ window.addEventListener('keydown', (e) => {
             tribbleEasterEggCache = null;
             return;
         }
-        if (e.key.length === 1 && /^[a-z]$/i.test(e.key)) {
+        if (e.key.length === 1 && /^[a-z0-9]$/i.test(e.key)) {
             easterEggLetterBuffer = (easterEggLetterBuffer + e.key.toUpperCase()).slice(-4);
             if (easterEggLetterBuffer === 'LLAP') {
                 gameState = 'SPOCK_EASTER_EGG';
@@ -4501,6 +4501,13 @@ window.addEventListener('keydown', (e) => {
             if (easterEggLetterBuffer.endsWith('EEN')) {
                 gameState = 'EEN_EASTER_EGG';
                 playSound(soundEen); 
+                easterEggKeySequence = [];
+                easterEggLetterBuffer = '';
+                return;
+            }
+            if (easterEggLetterBuffer.endsWith('DS9')) {
+                gameState = 'DS9_EASTER_EGG';
+                playSound(soundDs9);
                 easterEggKeySequence = [];
                 easterEggLetterBuffer = '';
                 return;
@@ -5167,6 +5174,28 @@ function drawEenEasterEgg() {
     text(eenEasterEgg3, canvas.width / 2, 470, 22, '#7feeff', false);
     text(eenEasterEgg4, canvas.width / 2, canvas.height - 30, 20, '#8df4ff', false);
 }
+
+function drawDs9EasterEgg() {
+    drawTitleBackground();
+    overlay(0.75);
+    text(ds9EasterEgg1, canvas.width / 2, 80, 56, '#ffcf72', false);
+    const imgBoxX = canvas.width / 2 - 100;
+    const imgBoxY = 110;
+    const imgBoxW = 250;
+    const imgBoxH = 270;
+
+    if (ds9Image.complete && ds9Image.naturalWidth > 0) {
+        const ratio = Math.min(imgBoxW / ds9Image.naturalWidth, imgBoxH / ds9Image.naturalHeight);
+        const drawW = ds9Image.naturalWidth * ratio;
+        const drawH = ds9Image.naturalHeight * ratio;
+        ctx.drawImage(ds9Image, canvas.width / 2 - drawW / 2, imgBoxY + (imgBoxH - drawH) / 2, drawW, drawH);
+    }
+
+    text(ds9EasterEgg2, canvas.width / 2, 430, 28, '#ffffff', false);
+    text(ds9EasterEgg3, canvas.width / 2, 470, 22, '#7feeff', false);
+    text(ds9EasterEgg4, canvas.width / 2, canvas.height - 30, 20, '#8df4ff', false);
+ }
+
 
 
 // MENÚS
@@ -6014,6 +6043,9 @@ function gameLoop() {
                 break;
             case 'EEN_EASTER_EGG':
                 drawEenEasterEgg();
+                break;
+            case 'DS9_EASTER_EGG':
+                drawDs9EasterEgg();
                 break;
             case 'MENU':
                 drawMainMenu();
