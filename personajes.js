@@ -112,9 +112,11 @@ const scottyPunch = loadImage('assets/scotty_punch.png');
 // Jordi
 const jordiGuard = loadImage('assets/jordi_guard.png');
 const jordiKick = loadImage('assets/jordi_kick.png');
+//const jordiVictory = loadImage('assets/jordi_victory.png');
 // Marina
 const marinaGuard = loadImage('assets/marina_guard.png');
 const marinaKick = loadImage('assets/marina_kick.png');
+const marinaVictory = loadImage('assets/marina_victory.png');
 // Khan
 const kanImage = loadImage('assets/khan_guard.png');
 const khanPunch = loadImage('assets/khan_punch.png');
@@ -157,19 +159,23 @@ const locutusPunch = loadImage('assets/locutus_punch.png');
 // Andreu
 const andreuGuard = loadImage('assets/andreu_guard.png');
 const andreuPunch = loadImage('assets/andreu_kick.png');
+const andreuVictory = loadImage('assets/andreu_victory.png');
 // Jesús
 const jesusGuard = loadImage('assets/jesus_guard.png');
 const jesusPunch = loadImage('assets/jesus_kick.png');
+const jesusVictory = loadImage('assets/jesus_victory.png');
 // Emilio
 const emilioGuard = loadImage('assets/emilio_guard.png');
 const emilioPunch = loadImage('assets/emilio_kick.png');
+const emilioVictory = loadImage('assets/emilio_victory.png');
 // Ramón
 const ramonGuard = loadImage('assets/ramon_guard.png');
 const ramonPunch = loadImage('assets/ramon_kick.png');
+//const ramonVictory = loadImage('assets/ramon_victory.png');
 // Txús
 const txusGuard = loadImage('assets/txus_guard.png');
 const txusPunch = loadImage('assets/txus_kick.png');
-
+//const txusVictory = loadImage('assets/txus_victory.png');
 
 // Y luego creas tu array usando la clase:
 const availableCharacters = [
@@ -233,6 +239,7 @@ const availableCharacters = [
             name: 'JORDI',
             guardImg: jordiGuard,
             punchImg: jordiKick,
+            //victoryImg: jordiVictory,
             role: 'Explorador de la Flota'
         }
     ),
@@ -242,6 +249,7 @@ const availableCharacters = [
             name: 'MARINA',
             guardImg: marinaGuard,
             punchImg: marinaKick,
+            victoryImg: marinaVictory,
             role: 'Oficial de la Flota'
         }
     ),
@@ -395,6 +403,7 @@ const availableCharacters = [
             name: 'ANDREU',
             guardImg: andreuGuard,
             punchImg: andreuPunch,
+            victoryImg: andreuVictory,
             role: 'Padrino 1',
         }
     ),
@@ -404,6 +413,7 @@ const availableCharacters = [
             name: 'JESÚS',
             guardImg: jesusGuard,
             punchImg: jesusPunch,
+            victoryImg: jesusVictory,
             role: 'Padrino 2',
          }
     ),
@@ -413,6 +423,7 @@ const availableCharacters = [
             name: 'EMILIO',
             guardImg: emilioGuard,
             punchImg: emilioPunch,
+            victoryImg: emilioVictory,
             role: 'AKA Anónimo Aguacate',
         }
     ),
@@ -422,6 +433,7 @@ const availableCharacters = [
             name: 'RAMON',
             guardImg: ramonGuard,
             punchImg: ramonPunch,
+            //victoryImg: ramonVictory,
             role: 'Bro 1',
         }
     ), new Character(
@@ -430,6 +442,7 @@ const availableCharacters = [
             name: 'TXUS',
             guardImg: txusGuard,
             punchImg: txusPunch,
+            //victoryImg: txusVictory,
             role: 'Bro2',
         }
     )

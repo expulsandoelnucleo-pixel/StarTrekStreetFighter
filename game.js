@@ -5614,10 +5614,18 @@ function drawSprite(p) {
     if (p.name === 'MARINA')
         y -= 40;
 
+    // Preparado para cuando otro jugador tenga la imagen de victoria
     // Picard toca la flauta cuando gana el combate.
-    if (gameOver && picardVictory && c.name === 'PICARD' && imageIsReady(picardFlute)) {
-        drawCharacterImage(p, picardFlute, y);
-        return;
+    // Cada personaje tendra una posicion de victoria diferente
+    if (gameOver && c.victoryImg) {
+        const winner = getRoundWinner();
+        const playerNumber = p === player1 ? 1 : 2;
+        const isWinner = winner !== 0 && winner === playerNumber;
+
+        if (isWinner && imageIsReady(c.victoryImg)) {
+            if (drawCharacterImage(p, c.victoryImg, y))
+                return;
+        }
     }
 
     if (gameOver) {
