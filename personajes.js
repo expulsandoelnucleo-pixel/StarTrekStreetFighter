@@ -42,19 +42,13 @@ class Character {
         this.height = height;
         // Habilidades especiales
         this.victoryImg = victoryImg,
-        this.extraGuardImg = extraGuardImg;
-        this.extraPunchImg = extraPunchImg;
-        this.extraDamage = extraDamage;
-        this.extraAttackRange = extraAttackRange;
-        this.extraAttackDuration = extraAttackDuration;
-        this.extraAttackCooldown = extraAttackCooldown;
-        this.extraKnockback = extraKnockback;
-        this.kickImg = kickImg;
-        this.kickDamage = kickDamage;
-        this.kickAttackRange = kickAttackRange;
-        this.kickAttackDuration = kickAttackDuration;
-        this.kickAttackCooldown = kickAttackCooldown;
-        this.kickKnockback = kickKnockback;
+        this.extraGuardImg = extraGuardImg || guardImg;
+        this.extraPunchImg = extraPunchImg || kickImg || punchImg;
+        this.extraDamage = extraDamage || kickDamage || damage;
+        this.extraAttackRange = extraAttackRange || kickAttackRange || attackRange;
+        this.extraAttackDuration = extraAttackDuration || kickAttackDuration || attackDuration;
+        this.extraAttackCooldown = extraAttackCooldown || kickAttackCooldown || 8;
+        this.extraKnockback = extraKnockback || kickKnockback || 15;
     }
 }
 
@@ -131,27 +125,28 @@ const picardVictoryImg = loadImage('assets/picard_flute.png');
 // Riker tiene guardia y golpe normales, ademÃ¡s de dos poses con silla.
 const rikerGuard = loadImage('assets/ricker_guard.png');
 const rikerPunch = loadImage('assets/ricker_kick.png');
-const rikerChairGuard = loadProjectAsset('ricker_silla_guard.png');
-const rikerChairPunch = loadProjectAsset('ricker_silla_punch.png');
+const rikerChairGuard = loadImage('assets/ricker_silla_guard.png');
+const rikerChairPunch = loadImage('assets/ricker_silla_punch.png');
 // DATA: androide de la Flota Estelar, con guardia y ataque normales.
-const dataGuard = loadProjectAsset('data_guard.png');
-const dataPunch = loadProjectAsset('data_punch.png');
+const dataGuard = loadImage('assets/data_guard.png');
+const dataPunch = loadImage('assets/data_punch.png');
 // WORF: guardia y ataque normal.
-const worfGuard = loadProjectAsset('worf_guard.png');
-const worfPunch = loadProjectAsset('worf_punch.png');
+const worfGuard = loadImage('assets/worf_guard.png');
+const worfPunch = loadImage('assets/worf_punch.png');
 // LAFORGE: guardia, ataque normal y patada especial.
-const laforgeGuard = loadProjectAsset('laforge_guard.png');
-const laforgePunch = loadProjectAsset('laforge_punch.png');
-const laforgeKick = loadProjectAsset('laforge_kick.png');
+const laforgeGuard = loadImage('assets/laforge_guard.png');
+const laforgePunch = loadImage('assets/laforge_punch.png');
+const laforgeExtraGuard = loadImage('assets/laforge_extra_guard.png');
+const laforgeExtraPunch = loadImage('assets/laforge_extra_punch.png');
 // CHEKOV: guardia y ataque normal.
-const chekovGuard = loadProjectAsset('chekov_guard.png');
-const chekovPunch = loadProjectAsset('chekov_punch.png');
+const chekovGuard = loadImage('assets/chekov_guard.png');
+const chekovPunch = loadImage('assets/chekov_punch.png');
 // GORN: guardia y ataque normal.
-const gornGuard = loadProjectAsset('gorn_guard.png');
-const gornPunch = loadProjectAsset('gorn_punch.png');
+const gornGuard = loadImage('assets/gorn_guard.png');
+const gornPunch = loadImage('assets/gorn_punch.png');
 // TASHA YAR: jefa de seguridad; sprites propios opcionales en assets/.
-const tashaGuard = loadProjectAsset('tasha_guard.png');
-const tashaPunch = loadProjectAsset('tasha_punch.png');
+const tashaGuard = loadImage('assets/tasha_guard.png');
+const tashaPunch = loadImage('assets/tasha_punch.png');
 // Seven of Nine
 const sevenGuard = loadImage('assets/seven_guard.png');
 const sevenKick = loadImage('assets/seven_kick.png');
@@ -288,7 +283,7 @@ const availableCharacters = [
             extraKnockback: 19
         }
     ),
-        new Character(
+    new Character(
         {
             id: 12,
             name: 'DATA',
@@ -318,13 +313,14 @@ const availableCharacters = [
             name: 'LAFORGE',
             guardImg: laforgeGuard,
             punchImg: laforgePunch,
-            kickImg: laforgeKick,
+            extraGuardImg: laforgeExtraGuard,
+            extraPunchImg: laforgeExtraPunch,
             role: 'Ingeniero jefe del Enterprise',
-            kickDamage: 10,
-            kickAttackRange: 145,
-            kickAttackDuration: 22,
-            kickAttackCooldown: 15,
-            kickKnockback: 20
+            extraDamage: 10,
+            extraAttackRange: 145,
+            extraAttackDuration: 22,
+            extraAttackCooldown: 15,
+            extraKnockback: 20
         }
     ),
     new Character(

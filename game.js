@@ -3329,7 +3329,7 @@ function isRikerExtraGuardHeld(p) {
     return false;
 }
 
-function isLaForgeKickHeld(p) {
+function isLaForgeExtraGuardHeld(p) {
     if (getCharacter(p).name !== 'LAFORGE')
         return false;
     if (p === player1)
@@ -3343,12 +3343,11 @@ function startAttack(p) {
     if (p.isAttacking || gameOver || p.stunTimer > 0 || p.attackCooldown > 0)
         return;
     const c = getCharacter(p);
-    const useExtra = c.name === 'RIKER' && isRikerExtraGuardHeld(p);
-    const useLaForgeKick = c.name === 'LAFORGE' && isLaForgeKickHeld(p);
-    p.attackStyle = useExtra ? 'chair' : useLaForgeKick ? 'kick' : 'normal';
+    const useExtra = (c.name === 'RIKER' && isRikerExtraGuardHeld(p)) || (c.name === 'LAFORGE' && isLaForgeExtraGuardHeld(p));
+    p.attackStyle = useExtra ? 'extra' : 'normal';
     p.activeAttackDuration = useExtra
-        ? (c.ExtraAttackDuration || c.attackDuration)
-        : useLaForgeKick ? (c.kickAttackDuration || c.attackDuration) : c.attackDuration;
+        ? (c.extraAttackDuration || c.attackDuration)
+        : c.attackDuration;
     p.isAttacking = true;
     p.hasHitThisAttack = false;
     p.attackTimer = p.activeAttackDuration;
@@ -3437,35 +3436,25 @@ function updateAttack(attacker, defender) {
     const distance = Math.abs(attacker.x - defender.x);
     const vertical = Math.abs(attacker.y - defender.y);
     const activeDuration = attacker.activeAttackDuration || c.attackDuration;
-    const extraAttack = c.name === 'RIKER' && attacker.attackStyle === 'chair';
-    const laforgeKickAttack = c.name === 'LAFORGE' && attacker.attackStyle === 'kick';
-    const specialAttack = extraAttack || laforgeKickAttack;
-    const attackRange = extraAttack ? (c.extraAttackRange || c.attackRange)
-        : laforgeKickAttack ? (c.kickAttackRange || c.attackRange) : c.attackRange;
-    const attackDamage = extraAttack ? (c.extraDamage || c.damage)
-        : laforgeKickAttack ? (c.kickDamage || c.damage) : c.damage;
-    const attackKnockback = extraAttack ? (c.extraKnockback || 19)
-        : laforgeKickAttack ? (c.kickKnockback || 20) : 15;
+    const extraAttack = (c.name === 'RIKER' || c.name === 'LAFORGE') && attacker.attackStyle === 'extra';
+    const specialAttack = extraAttack;
+    const attackRange = extraAttack ? (c.extraAttackRange || c.attackRange) : c.attackRange;
+    const attackDamage = extraAttack ? (c.extraDamage || c.damage) : c.damage;
+    const attackKnockback = extraAttack ? (c.extraKnockback || 19) : 15;
     const hitFrame = Math.ceil(activeDuration * 0.55);
 
     // Riker y LaForge disponen de una ventana de impacto de varios fotogramas,
     // para que sus ataques especiales no dependan de un único instante exacto.
-    const isHitFrame = c.name === 'RIKER'
-        ? (extraAttack
-             ? attacker.attackTimer <= Math.ceil(activeDuration * 0.78) &&
-            attacker.attackTimer >= Math.max(1, Math.floor(activeDuration * 0.20))
-             : attacker.attackTimer <= Math.ceil(activeDuration * 0.60) &&
-            attacker.attackTimer >= Math.max(1, Math.floor(activeDuration * 0.30)))
-        : laforgeKickAttack
-         ? attacker.attackTimer <= Math.ceil(activeDuration * 0.78) &&
-        attacker.attackTimer >= Math.max(1, Math.floor(activeDuration * 0.22))
+    const isHitFrame = extraAttack
+        ? (attacker.attackTimer <= Math.ceil(activeDuration * 0.78) &&
+            attacker.attackTimer >= Math.max(1, Math.floor(activeDuration * 0.20)))
         : attacker.attackTimer === hitFrame;
 
     if (c.name === 'KAN' && attacker.attackTimer >= c.attackDuration - 8) {
         attacker.x = clamp(
-                attacker.x + (attacker.x < defender.x ? 5.5 : -5.5),
-                0,
-                Math.max(0, canvas.width - attacker.width));
+            attacker.x + (attacker.x < defender.x ? 5.5 : -5.5),
+            0,
+            Math.max(0, canvas.width - attacker.width));
         if (distance < 90 && vertical < 55 && !attacker.hasHitThisAttack) {
             if (applyHit(attacker, defender, 7, 19))
                 attacker.hasHitThisAttack = true;
@@ -3482,12 +3471,10 @@ function updateAttack(attacker, defender) {
 
     attacker.attackTimer--;
     if (attacker.attackTimer <= 0) {
-        const endedWithExtra = attacker.attackStyle === 'chair';
-        const endedWithLaForgeKick = attacker.attackStyle === 'kick';
+        const endedWithExtra = attacker.attackStyle === 'extra';
         attacker.attackTimer = 0;
         attacker.isAttacking = false;
-        attacker.attackCooldown = endedWithExtra ? (c.extraAttackCooldown || 16)
-            : endedWithLaForgeKick ? (c.kickAttackCooldown || 13) : 8;
+        attacker.attackCooldown = endedWithExtra ? (c.extraAttackCooldown || 16) : 8;
         attacker.attackStyle = 'normal';
         attacker.activeAttackDuration = 0;
         attacker.hasHitThisAttack = false;
@@ -5642,39 +5629,24 @@ function drawSprite(p) {
         // El vencedor termina de pie, en pose neutral, no congelado a mitad de golpe.
         if (drawCharacterImage(p, c.guardImg, y))
             return;
-    } else if (c.name === 'RIKER') {
+    } else if (c.name === 'RIKER' || c.name === 'LAFORGE') {
         // Alterna entre las dos poses normales y las dos poses con silla.
         // Si alguna imagen adicional falta o tarda en cargar, vuelve a la pose normal.
+        const useExtra = (c.name === 'RIKER' && isRikerExtraGuardHeld(p)) ||
+                        (c.name === 'LAFORGE' && isLaForgeExtraGuardHeld(p));
         if (p.isAttacking) {
-            const attackImg = p.attackStyle === 'chair' ? c.chairPunchImg : c.punchImg;
+            // Usa el ataque extra (especial) si attackStyle es 'extra', o el normal si no
+            const attackImg = p.attackStyle === 'extra' ? c.extraPunchImg : c.punchImg;
             if (drawCharacterImage(p, attackImg, y))
                 return;
-            if (p.attackStyle === 'chair' && drawCharacterImage(p, c.punchImg, y))
+            if (p.attackStyle === 'extra' && drawCharacterImage(p, c.punchImg, y))
                 return;
             if (drawCharacterImage(p, c.guardImg, y))
                 return;
         } else {
-            const guardImg = isRikerExtraGuardHeld(p) ? c.extraGuardImg : c.guardImg;
+            // Muestra la guardia extra si se mantiene S/Abajo, o la guardia normal en caso contrario
+            const guardImg = useExtra ? c.extraGuardImg : c.guardImg;
             if (drawCharacterImage(p, guardImg, y))
-                return;
-            if (drawCharacterImage(p, c.guardImg, y))
-                return;
-            if (drawCharacterImage(p, c.punchImg, y))
-                return;
-        }
-        return;
-    } else if (c.name === 'LAFORGE') {
-        if (p.isAttacking) {
-            const attackImg = p.attackStyle === 'kick' ? c.kickImg : c.punchImg;
-            if (drawCharacterImage(p, attackImg, y))
-                return;
-            // Si la nueva imagen aún no carga, conserva un sprite visible.
-            if (p.attackStyle === 'kick' && drawCharacterImage(p, c.punchImg, y))
-                return;
-            if (drawCharacterImage(p, c.guardImg, y))
-                return;
-        } else {
-            if (drawCharacterImage(p, c.guardImg, y))
                 return;
             if (drawCharacterImage(p, c.punchImg, y))
                 return;
