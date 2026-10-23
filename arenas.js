@@ -111,7 +111,8 @@ const TOTAL_MISIONES = 19; // Una arena por personaje; Khan penúltimo y Locutus
 // 0 KIRK, 1 SPOCK, 2 UHURA, 3 SULU, 4 MCCOY,
 // 5 SCOTTY, 6 JORDI, 7 MARINA, 8 KAN, 9 PICARD,
 // 10 RIKER, 11 DATA, 12 WORF, 13 LAFORGE, 14 CHEKOV,
-// 15 GORN, 16 TASHA YAR.
+// 15 GORN, 16 TASHA YAR, 17 SEVEN OF NINE, 18 LOCUTUS,
+// 19 ANDREU, 20 JESÚS, 21 EMILIO, 22 RAMON, 23 TXUS.
 const arenaCombatants = [
     [availableCharacters[0].id, availableCharacters[1].id],   // Misión 1: Kirk vs Spock
     [availableCharacters[2].id, availableCharacters[3].id],   // Misión 2: Uhura vs Sulu
