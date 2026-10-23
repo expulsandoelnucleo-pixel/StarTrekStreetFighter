@@ -5761,7 +5761,7 @@ function drawGameOver() {
         textWithAnimation(
             roundWinnerMessage,
             canvas.width / 2,
-            (canvas.height / 2),
+            (canvas.height / 2) - 60,
             10,           // Tamaño inicial (pequeño)
             150,           // Tamaño final (grande)
             animDuration,
