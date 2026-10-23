@@ -3,6 +3,12 @@
 // ============================================================
 // STAR TREK: EXPULSANDO EL NÚCLEO
 // ============================================================
+const GAME_FONT = "'StarTrekFont', monospace";
+const GAME_FONTDS9 = "'StarTrekDs9', monospace";
+const GAME_FONTKLINGON = "'StarTrekKlingon', monospace";
+const GAME_FONTROMULAN = "'StarTrekRomulan', monospace";
+const GAME_FONTTNG = "'StarTrekTng', monospace";
+
 
 const canvas = document.getElementById('gameCanvas');
 if (!canvas)
@@ -78,6 +84,7 @@ const player1 = makePlayer(100, 0, 1);
 const player2 = makePlayer(460, 1, -1);
 
 let gameState = 'MENU';
+let gameOver = false;
 
 // Easter eggs secretos del menú principal.
 const TRIBBLES_SECRET_SEQUENCE = [
@@ -87,19 +94,23 @@ const TRIBBLES_SECRET_SEQUENCE = [
 let easterEggKeySequence = [];
 let easterEggLetterBuffer = '';
 
-let gameOver = false;
+let qEasterEggActive = false;
+
 // Mostrar al personaje derrotado en el suelo durante 5 segundos antes del rótulo de resultado.
 let gameOverFrame = 0;
 const GAME_OVER_PAUSE_FRAMES = 5 * 60;
 
 let frameCount = 0;
+let matchStartFrame = 0;
 let screenShakeTimer = 0;
 let impactEffects = [];
 let currentArena = 1;
 let matchTimeLeft = 120;
 let timeText = '02:00';
 let roundWinnerMessage = '';
+let roundWinnerHasTwoLines = false;
 let picardVictory = false;
+let matchStartDelay = 0;
 
 // Juicio final de Q: desafío táctico para expulsar el núcleo a tiempo.
 let qTrialTimer = 60;
@@ -109,6 +120,7 @@ let qTrialStep = 0;
 let qTrialMessage = '';
 let qTrialOutcome = '';
 let qTrialFrame = 0;
+let qTrialResultFrame = 0;
 
 let isStoryMode = false;
 let isVsMachine = false;
@@ -121,6 +133,7 @@ let storyPhase = 1;
 let campaignAttempts = 3;
 let campaignCompleted = false;
 let campaignFailed = false;
+let campaignEndFrame = 0;
 // Final alternativo de historia: solo para quien complete la campaña como Picard.
 let picardNexusStep = 0;
 
@@ -137,7 +150,7 @@ let storySeriesHumanHealthTotal = 0;
 let storySeriesMachineHealthTotal = 0;
 let storyRoundRecorded = false;
 
-// Minijuego arcade de destrucción de lanzadera cada cuatro misiones.
+// Bonus arcade independiente de las 19 misiones de historia.
 let shuttleMaxHealth = 300;
 let shuttleHealth = 300;
 let shuttleTimer = 60 * 60;
@@ -150,6 +163,8 @@ let shuttleResult = '';
 let shuttleResultTimer = 0;
 let shuttleSparks = [];
 let shuttleBonus = 0;
+// Fase narrativa exacta a la que se debe volver tras el bonus de lanzadera.
+let shuttleResumeStoryPhase = null;
 
 // Modo entrenamiento: puente, combate espacial, holodeck, razonamiento y Preguntas Trekkies.
 let starshipGame = null;
@@ -276,7 +291,7 @@ const intelligenceQuestionBank = [{
     }, {
         id: 18,
         question: intelligenceQuestQuestion18,
-        options: [intelligenceQuestQuestion18Option1, intelligenceQuestQuestion18Option2, intelligenceQuestQuestion18Option2, intelligenceQuestQuestion18Option4],
+        options: [intelligenceQuestQuestion18Option1, intelligenceQuestQuestion18Option2, intelligenceQuestQuestion18Option3, intelligenceQuestQuestion18Option4],
         answer: 2,
         explanation: intelligenceQuestQuestion18Explanation
     }, {
@@ -284,7 +299,7 @@ const intelligenceQuestionBank = [{
         question: intelligenceQuestQuestion19,
         options: [intelligenceQuestQuestion19Option1, intelligenceQuestQuestion19Option2, intelligenceQuestQuestion19Option3, intelligenceQuestQuestion19Option4],
         answer: 1,
-        explanation: intelligenceQuestQuestion20Explanation
+        explanation: intelligenceQuestQuestion19Explanation
     }, {
         id: 20,
         question: intelligenceQuestQuestion20,
@@ -567,26 +582,31 @@ const starTrekTriviaQuestionBank = [{
         answer: 2,
         explanation: triviaQuestion45Explanation
     }, {
+        id: 46,
         question: triviaQuestion46,
         options: [triviaQuestion46Option1, triviaQuestion46Option2, triviaQuestion46Option3, triviaQuestion46Option4],
         answer: 0,
         explanation: triviaQuestion46Explanation
     }, {
+        id: 47,
         question: triviaQuestion47,
         options: [triviaQuestion47Option1, triviaQuestion47Option2, triviaQuestion47Option3, triviaQuestion47Option4],
         answer: 3,
         explanation: triviaQuestion47Explanation
     }, {
+        id: 48,
         question: triviaQuestion48,
         options: [triviaQuestion48Option1, triviaQuestion48Option2, triviaQuestion48Option3, triviaQuestion48Option4],
         answer: 1,
         explanation: triviaQuestion48Explanation
     }, {
+        id: 49,
         question: triviaQuestion49,
         options: [triviaQuestion49Option1, triviaQuestion49Option2, triviaQuestion49Option3, triviaQuestion49Option4],
         answer: 0,
         explanation: triviaQuestion49Explanation
     }, {
+        id: 50,
         question: triviaQuestion50,
         options: [triviaQuestion50Option1, triviaQuestion50Option2, triviaQuestion50Option3, triviaQuestion50Option4],
         answer: 2,
@@ -631,7 +651,7 @@ const kobayashiMaruChoices = [{
 // Personaje elegido solo para el circuito del holodeck; no cambia la selección
 // de los modos de combate ni el personaje que usa la historia.
 let trainingCharacterIndex = 0;
-const trainingScoreTarget = 500;
+const trainingScoreTarget = 3000;
 let trainingCircuitIndex = 0;
 const holodeckCourses = [{
         name: holodeckCourseName1,
@@ -785,6 +805,7 @@ function damageStarshipPlayer() {
     if (g.lives <= 0) {
         g.lives = 0;
         g.over = true;
+        g.overFrame = g.frame;
     }
 }
 
@@ -903,6 +924,7 @@ function updateStarshipMode() {
                     if (g.score >= trainingScoreTarget) {
                         g.missionComplete = true;
                         g.over = true;
+                        g.overFrame = g.frame;
                     }
                 }
                 break;
@@ -1112,24 +1134,50 @@ function drawStarshipMode() {
     // HUD.
     ctx.fillStyle = 'rgba(0, 8, 20, 0.7)';
     ctx.fillRect(0, 0, w, 43);
-    text(hudStarshipModeText1, 150, 27, 16, '#7eeeff', true);
-    text(`${hudStarshipModeText2}${String(g.score).padStart(6, '0')}`, w / 2, 27, 15, '#ffffff', true);
-    text(`${hudStarshipModeText3}${'◆ '.repeat(g.lives).trim()}`, w - 88, 27, 15, '#ffcf70', true);
-    text(hudStarshipModeText4, w / 2, h - 10, 10, '#b4d7e8', true);
+    text(hudStarshipModeText1, 150, 27, 36, '#7eeeff', false);
+    text(`${hudStarshipModeText2}${String(g.score).padStart(6, '0')}`, w / 2, 27, 30, '#ffffff', false);
+    text(`${hudStarshipModeText3}${'◆ '.repeat(g.lives).trim()}`, w - 88, 27, 30, '#ffcf70', false);
+    text(hudStarshipModeText4, w / 2, h - 10, 24, '#b4d7e8', false);
 
     if (g.over) {
         ctx.fillStyle = 'rgba(0, 4, 14, 0.80)';
         ctx.fillRect(0, 0, w, h);
+
+        if (!g.overFrame) g.overFrame = frameCount;
+        const elapsed = frameCount - g.overFrame;
+
         if (g.missionComplete) {
-            text(hudStarshipModeText5, w / 2, h / 2 - 40, 25, '#ffdf70', true);
-            text(`${hudStarshipModeText6A}: ${g.score}${hudStarshipModeText6B}`, w / 2, h / 2 - 5, 16, '#ffffff', true);
-            text(hudStarshipModeText7, w / 2, h / 2 + 32, 13, '#78f7ff', true);
+            //text(hudStarshipModeText5, w / 2, h / 2 - 40, 25, '#ffdf70', true);
+            textWithAnimation(
+                hudStarshipModeText5,
+                w / 2,
+                h / 2 - 80,
+                10,            // Tamaño inicial pequeño
+                120,           // Tamaño final
+                25,
+                elapsed,
+                '#ffdf70',
+                false
+            );
+            text(`${hudStarshipModeText6A}: ${g.score}${hudStarshipModeText6B}`, w / 2, h / 2 - 5, 36, '#ffffff', false);
+            text(hudStarshipModeText7, w / 2, h / 2 + 40, 33, '#78f7ff', false);
         } else {
-            text(hudStarshipModeText8, w / 2, h / 2 - 36, 29, '#ff625b', true);
-            text(`${hudStarshipModeText9}${g.score}`, w / 2, h / 2 + 2, 18, '#ffffff', true);
-            text(hudStarshipModeText10, w / 2, h / 2 + 36, 14, '#78f7ff', true);
+            //text(hudStarshipModeText8, w / 2, h / 2 - 36, 29, '#ff625b', true);
+            textWithAnimation(
+                hudStarshipModeText8,
+                w / 2,
+                h / 2 - 80,
+                10,            // Tamaño inicial pequeño
+                125,            // Tamaño final
+                25,
+                elapsed,
+                '#ff625b',
+                false
+            );
+            text(`${hudStarshipModeText9}${g.score}`, w / 2, h / 2 + 2, 28, '#ffffff', false);
+            text(hudStarshipModeText10, w / 2, h / 2 + 40, 24, '#78f7ff', false);
         }
-        text(hudStarshipModeText11, w / 2, h / 2 + 63, 12, '#c8dbe8');
+        text(hudStarshipModeText11, w / 2, h / 2 + 80, 22, '#c8dbe8');
     }
 }
 
@@ -1139,7 +1187,7 @@ function drawStarshipMode() {
 // contra tres rivales; salirse del trazado o golpear boyas resta distancia.
 // ------------------------------------------------------------
 const RACE_SCREEN_SCALE = 0.34;
-const RACE_FINISH_DISTANCE = 8200;
+const RACE_FINISH_DISTANCE = 20000;
 const RACE_TRACK_WIDTH = () => Math.min(canvas.width * 0.68, 500);
 
 function raceTrackCenterAt(distance) {
@@ -1315,6 +1363,7 @@ function updateStarshipRace() {
     if (g.progress >= g.finishDistance || fastestRival >= g.finishDistance) {
         g.over = true;
         g.won = g.progress >= g.finishDistance && g.progress >= fastestRival;
+        g.overFrame = g.frame;
         for (const k in keys)
             keys[k] = false;
     }
@@ -1484,25 +1533,40 @@ function drawStarshipRace() {
     const pct = Math.min(100, Math.floor(g.progress / g.finishDistance * 100));
     ctx.fillStyle = 'rgba(0,8,20,0.82)';
     ctx.fillRect(0, 0, w, 47);
-    text(starshipRaceInstructions1, w / 2, 19, 15, '#7eeeff', true);
-    text(`${starshipRaceInstructions2} ${pct}%`, w * 0.22, 38, 11, '#ffffff', true);
+    text(starshipRaceInstructions1, w / 2, 19, 24, '#7eeeff', false);
+    text(`${starshipRaceInstructions2} ${pct}%`, w * 0.22, 38, 24, '#ffffff', false);
     ctx.fillStyle = '#19394d';
     ctx.fillRect(w * 0.36, 29, w * 0.28, 9);
     ctx.fillStyle = '#58e9ff';
     ctx.fillRect(w * 0.36, 29, w * 0.28 * pct / 100, 9);
-    text(`${starshipRaceInstructions3} ${place}/4`, w * 0.80, 38, 12, '#ffdc72', true);
-    text(starshipRaceInstructions4, w / 2, h - 10, 9, '#c5e7f5', true);
+    text(`${starshipRaceInstructions3} ${place}/4`, w * 0.80, 38, 24, '#ffdc72', false);
+    text(starshipRaceInstructions4, w / 2, h - 10, 24, '#c5e7f5', false);
     if (g.offTrack && !g.over)
-        text(starshipRaceInstructions5, w / 2, h - 34, 12, '#ffbb67', true);
+        text(starshipRaceInstructions5, w / 2, h - 34, 12, '#ffbb67', false);
     else if (g.lastImpact && g.player.hitTimer > 0)
-        text(g.lastImpact, w / 2, h - 34, 12, '#ff8e77', true);
+        text(g.lastImpact, w / 2, h - 34, 12, '#ff8e77', false);
     if (g.over) {
         ctx.fillStyle = 'rgba(1,6,17,0.82)';
         ctx.fillRect(0, 0, w, h);
-        text(g.won ? starshipRaceEndWin1 : starshipRaceEndLoose1, w / 2, h / 2 - 35, 26, g.won ? '#ffdc72' : '#ff716d', true);
-        text(g.won ? starshipRaceEndWin2 : starshipRaceEndLoose2, w / 2, h / 2, 14, '#ffffff');
-        text(starshipRaceEndText1 + (g.won ? starshipRaceEndText2 : starshipRaceEndText3), w / 2, h / 2 + 40, 13, '#7eeeff', true);
-        text(starshipRaceEndText4, w / 2, h / 2 + 67, 11, '#c5e7f5');
+
+        if (!g.overFrame) g.overFrame = frameCount;
+        const elapsed = frameCount - g.overFrame;
+
+        //text(g.won ? starshipRaceEndWin1 : starshipRaceEndLoose1, w / 2, h / 2 - 35, 26, g.won ? '#ffdc72' : '#ff716d', true);
+        textWithAnimation(
+            g.won ? starshipRaceEndWin1 : starshipRaceEndLoose1,
+            w / 2,
+            h / 2 - 35,
+            10,            // Tamaño inicial pequeño
+            120,            // Tamaño final
+            25,
+            elapsed,
+            g.won ? '#ffdc72' : '#ff716d',
+            false
+        );
+        text(g.won ? starshipRaceEndWin2 : starshipRaceEndLoose2, w / 2, h / 2, 30, '#ffffff');
+        text(starshipRaceEndText1 + (g.won ? starshipRaceEndText2 : starshipRaceEndText3), w / 2, h / 2 + 45, 30, '#7eeeff', false);
+        text(starshipRaceEndText4, w / 2, h / 2 + 90, 30, '#c5e7f5');
     }
 }
 
@@ -1513,36 +1577,72 @@ function drawStarshipRace() {
 
 function drawTrainingBridgeBackdrop() {
     const w = canvas.width,
-    h = canvas.height;
+        h = canvas.height;
     const bg = ctx.createLinearGradient(0, 0, 0, h);
     bg.addColorStop(0, '#09182a');
     bg.addColorStop(0.58, '#152d44');
     bg.addColorStop(1, '#050a13');
     ctx.fillStyle = bg;
     ctx.fillRect(0, 0, w, h);
+
     // Ventanal panorámico y espacio exterior.
     ctx.fillStyle = '#020916';
     ctx.fillRect(w * 0.12, h * 0.10, w * 0.76, h * 0.40);
-    for (let i = 0; i < 85; i++) {
-        const sx = ((i * 97) % 997) / 997 * w;
-        const sy = ((i * 53) % 193) / 193 * h * 0.48 + h * 0.10;
-        ctx.globalAlpha = 0.35 + ((i % 5) * 0.12);
-        ctx.fillStyle = i % 6 === 0 ? '#7de9ff' : '#ffffff';
-        ctx.fillRect(sx, sy, i % 4 === 0 ? 2 : 1, i % 4 === 0 ? 2 : 1);
-    }
-    ctx.globalAlpha = 1;
     ctx.save();
     ctx.beginPath();
     ctx.rect(w * 0.12, h * 0.10, w * 0.76, h * 0.40);
     ctx.clip();
-    ctx.fillStyle = 'rgba(18,106,176,0.34)';
-    ctx.beginPath();
-    ctx.ellipse(w * 0.63, h * 0.47, w * 0.36, h * 0.15, -0.12, 0, Math.PI * 2);
-    ctx.fill();
+
+    const windowWidth = w * 0.76;
+    const windowHeight = h * 0.40;
+
+    // Nivel 1: Estrellas lejanas (lentas, pequeñas y tenues)
+    for (let i = 0; i < 45; i++) {
+        const rx = Math.abs(Math.sin(i * 12.9898 + 1.1) * 43758.5453) % 1;
+        const ry = Math.abs(Math.sin(i * 78.233 + 2.3) * 43758.5453) % 1;
+
+        const rawX = (rx * windowWidth + frameCount * 0.05) % windowWidth;
+        const sx = w * 0.12 + rawX;
+        const sy = h * 0.10 + ry * windowHeight;
+
+        ctx.globalAlpha = 0.3;
+        ctx.fillStyle = '#ffffff';
+        ctx.fillRect(sx, sy, 1, 1);
+    }
+
+    // Nivel 2: Estrellas medianas (velocidad media)
+    for (let i = 0; i < 28; i++) {
+        const rx = Math.abs(Math.sin(i * 31.415 + 55.2) * 22159.876) % 1;
+        const ry = Math.abs(Math.sin(i * 64.882 + 11.4) * 22159.876) % 1;
+
+        const rawX = (rx * windowWidth + frameCount * 0.18) % windowWidth;
+        const sx = w * 0.12 + rawX;
+        const sy = h * 0.10 + ry * windowHeight;
+
+        ctx.globalAlpha = 0.65;
+        ctx.fillStyle = i % 3 === 0 ? '#7de9ff' : '#ffffff';
+        ctx.fillRect(sx, sy, 1.5, 1.5);
+    }
+
+    // Nivel 3: Estrellas cercanas / brillantes (más rápidas)
+    for (let i = 0; i < 15; i++) {
+        const rx = Math.abs(Math.sin(i * 93.123 + 129.5) * 15481.993) % 1;
+        const ry = Math.abs(Math.sin(i * 27.451 + 77.1) * 15481.993) % 1;
+
+        const rawX = (rx * windowWidth + frameCount * 0.40) % windowWidth;
+        const sx = w * 0.12 + rawX;
+        const sy = h * 0.10 + ry * windowHeight;
+
+        ctx.globalAlpha = 0.9;
+        ctx.fillStyle = '#7de9ff';
+        ctx.fillRect(sx, sy, 2.5, 2.5);
+    }
+
     ctx.restore();
     ctx.strokeStyle = '#4b758d';
     ctx.lineWidth = 8;
     ctx.strokeRect(w * 0.12, h * 0.10, w * 0.76, h * 0.40);
+
     // Estructura del puente, consolas y suelo.
     ctx.fillStyle = '#263b50';
     ctx.fillRect(0, h * 0.49, w, h * 0.18);
@@ -1571,6 +1671,7 @@ function drawTrainingBridgeBackdrop() {
         ctx.lineTo(x - 34, h);
         ctx.stroke();
     }
+
     // Consola de mando principal en primer plano.
     ctx.fillStyle = '#3b5366';
     ctx.beginPath();
@@ -1587,13 +1688,13 @@ function drawTrainingBridgeBackdrop() {
         ctx.fillRect(w * 0.36 + i * w * 0.023, h * 0.795, 9, 3);
     }
     ctx.fillStyle = '#8aa0b3';
-    ctx.font = 'bold 11px monospace';
+    ctx.font = `bold 11px ${GAME_FONT}`;
     ctx.textAlign = 'center';
     ctx.fillText(trainingBridge, w / 2, h * 0.972);
 }
 
-function wrapCanvasText(str, centerX, startY, maxWidth, lineHeight, color) {
-    ctx.font = '13px monospace';
+function wrapCanvasText(str, centerX, startY, maxWidth, lineHeight, color, font = GAME_FONT) {
+    ctx.font = `25px ${font}`;
     ctx.textAlign = 'center';
     ctx.fillStyle = color;
     const words = str.split(/\s+/);
@@ -1616,28 +1717,28 @@ function drawTrainingBridge() {
     drawTrainingBridgeBackdrop();
     ctx.fillStyle = 'rgba(2, 8, 19, 0.78)';
     ctx.fillRect(38, 24, canvas.width - 76, 80);
-    text(trainingBridgeAcademy, canvas.width / 2, 52, 17, '#79edff', true);
-    text(trainingBridgeModus, canvas.width / 2, 78, 12, '#ffd66b', true);
+    text(trainingBridgeAcademy, canvas.width / 2, 52, 37, '#79edff', false);
+    text(trainingBridgeModus, canvas.width / 2, 78, 22, '#ffd66b', false);
     const d = trainingDialogue[trainingDialogueIndex];
     ctx.fillStyle = 'rgba(3, 12, 25, 0.91)';
-    ctx.fillRect(52, canvas.height * 0.66, canvas.width - 104, 112);
+    ctx.fillRect(52, canvas.height * 0.64, canvas.width - 104, 126);
     ctx.strokeStyle = '#64dff4';
     ctx.lineWidth = 2;
-    ctx.strokeRect(52, canvas.height * 0.66, canvas.width - 104, 112);
-    text(d.speaker, canvas.width / 2, canvas.height * 0.66 + 25, 13, '#ffd66b', true);
-    wrapCanvasText(d.text, canvas.width / 2, canvas.height * 0.66 + 52, canvas.width - 150, 17, '#ffffff');
+    ctx.strokeRect(52, canvas.height * 0.64, canvas.width - 104, 126);
+    text(d.speaker, canvas.width / 2, canvas.height * 0.64 + 25, 22, '#ffd66b', false);
+    wrapCanvasText(d.text, canvas.width / 2, canvas.height * 0.64 + 58, canvas.width - 150, 22, '#ffffff');
     // Muestra un personaje real del elenco en el puente y permite escoger
     // quién hará el circuito del holodeck. El selector es exclusivo del entrenamiento.
     const selected = availableCharacters[trainingCharacterIndex] || availableCharacters[0];
     const previewX = canvas.width * 0.74;
     const previewY = canvas.height * 0.31;
     ctx.fillStyle = 'rgba(2, 10, 22, 0.68)';
-    ctx.fillRect(previewX - 67, previewY - 57, 134, 120);
+    ctx.fillRect(previewX - 75, previewY - 65, 150, 130);
     ctx.strokeStyle = '#69dff1';
     ctx.lineWidth = 1.5;
-    ctx.strokeRect(previewX - 67, previewY - 57, 134, 120);
+    ctx.strokeRect(previewX - 75, previewY - 65, 150, 130);
     if (imageIsReady(selected.guardImg)) {
-        const previewW = 38;
+        const previewW = 130;
         const previewH = previewW * selected.guardImg.naturalHeight / selected.guardImg.naturalWidth;
         ctx.drawImage(selected.guardImg, previewX - previewW / 2, previewY - previewH / 2 - 4, previewW, previewH);
     } else {
@@ -1649,22 +1750,22 @@ function drawTrainingBridge() {
         ctx.fillRect(previewX - 10, previewY + 22, 8, 14);
         ctx.fillRect(previewX + 2, previewY + 22, 8, 14);
     }
-    text(selected.name, previewX, previewY + 48, 12, '#ffdc72', true);
-    text(trainingBridgeInstructions1, previewX, previewY + 76, 9, '#8ff5ff', true);
-    text(trainingBridgeInstructions2, canvas.width / 2, canvas.height - 16, 9, '#8ff5ff', true);
-    text(`${trainingDialogueIndex + 1} / ${trainingDialogue.length}`, canvas.width - 70, 125, 11, '#c6d8e6');
+    text(selected.name, previewX, previewY + 48, 22, '#ffdc72', false);
+    text(trainingBridgeInstructions1, previewX, previewY + 86, 22, '#8ff5ff', false);
+    text(trainingBridgeInstructions2, canvas.width / 2, canvas.height - 16, 20, '#8ff5ff', false);
+    text(`${trainingDialogueIndex + 1} / ${trainingDialogue.length}`, canvas.width - 70, 125, 28, '#c6d8e6');
 }
 
 function drawTrainingMissionBriefing() {
     drawTrainingBridgeBackdrop();
     overlay(0.55);
-    text(trainingMissionBriefing1, canvas.width / 2, 66, 24, '#7feeff', true);
-    text(trainingMissionBriefing2, canvas.width / 2, 112, 19, '#ffdc72', true);
-    text(trainingMissionBriefing3, canvas.width / 2, 163, 14, '#ffffff');
-    text(trainingMissionBriefing4, canvas.width / 2, 211, 13, '#8ff5ff', true);
-    text(trainingMissionBriefing5, canvas.width / 2, 241, 13, '#8ff5ff', true);
-    text(trainingMissionBriefing6, canvas.width / 2, 294, 12, '#d4e6f0');
-    text(trainingMissionBriefing7, canvas.width / 2, 382, 11, '#ffdc72', true);
+    text(trainingMissionBriefing1, canvas.width / 2, 66, 40, '#7feeff', true);
+    text(trainingMissionBriefing2, canvas.width / 2, 115, 32, '#ffdc72', false);
+    text(trainingMissionBriefing3, canvas.width / 2, 175, 24, '#ffffff');
+    text(trainingMissionBriefing4, canvas.width / 2, 235, 23, '#8ff5ff', false);
+    text(trainingMissionBriefing5, canvas.width / 2, 275, 23, '#8ff5ff', false);
+    text(trainingMissionBriefing6, canvas.width / 2, 380, 22, '#d4e6f0');
+    text(trainingMissionBriefing7, canvas.width / 2, 522, 28, '#ffdc72', false);
 }
 
 // Galería de tiro previa al pilotaje. Se apunta con WASD/flechas y se dispara
@@ -1690,7 +1791,7 @@ function beginTrainingShootingRange() {
         frame: 0,
         aimX: w / 2,
         aimY: h * 0.66,
-        shots: 16,
+        shots: 30,
         hits: 0,
         requiredHits: 8,
         timeLeft: 60 * 45,
@@ -1787,8 +1888,8 @@ function drawTrainingShootingRange() {
     // Overlay que transforma el puente en una galería táctica de la Flota.
     ctx.fillStyle = 'rgba(2,8,18,0.58)';
     ctx.fillRect(25, 24, w - 50, h - 48);
-    text(trainingShootingRangeText1, w / 2, 46, 13, '#82eeff', true);
-    text(trainingShootingRangeText2, w / 2, 76, 20, '#ffdc72', true);
+    text(trainingShootingRangeText1, w / 2, 46, 43, '#82eeff', false);
+    text(trainingShootingRangeText2, w / 2, 82, 40, '#ffdc72', false);
     if (!g)
         return;
     // Líneas de telémetro en el fondo.
@@ -1865,18 +1966,18 @@ function drawTrainingShootingRange() {
     ctx.restore();
     ctx.fillStyle = 'rgba(1,7,17,0.86)';
     ctx.fillRect(35, 88, w - 70, 35);
-    text(`${trainingShootingRangeHits}${g.hits}/${g.requiredHits}${trainingShootingRangeShoots}${g.shots}${trainingShootingRangeTime}${Math.ceil(g.timeLeft / 60)}s`, w / 2, 110, 13, '#ffffff', true);
+    text(`${trainingShootingRangeHits}${g.hits}/${g.requiredHits}${trainingShootingRangeShoots}${g.shots}${trainingShootingRangeTime}${Math.ceil(g.timeLeft / 60)}s`, w / 2, 110, 23, '#ffffff', false);
     if (g.feedbackTimer > 0)
-        text(g.feedback, w / 2, h - 78, 13, g.feedback.startsWith('¡') ? '#8dffc9' : '#ff9b9b', true);
+        text(g.feedback, w / 2, h - 78, 23, g.feedback.startsWith('¡') ? '#8dffc9' : '#ff9b9b', false);
     if (g.over) {
         ctx.fillStyle = 'rgba(0,4,12,0.84)';
         ctx.fillRect(0, 0, w, h);
-        text(g.passed ? trainingShootingRangeWin : trainingShootingRangeFail, w / 2, h / 2 - 45, 24, g.passed ? '#ffdc72' : '#ff716d', true);
-        text(`${trainingShootingRangeDoneA}${g.hits}/${g.requiredHits}${trainingShootingRangeDoneB}${g.shots}`, w / 2, h / 2 - 8, 14, '#ffffff', true);
-        text(g.passed ? trainingShootingRangePrecise : trainingShootingRangeNoPrecise, w / 2, h / 2 + 22, 12, '#d6e9f4');
-        text(g.passed ? trainingShootingRangeKeyNext : trainingShootingRangeKeyRepeat, w / 2, h / 2 + 54, 12, '#8ff5ff', true);
+        text(g.passed ? trainingShootingRangeWin : trainingShootingRangeFail, w / 2, h / 2 - 45, 54, g.passed ? '#ffdc72' : '#ff716d', false);
+        text(`${trainingShootingRangeDoneA}${g.hits}/${g.requiredHits}${trainingShootingRangeDoneB}${g.shots}`, w / 2, h / 2, 34, '#ffffff', false);
+        text(g.passed ? trainingShootingRangePrecise : trainingShootingRangeNoPrecise, w / 2, h / 2 + 42, 32, '#d6e9f4');
+        text(g.passed ? trainingShootingRangeKeyNext : trainingShootingRangeKeyRepeat, w / 2, h / 2 + 80, 32, '#8ff5ff', false);
     }
-    text(trainingShootingRangeInstructions, w / 2, h - 18, 10, '#b6d9e8', true);
+    text(trainingShootingRangeInstructions, w / 2, h - 18, 22, '#b6d9e8', false);
 }
 
 function beginHolodeckLevel(circuitIndex = trainingCircuitIndex) {
@@ -1992,6 +2093,7 @@ function updateHolodeckLevel() {
         if (g.lives <= 0) {
             g.lives = 0;
             g.over = true;
+            g.overFrame = g.frame;
         }
     }
     for (const coin of g.coins) {
@@ -2024,6 +2126,7 @@ function updateHolodeckLevel() {
                 if (g.lives <= 0) {
                     g.lives = 0;
                     g.over = true;
+                    g.overFrame = g.frame;
                 }
             }
         }
@@ -2386,23 +2489,37 @@ function drawHolodeckLevel() {
         ctx.lineTo(goalX + 5, h - 111);
         ctx.closePath();
         ctx.fill();
-        text('META', goalX + 23, h - 157, 11, '#153c58', true);
+        text('META', goalX + 23, h - 157, 11, '#153c58', false);
     }
     ctx.fillStyle = 'rgba(3,20,40,0.78)';
     ctx.fillRect(0, 0, w, 38);
-    text(`${holodeckLevelTitle}${g.circuitIndex + 1}/${holodeckCourses.length}: ${g.courseName}`, w / 2, 24, 14, '#ffffff', true);
-    text(`${holodeckLevelLives}${'◆ '.repeat(g.lives).trim()}`, 95, 61, 13, '#d33f47', true);
-    text(`${holodeckLevelStars}${g.collected}/${g.coins.length}`, w - 112, 61, 13, g.theme === 'classic' ? '#60420b' : '#ffffff', true);
-    text(holodeckLevelInstructions, w / 2, h - 12, 10, g.theme === 'volcano' ? '#ffffff' : '#153c58', true);
+    text(`${holodeckLevelTitle}${g.circuitIndex + 1}/${holodeckCourses.length}: ${g.courseName}`, w / 2, 24, 24, '#ffffff', false);
+    text(`${holodeckLevelLives}${'◆ '.repeat(g.lives).trim()}`, 95, 61, 23, '#d33f47', false);
+    text(`${holodeckLevelStars}${g.collected}/${g.coins.length}`, w - 112, 61, 23, g.theme === 'classic' ? '#60420b' : '#ffffff', false);
+    text(holodeckLevelInstructions, w / 2, h - 12, 26, g.theme === 'volcano' ? '#ffffff' : '#153c58', false);
     if (g.over || g.complete) {
         ctx.fillStyle = 'rgba(4,12,27,0.82)';
         ctx.fillRect(0, 0, w, h);
+
+        if (!g.overFrame) g.overFrame = frameCount;
+        const elapsed = frameCount - g.overFrame;
         const isLastCircuit = g.circuitIndex >= holodeckCourses.length - 1;
-        text(g.complete ? `${holodeckLevelCompleted1}${g.circuitIndex + 1}${holodeckLevelCompleted2}` : holodeckLevelFail, w / 2, h / 2 - 42, 23, g.complete ? '#ffe071' : '#ff746d', true);
-        text(`${g.courseName}${holodeckLevelPoints}${g.score}`, w / 2, h / 2 - 7, 14, '#ffffff', true);
-        text(`${holodeckLevelStars}${g.collected}/${g.coins.length}`, w / 2, h / 2 + 17, 12, '#d4e6f0', true);
-        text(g.complete ? (isLastCircuit ? holodeckLevelKeyStart : `${holodeckLevelKeyNext}${g.circuitIndex + 2}`) : holodeckLevelKeyRepeat, w / 2, h / 2 + 46, 12, '#8ff5ff', true);
-        text(holodeckLevelKeyMenu, w / 2, h / 2 + 70, 11, '#c8dbe8');
+        //text(g.complete ? `${holodeckLevelCompleted1}${g.circuitIndex + 1}${holodeckLevelCompleted2}` : holodeckLevelFail, w / 2, h / 2 - 42, 23, g.complete ? '#ffe071' : '#ff746d', false);
+        textWithAnimation(
+            g.complete ? `${holodeckLevelCompleted1}${g.circuitIndex + 1}${holodeckLevelCompleted2}` : holodeckLevelFail,
+            w / 2,
+            h / 2 - 80,
+            10,
+            120,
+            25,
+            elapsed,
+            g.complete ? '#ffe071' : '#ff746d',
+            false
+        );
+        text(`${g.courseName}${holodeckLevelPoints}${g.score}`, w / 2, h / 2 - 5, 36, '#ffffff', false);
+        text(`${holodeckLevelStars}${g.collected}/${g.coins.length}`, w / 2, h / 2 + 40, 33, '#d4e6f0', false);
+        text(g.complete ? (isLastCircuit ? holodeckLevelKeyStart : `${holodeckLevelKeyNext}${g.circuitIndex + 2}`) : holodeckLevelKeyRepeat, w / 2, h / 2 + 80, 22, '#8ff5ff', false);
+        text(holodeckLevelKeyMenu, w / 2, h / 2 + 115, 22, '#c8dbe8');
     }
 }
 
@@ -2575,21 +2692,61 @@ function drawKobayashiShip(cx, cy, scale, kind = 'civilian', damage = false) {
 
 function drawKobayashiViewscren(hostiles = false) {
     const w = canvas.width,
-    h = canvas.height;
-    const x = w * 0.075,
-    y = h * 0.135,
-    vw = w * 0.85,
-    vh = h * 0.39;
+        h = canvas.height;
+    const x = 50,
+        y = 85,
+        vw = w - 100,
+        vh = 205;
     ctx.fillStyle = '#020914';
     ctx.fillRect(x, y, vw, vh);
-    // Estrellas estables para dar movimiento sin parpadeo aleatorio.
-    for (let i = 0; i < 78; i++) {
-        const sx = x + ((i * 73 + frameCount * (i % 3 + 1) * 0.23) % vw);
-        const sy = y + ((i * 41) % vh);
-        ctx.globalAlpha = 0.45 + (i % 4) * 0.13;
-        ctx.fillStyle = i % 7 === 0 ? '#ffb3a7' : '#e2f4ff';
-        ctx.fillRect(sx, sy, i % 5 === 0 ? 2 : 1, i % 5 === 0 ? 2 : 1);
+    ctx.save();
+    ctx.beginPath();
+    ctx.rect(x, y, vw, vh);
+    ctx.clip();
+
+    // Nivel 1: Estrellas lejanas (lentas, pequeñas y tenues)
+    for (let i = 0; i < 45; i++) {
+        const rx = Math.abs(Math.sin(i * 12.9898 + 1.1) * 43758.5453) % 1;
+        const ry = Math.abs(Math.sin(i * 78.233 + 2.3) * 43758.5453) % 1;
+
+        const rawX = (rx * vw + frameCount * 0.05) % vw;
+        const sx = x + rawX;
+        const sy = y + ry * vh;
+
+        ctx.globalAlpha = 0.3;
+        ctx.fillStyle = '#ffffff';
+        ctx.fillRect(sx, sy, 1, 1);
     }
+
+    // Nivel 2: Estrellas medianas (velocidad media)
+    for (let i = 0; i < 28; i++) {
+        const rx = Math.abs(Math.sin(i * 31.415 + 55.2) * 22159.876) % 1;
+        const ry = Math.abs(Math.sin(i * 64.882 + 11.4) * 22159.876) % 1;
+
+        const rawX = (rx * vw + frameCount * 0.18) % vw;
+        const sx = x + rawX;
+        const sy = y + ry * vh;
+
+        ctx.globalAlpha = 0.65;
+        ctx.fillStyle = i % 3 === 0 ? '#7de9ff' : '#ffffff';
+        ctx.fillRect(sx, sy, 1.5, 1.5);
+    }
+
+    // Nivel 3: Estrellas cercanas / brillantes (más rápidas)
+    for (let i = 0; i < 15; i++) {
+        const rx = Math.abs(Math.sin(i * 93.123 + 129.5) * 15481.993) % 1;
+        const ry = Math.abs(Math.sin(i * 27.451 + 77.1) * 15481.993) % 1;
+
+        const rawX = (rx * vw + frameCount * 0.40) % vw;
+        const sx = x + rawX;
+        const sy = y + ry * vh;
+
+        ctx.globalAlpha = 0.9;
+        ctx.fillStyle = '#7de9ff';
+        ctx.fillRect(sx, sy, 2.5, 2.5);
+    }
+
+    ctx.restore();
     ctx.globalAlpha = 1;
     // La nave de rescate permanece visible en la pantalla principal.
     drawKobayashiShip(x + vw * 0.64, y + vh * 0.52, 1.12, 'civilian', true);
@@ -2627,59 +2784,74 @@ function drawKobayashiViewscren(hostiles = false) {
 function drawKobayashiMaru() {
     drawTrainingBridgeBackdrop();
     const w = canvas.width,
-    h = canvas.height;
+        h = canvas.height;
     overlay(0.58);
     const alarmOn = Math.floor(frameCount / 18) % 2 === 0;
     if (alarmOn && kobayashiMaruStage >= 1 && kobayashiMaruStage <= 2) {
         ctx.fillStyle = 'rgba(235, 33, 53, 0.15)';
         ctx.fillRect(0, 0, w, h);
     }
+
+    // Cabecera superior
     ctx.fillStyle = kobayashiMaruStage >= 1 && kobayashiMaruStage <= 2 ? '#8b1728' : '#173a50';
-    ctx.fillRect(0, 0, w, 40);
-    text(kobayashiMaruInformation1, w / 2, 26, 17, '#ffffff', true);
+    ctx.fillRect(0, 0, w, 42);
+    text(kobayashiMaruInformation1, w / 2, 27, 20, '#ffffff', false);
+
     if (kobayashiMaruStage === 0) {
-        text(kobayashiMaruInformation2, w / 2, 66, 13, '#ff827f', true);
+        text(kobayashiMaruInformation2, w / 2, 70, 36, '#ff827f', false);
         drawKobayashiViewscren(false);
-        ctx.fillStyle = 'rgba(4, 12, 23, 0.94)';
-        ctx.fillRect(55, h * 0.56, w - 110, 91);
+
+        // Caja de texto reorganizada
+        ctx.fillStyle = 'rgba(4, 12, 23, 0.95)';
+        ctx.fillRect(50, 305, w - 100, 95);
         ctx.strokeStyle = '#f06b70';
-        ctx.lineWidth = 1.5;
-        ctx.strokeRect(55, h * 0.56, w - 110, 91);
-        wrapCanvasText(kobayashiMaruInformation3, w / 2, h * 0.56 + 24, w - 145, 16, '#f5f8fb');
-        text(kobayashiMaruInformation4, w / 2, h - 14, 10, '#8ff5ff', true);
+        ctx.lineWidth = 2;
+        ctx.strokeRect(50, 305, w - 100, 95);
+        wrapCanvasText(kobayashiMaruInformation3, w / 2, 330, w - 130, 20, '#ffffff');
+        text(kobayashiMaruInformation4, w / 2, h - 16, 24, '#8ff5ff', false);
+
     } else if (kobayashiMaruStage === 1) {
-        text(kobayashiMaruInformation5, w / 2, 65, 13, '#ffcf6b', true);
+        text(kobayashiMaruInformation5, w / 2, 70, 36, '#ffcf6b', false);
         drawKobayashiViewscren(false);
+
         ctx.fillStyle = 'rgba(4, 12, 23, 0.96)';
-        ctx.fillRect(55, h * 0.55, w - 110, 122);
+        ctx.fillRect(50, 295, w - 100, 140);
         ctx.strokeStyle = '#f06b70';
-        ctx.strokeRect(55, h * 0.55, w - 110, 122);
+        ctx.lineWidth = 2;
+        ctx.strokeRect(50, 295, w - 100, 140);
+
         kobayashiMaruChoices.forEach((choice, i) => {
-            const yy = h * 0.55 + 30 + i * 29;
-            text(`${i + 1}. ${choice.title} — ${choice.detail}`, w / 2, yy, 10, '#ffffff', i === 0);
+            const yy = 332 + i * 43;
+            text(`${i + 1}. ${choice.title} — ${choice.detail}`, w / 2, yy, 19, '#ffffff', i === 0);
         });
-        text(kobayashiMaruInformation6, w / 2, h - 13, 10, '#8ff5ff', true);
+        text(kobayashiMaruInformation6, w / 2, h - 16, 24, '#8ff5ff', false);
+
     } else if (kobayashiMaruStage === 2) {
-        text(kobayashiMaruInformation7, w / 2, 65, 13, '#ff777f', true);
+        text(kobayashiMaruInformation7, w / 2, 70, 36, '#ff777f', false);
         drawKobayashiViewscren(true);
+
         ctx.fillStyle = 'rgba(4, 9, 17, 0.96)';
-        ctx.fillRect(55, h * 0.56, w - 110, 90);
+        ctx.fillRect(50, 305, w - 100, 95);
         ctx.strokeStyle = '#f06b70';
-        ctx.strokeRect(55, h * 0.56, w - 110, 90);
-        wrapCanvasText(kobayashiMaruOutcome + kobayashiMaruInformation8, w / 2, h * 0.56 + 25, w - 145, 16, '#ffffff');
-        text(kobayashiMaruInformation9, w / 2, h - 13, 10, '#8ff5ff', true);
+        ctx.lineWidth = 2;
+        ctx.strokeRect(50, 305, w - 100, 95);
+        wrapCanvasText(kobayashiMaruOutcome + kobayashiMaruInformation8, w / 2, 330, w - 130, 20, '#ffffff');
+        text(kobayashiMaruInformation9, w / 2, h - 16, 24, '#8ff5ff', true);
+
     } else {
         drawKobayashiViewscren(true);
+
         ctx.fillStyle = 'rgba(2, 8, 17, 0.97)';
-        ctx.fillRect(54, h * 0.55, w - 108, 132);
+        ctx.fillRect(50, 298, w - 100, 115);
         ctx.strokeStyle = '#70d7ed';
-        ctx.lineWidth = 1.5;
-        ctx.strokeRect(54, h * 0.55, w - 108, 132);
-        text(kobayashiMaruInformation10, w / 2, h * 0.55 + 25, 15, '#ffdc72', true);
+        ctx.lineWidth = 2;
+        ctx.strokeRect(50, 298, w - 100, 115);
+
+        text(kobayashiMaruInformation10, w / 2, 322, 22, '#ffdc72', true);
         const selected = kobayashiMaruChoices[kobayashiMaruChoice];
-        text(selected ? `${kobayashiMaruInformation11}${selected.title}` : kobayashiMaruInformation12, w / 2, h * 0.55 + 49, 10, '#8ceeff', true);
-        wrapCanvasText(kobayashiMaruInformation13, w / 2, h * 0.55 + 73, w - 150, 16, '#ffffff');
-        text(kobayashiMaruInformation14, w / 2, h - 13, 10, '#ffdc72', true);
+        text(selected ? `${kobayashiMaruInformation11}${selected.title}` : kobayashiMaruInformation12, w / 2, 346, 20, '#8ceeff', false);
+        wrapCanvasText(kobayashiMaruInformation13, w / 2, 372, w - 130, 18, '#ffffff');
+        text(kobayashiMaruInformation14, w / 2, h - 16, 24, '#ffdc72', false);
     }
 }
 
@@ -2693,43 +2865,103 @@ function drawTrainingQuiz(type) {
     const feedback = isIntelligence ? intelligenceFeedback : triviaFeedback;
     const q = questions[index];
     const title = isIntelligence ? trainingQuizIntelligence : trainingQuizQuestions;
-    text(trainingQuizAcademy, canvas.width / 2, 44, 13, '#8ceeff', true);
-    text(title, canvas.width / 2, 78, 22, '#ffdc72', true);
-    text(`${trainingQuizQuestionText}${index + 1} / ${questions.length}${trainingQuizCorrects}${score}`, canvas.width / 2, 105, 12, '#c4e5f0', true);
+    text(trainingQuizAcademy, canvas.width / 2, 40, 20, '#8ceeff', false);
+    text(title, canvas.width / 2, 85, 50, '#ffdc72', false);
+    text(`${trainingQuizQuestionText}${index + 1} / ${questions.length}${trainingQuizCorrects}${score}`, canvas.width / 2, 120, 20, '#c4e5f0', false);
     ctx.fillStyle = 'rgba(3, 13, 27, 0.94)';
-    ctx.fillRect(58, 120, canvas.width - 116, 74);
+    ctx.fillRect(58, 140, canvas.width - 116, 74);
     ctx.strokeStyle = '#51cfe9';
     ctx.lineWidth = 1.5;
-    ctx.strokeRect(58, 120, canvas.width - 116, 74);
-    wrapCanvasText(q.question, canvas.width / 2, 149, canvas.width - 150, 18, '#ffffff');
+    ctx.strokeRect(58, 140, canvas.width - 116, 74);
+    wrapCanvasText(q.question, canvas.width / 2, 172, canvas.width - 150, 22, '#ffffff');
     q.options.forEach((option, i) => {
-        const y = 204 + i * 43;
+        const y = 240 + i * 50;
         ctx.fillStyle = feedback && i === q.answer ? 'rgba(33, 116, 83, 0.88)' : 'rgba(12, 35, 56, 0.92)';
-        ctx.fillRect(90, y, canvas.width - 180, 34);
+        ctx.fillRect(90, y, canvas.width - 180, 40);
         ctx.strokeStyle = feedback && i === q.answer ? '#76f0a8' : '#416c83';
-        ctx.strokeRect(90, y, canvas.width - 180, 34);
-        text(`${i + 1}. ${option}`, canvas.width / 2, y + 22, 13, '#f3fbff', i === q.answer && !!feedback);
+        ctx.strokeRect(90, y, canvas.width - 180, 40);
+        text(`${i + 1}. ${option}`, canvas.width / 2, y + 26, 20, '#f3fbff', i === q.answer && !!feedback);
     });
     if (feedback) {
         ctx.fillStyle = 'rgba(2, 11, 21, 0.96)';
-        ctx.fillRect(45, 378, canvas.width - 90, 51);
+        ctx.fillRect(45, 320, canvas.width - 90, 75);
         ctx.strokeStyle = feedback.correct ? '#62e49b' : '#f0b75e';
-        ctx.strokeRect(45, 378, canvas.width - 90, 51);
-        wrapCanvasText(feedback.text, canvas.width / 2, 396, canvas.width - 120, 14, feedback.correct ? '#a8ffc9' : '#ffe0a0');
-        text(trainingQuizKeys1, canvas.width / 2, canvas.height - 7, 10, '#8ceeff', true);
+        ctx.strokeRect(45, 320, canvas.width - 90, 75);
+        // Cálculo dinámico para centrar verticalmente el texto (1 o 2 líneas) dentro de la caja (Y: 320 a 395)
+        ctx.font = `25px ${GAME_FONT}`;
+        const maxWidth = canvas.width - 120;
+        const words = feedback.text.split(/\s+/);
+        let line = '';
+        let lines = [];
+        for (const word of words) {
+            const test = line ? `${line} ${word}` : word;
+            if (ctx.measureText(test).width > maxWidth && line) {
+                lines.push(line);
+                line = word;
+            } else {
+                line = test;
+            }
+        }
+        if (line) lines.push(line);
+        const lineHeight = 18;
+        const totalTextHeight = lines.length * lineHeight;
+        const startY = 357.5 - (totalTextHeight / 2) + (lineHeight / 2);
+
+        let currentY = startY;
+        ctx.textAlign = 'center';
+        ctx.fillStyle = feedback.correct ? '#a8ffc9' : '#ffe0a0';
+        for (const l of lines) {
+            ctx.fillText(l, canvas.width / 2, currentY);
+            currentY += lineHeight;
+        }
+        text(trainingQuizKeys1, canvas.width / 2, canvas.height - 12, 20, '#8ceeff', false);
     } else {
-        text(trainingQuizKeys2, canvas.width / 2, canvas.height - 15, 11, '#8ceeff', true);
+        text(trainingQuizKeys2, canvas.width / 2, canvas.height - 15, 20, '#8ceeff', false);
     }
-}
+} 
 
 function drawTrainingComplete() {
     drawTrainingBridgeBackdrop();
     overlay(0.64);
-    text(trainingComplete1, canvas.width / 2, 150, 24, '#ffdc72', true);
-    text(trainingComplete2, canvas.width / 2, 196, 13, '#ffffff');
-    text(`${trainingComplete3A}${intelligenceScore}/${intelligenceQuestions.length}${trainingComplete3B}${triviaScore}/${starTrekTriviaQuestions.length}`, canvas.width / 2, 226, 12, '#ffdc72', true);
-    text(trainingComplete4, canvas.width / 2, 258, 12, '#7feeff');
-    text(trainingComplete5, canvas.width / 2, 315, 13, '#ffdc72', true);
+    text(trainingComplete1, canvas.width / 2, 90, 30, '#ffdc72', false, GAME_FONTTNG);
+    text(trainingComplete2, canvas.width / 2, 165, 30, '#ffffff');
+    text(`${trainingComplete3A}${intelligenceScore}/${intelligenceQuestions.length}${trainingComplete3B}${triviaScore}/${starTrekTriviaQuestions.length}`, canvas.width / 2, 235, 30, '#ffdc72', false);
+    text(trainingComplete4, canvas.width / 2, 295, 30, '#7feeff');
+    text(trainingComplete5, canvas.width / 2, 385, 26, '#ffdc72', false);
+
+    // Easster Eggde Q
+    if (qEasterEggActive) {
+        ctx.save();
+
+        // Fondo semitransparente para el mensaje secreto
+        ctx.fillStyle = 'rgba(2, 6, 16, 0.96)';
+        ctx.fillRect(50, 95, canvas.width - 100, 420);
+
+        // Borde dorado
+        ctx.strokeStyle = '#ffdc72';
+        ctx.lineWidth = 2;
+        ctx.strokeRect(50, 95, canvas.width - 100, 420);
+
+        ctx.restore();
+
+        // Retrato de Q (qTalkImage)
+        const qBoxX = canvas.width / 2 - 60;
+        const qBoxY = 145;
+        const qBoxW = 120;
+        const qBoxH = 180;
+        if (qTalkImage.complete && qTalkImage.naturalWidth > 0) {
+            const ratio = Math.min((qBoxW - 8) / qTalkImage.naturalWidth, (qBoxH - 8) / qTalkImage.naturalHeight);
+            const drawW = qTalkImage.naturalWidth * ratio,
+                drawH = qTalkImage.naturalHeight * ratio;
+            ctx.drawImage(qTalkImage, canvas.width / 2 - drawW / 2, qBoxY + (qBoxH - drawH) / 2, drawW, drawH);
+        }
+
+        // Texto del Easter Egg
+        text(qEasterEgg1, canvas.width / 2, 125, 30, '#ffdc72');
+        text(qEasterEgg2, canvas.width / 2, 380, 22, '#ffffff');
+        text(qEasterEgg3, canvas.width / 2, 420, 22, '#ffffff');
+        text(qEasterEgg4, canvas.width / 2, 480, 24, '#7feeff', false);
+    }
 }
 
 // Ventajas y consecuencias de las decisiones de la historia.
@@ -2751,88 +2983,87 @@ const energyParticles = Array.from({
         opacity: Math.random() * 0.7 + 0.3
     }));
 
-// Ocho destinos de campaña, uno por misión.
-const galaxyNodes = [{
-        id: 1,
-        name: 'Academia de la Flota',
-        x: 90,
-        y: 145
-    }, {
-        id: 2,
-        name: 'Zona de entrenamiento',
-        x: 190,
-        y: 225
-    }, {
-        id: 3,
-        name: 'Estación en peligro',
-        x: 290,
-        y: 145
-    }, {
-        id: 4,
-        name: 'Emergencia estelar',
-        x: 390,
-        y: 225
-    }, {
-        id: 5,
-        name: 'Núcleo estelar',
-        x: 490,
-        y: 145
-    }, {
-        id: 6,
-        name: 'Minas de Dilithium',
-        x: 590,
-        y: 225
-    }, {
-        id: 7,
-        name: 'Ingeniería Enterprise',
-        x: 690,
-        y: 145
-    }, {
-        id: 8,
-        name: 'Talos IV',
-        x: 750,
-        y: 255
-    }
+// 19 destinos de campaña, uno por misión.
+const galaxyNodesHorizontal = [
+    { id: 1,    name: 'Puente de la U.S.S. Enterprise',     x: 100, y: 65 },
+    { id: 2,    name: 'Estación Espacial 9',                x: 200, y: 95},
+    { id: 3,    name: 'Nave Klingon',                       x: 356, y: 95},
+    { id: 4,    name: 'Terraza Romulana',                   x: 504, y: 95 },
+    { id: 5,    name: 'Ingeniería de la Enterprise',        x: 652, y: 95 },
+    { id: 6,    name: 'Pasillo Borg',                       x: 800, y: 95 },
+    { id: 7,    name: 'Sala del Transportador',             x: 950, y: 95},
+    { id: 8,    name: 'Planeta Talos IV',                   x: 950, y: 207 },
+    { id: 9,    name: 'Desierto Remoto',                    x: 772, y: 207 },
+    { id: 10,   name: 'Ruinas Antiguas',                    x: 594, y: 207 },
+    { id: 11,   name: 'Academia de la Federación',          x: 416, y: 207 },
+    { id: 12,   name: 'Hangar de Lanzaderas',               x: 238, y: 207 },
+    { id: 13,   name: 'Cinturón de Asteroides',             x: 60, y: 207 },
+    { id: 14,   name: 'Selva Exótica',                      x: 60, y: 320 },
+    { id: 15,   name: 'Observatorio Estelar',               x: 238, y: 320 },
+    { id: 16,   name: 'Puente Dañado',                      x: 416, y: 320 },
+    { id: 17,   name: 'Estación Orbital',                   x: 594, y: 320},
+    { id: 18,   name: 'Templo Borg',                        x: 772, y: 320 },
+    { id: 19,   name: 'Núcleo Borg',                        x: 930, y: 360 }
 ];
+// Ocho destinos de campaña, uno por misión (reorganizados en zigzag vertical)
+const galaxyNodesVertical = [
+    { id: 1,    name: 'Puente de la U.S.S. Enterprise',     x: 100, y: 80 },   // Arriba-Izquierda
+    { id: 2,    name: 'Estación Espacial 9',                x: 100, y: 220 },  // Baja 1
+    { id: 3,    name: 'Nave Klingon',                       x: 100, y: 360 },  // Baja 2 (Fondo)
+    { id: 4,    name: 'Terraza Romulana',                   x: 230, y: 360 },  // Salto a la derecha
+    { id: 5,    name: 'Ingeniería de la Enterprise',        x: 230, y: 220 },  // Sube 1
+    { id: 6,    name: 'Pasillo Borg',                       x: 230, y: 80 },   // Sube 2 (Arriba)
+    { id: 7,    name: 'Sala del Transportador',             x: 360, y: 80 },   // Salto a la derecha
+    { id: 8,    name: 'Planeta Talos IV',                   x: 360, y: 220 },  // Baja 1
+    { id: 9,    name: 'Desierto Remoto',                    x: 360, y: 360 },  // Baja 2 (Fondo)
+    { id: 10,   name: 'Ruinas Antiguas',                    x: 490, y: 360 },  // Salto a la derecha
+    { id: 11,   name: 'Academia de la Federación',          x: 490, y: 220 },  // Sube 1
+    { id: 12,   name: 'Hangar de Lanzaderas',               x: 490, y: 80 },   // Sube 2 (Arriba)
+    { id: 13,   name: 'Cinturón de Asteroides',             x: 620, y: 80 },   // Salto a la derecha
+    { id: 14,   name: 'Selva Exótica',                      x: 620, y: 220 },  // Baja 1
+    { id: 15,   name: 'Observatorio Estelar',               x: 620, y: 360 },  // Baja 2 (Fondo)
+    { id: 16,   name: 'Puente Dañado',                      x: 750, y: 360 },  // Salto a la derecha
+    { id: 17,   name: 'Estación Orbital',                   x: 750, y: 220 },  // Sube 1
+    { id: 18,   name: 'Templo Borg',                        x: 750, y: 80 },   // Sube 2 (Arriba)
+    { id: 19,   name: 'Núcleo Borg',                        x: 910, y: 220 }   // Meta final a la derecha
+];
+
+
+
+const galaxyNodes = galaxyNodesVertical;
+
 
 let shuttleX = galaxyNodes[0].x;
 let shuttleY = galaxyNodes[0].y;
 
-// Ocho misiones, con dificultad creciente y combate final más difícil.
-const storyDetails = {
-    1: {
-        title: storyDetailsTitle1,
-        desc: storyDetailsDescription1
-    },
-    2: {
-        title: storyDetailsTitle2,
-        desc: storyDetailsDescription2
-    },
-    3: {
-        title: storyDetailsTitle3,
-        desc: storyDetailsDescription3
-    },
-    4: {
-        title: storyDetailsTitle4,
-        desc: storyDetailsDescription4
-    },
-    5: {
-        title: storyDetailsTitle5,
-        desc: storyDetailsDescription5
-    },
-    6: {
-        title: storyDetailsTitle6,
-        desc: storyDetailsDescription6
-    },
-    7: {
-        title: storyDetailsTitle7,
-        desc: storyDetailsDescription7
-    },
-    8: {
-        title: storyDetailsTitle8,
-        desc: storyDetailsDescription8
-    }
-};
+const storyMissionDetails = [
+    [storyDetailsTitle1, storyDetailsDescription1],
+    [storyDetailsTitle2, storyDetailsDescription2],
+    [storyDetailsTitle3, storyDetailsDescription3],
+    [storyDetailsTitle4, storyDetailsDescription4],
+    [storyDetailsTitle5, storyDetailsDescription5],
+    [storyDetailsTitle6, storyDetailsDescription6],
+    [storyDetailsTitle7, storyDetailsDescription7],
+    [storyDetailsTitle8, storyDetailsDescription8],
+    [storyDetailsTitle9, storyDetailsDescription9],
+    [storyDetailsTitle10, storyDetailsDescription10],
+    [storyDetailsTitle11, storyDetailsDescription11],
+    [storyDetailsTitle12, storyDetailsDescription12],
+    [storyDetailsTitle13, storyDetailsDescription13],
+    [storyDetailsTitle14, storyDetailsDescription14],
+    [storyDetailsTitle15, storyDetailsDescription15],
+    [storyDetailsTitle16, storyDetailsDescription16],
+    [storyDetailsTitle17, storyDetailsDescription17],
+    [storyDetailsTitle18, storyDetailsDescription18],
+    [storyDetailsTitle19, storyDetailsDescription19]
+];
+
+
+// Una entrada narrativa por arena de la campaña.
+const storyDetails = Object.fromEntries(storyMissionDetails.map(([title, desc], index) => [
+    index + 1,
+    { title, desc }
+]));
 
 const machineSettings = {
     FACIL: {
@@ -2957,7 +3188,7 @@ function setArenaCombatants(arenaNumber) {
     screenShakeTimer = 0;
 }
 
-function resetMatch() {
+function resetMatch(shouldPlaySound = true) {
     impactEffects = [];
     screenShakeTimer = 0;
     for (const p of[player1, player2]) {
@@ -3018,6 +3249,15 @@ function resetMatch() {
     roundWinnerMessage = '';
     screenShakeTimer = 0;
     resetMachineAI();
+
+    // --- SONIDOS AL EMPEZAR EL COMBATE ---
+    if (shouldPlaySound) {
+        matchStartDelay = 120;
+        matchStartFrame = frameCount;
+        playSound(soundFight);
+    } else {
+        matchStartDelay = 0;
+    }
 }
 
 function getRoundWinner() {
@@ -3051,15 +3291,24 @@ function setWinnerMessageByHealth() {
         const humanPerfect =
             humanWon && getHumanPlayer().health >= getHumanPlayer().startingHealth;
 
+        // Sonido Win/Lose 
+        if (humanWon) {
+            playSound(soundWin);
+        } else {
+            playSound(soundLose);
+        }
+
         roundWinnerMessage = humanPerfect
             ? winnerMessagePerfect
             : humanWon
-            ? winnerMessageWin
-            : winnerMessageLose;
+                ? winnerMessageWin
+                : winnerMessageLose;
+        roundWinnerHasTwoLines = false;
     } else {
         roundWinnerMessage = w === 1
             ? `¡${player1.name} ${winnerMessageWhoWins}`
             : `¡${player2.name} ${winnerMessageWhoWins}`;
+        roundWinnerHasTwoLines = true;
     }
 }
 
@@ -3080,7 +3329,7 @@ function isRikerExtraGuardHeld(p) {
     return false;
 }
 
-function isLaForgeKickHeld(p) {
+function isLaForgeExtraGuardHeld(p) {
     if (getCharacter(p).name !== 'LAFORGE')
         return false;
     if (p === player1)
@@ -3094,12 +3343,11 @@ function startAttack(p) {
     if (p.isAttacking || gameOver || p.stunTimer > 0 || p.attackCooldown > 0)
         return;
     const c = getCharacter(p);
-    const useExtra = c.name === 'RIKER' && isRikerExtraGuardHeld(p);
-    const useLaForgeKick = c.name === 'LAFORGE' && isLaForgeKickHeld(p);
-    p.attackStyle = useExtra ? 'chair' : useLaForgeKick ? 'kick' : 'normal';
+    const useExtra = (c.name === 'RIKER' && isRikerExtraGuardHeld(p)) || (c.name === 'LAFORGE' && isLaForgeExtraGuardHeld(p));
+    p.attackStyle = useExtra ? 'extra' : 'normal';
     p.activeAttackDuration = useExtra
-        ? (c.ExtraAttackDuration || c.attackDuration)
-        : useLaForgeKick ? (c.kickAttackDuration || c.attackDuration) : c.attackDuration;
+        ? (c.extraAttackDuration || c.attackDuration)
+        : c.attackDuration;
     p.isAttacking = true;
     p.hasHitThisAttack = false;
     p.attackTimer = p.activeAttackDuration;
@@ -3173,6 +3421,11 @@ function applyHit(attacker, defender, damage, knockback) {
         });
     }
     screenShakeTimer = Math.max(screenShakeTimer, 9);
+
+    // Sonido del golpe
+    playSound(hitSound1);
+
+
     return true;
 }
 
@@ -3183,35 +3436,25 @@ function updateAttack(attacker, defender) {
     const distance = Math.abs(attacker.x - defender.x);
     const vertical = Math.abs(attacker.y - defender.y);
     const activeDuration = attacker.activeAttackDuration || c.attackDuration;
-    const extraAttack = c.name === 'RIKER' && attacker.attackStyle === 'chair';
-    const laforgeKickAttack = c.name === 'LAFORGE' && attacker.attackStyle === 'kick';
-    const specialAttack = extraAttack || laforgeKickAttack;
-    const attackRange = extraAttack ? (c.extraAttackRange || c.attackRange)
-        : laforgeKickAttack ? (c.kickAttackRange || c.attackRange) : c.attackRange;
-    const attackDamage = extraAttack ? (c.extraDamage || c.damage)
-        : laforgeKickAttack ? (c.kickDamage || c.damage) : c.damage;
-    const attackKnockback = extraAttack ? (c.extraKnockback || 19)
-        : laforgeKickAttack ? (c.kickKnockback || 20) : 15;
+    const extraAttack = (c.name === 'RIKER' || c.name === 'LAFORGE') && attacker.attackStyle === 'extra';
+    const specialAttack = extraAttack;
+    const attackRange = extraAttack ? (c.extraAttackRange || c.attackRange) : c.attackRange;
+    const attackDamage = extraAttack ? (c.extraDamage || c.damage) : c.damage;
+    const attackKnockback = extraAttack ? (c.extraKnockback || 19) : 15;
     const hitFrame = Math.ceil(activeDuration * 0.55);
 
     // Riker y LaForge disponen de una ventana de impacto de varios fotogramas,
     // para que sus ataques especiales no dependan de un único instante exacto.
-    const isHitFrame = c.name === 'RIKER'
-        ? (extraAttack
-             ? attacker.attackTimer <= Math.ceil(activeDuration * 0.78) &&
-            attacker.attackTimer >= Math.max(1, Math.floor(activeDuration * 0.20))
-             : attacker.attackTimer <= Math.ceil(activeDuration * 0.60) &&
-            attacker.attackTimer >= Math.max(1, Math.floor(activeDuration * 0.30)))
-        : laforgeKickAttack
-         ? attacker.attackTimer <= Math.ceil(activeDuration * 0.78) &&
-        attacker.attackTimer >= Math.max(1, Math.floor(activeDuration * 0.22))
+    const isHitFrame = extraAttack
+        ? (attacker.attackTimer <= Math.ceil(activeDuration * 0.78) &&
+            attacker.attackTimer >= Math.max(1, Math.floor(activeDuration * 0.20)))
         : attacker.attackTimer === hitFrame;
 
     if (c.name === 'KAN' && attacker.attackTimer >= c.attackDuration - 8) {
         attacker.x = clamp(
-                attacker.x + (attacker.x < defender.x ? 5.5 : -5.5),
-                0,
-                Math.max(0, canvas.width - attacker.width));
+            attacker.x + (attacker.x < defender.x ? 5.5 : -5.5),
+            0,
+            Math.max(0, canvas.width - attacker.width));
         if (distance < 90 && vertical < 55 && !attacker.hasHitThisAttack) {
             if (applyHit(attacker, defender, 7, 19))
                 attacker.hasHitThisAttack = true;
@@ -3228,12 +3471,10 @@ function updateAttack(attacker, defender) {
 
     attacker.attackTimer--;
     if (attacker.attackTimer <= 0) {
-        const endedWithExtra = attacker.attackStyle === 'chair';
-        const endedWithLaForgeKick = attacker.attackStyle === 'kick';
+        const endedWithExtra = attacker.attackStyle === 'extra';
         attacker.attackTimer = 0;
         attacker.isAttacking = false;
-        attacker.attackCooldown = endedWithExtra ? (c.extraAttackCooldown || 16)
-            : endedWithLaForgeKick ? (c.kickAttackCooldown || 13) : 8;
+        attacker.attackCooldown = endedWithExtra ? (c.extraAttackCooldown || 16) : 8;
         attacker.attackStyle = 'normal';
         attacker.activeAttackDuration = 0;
         attacker.hasHitThisAttack = false;
@@ -3408,81 +3649,68 @@ function canHumanControlPlayer(index) {
 // ------------------------------------------------------------
 // MODO HISTORIA
 // ------------------------------------------------------------
-const STORY_DIALOGUES = {
-    1: {
-        title: storyModeChapter1Title,
-        before: [[storyModeSpeakerComputer, storyModeChapter1Before1],
-                [storyModeSpeakerData, storyModeChapter1Before2],
-                [storyModeSpeakerPicard, storyModeChapter1Before3]],
-        afterWin: [storyModeSpeakerData, storyModeChapter1AfterWin],
-        afterLose: [storyModeSpeakerPicard, storyModeChapter1AfterLose]
-    },
-    2: {
-        title: storyModeChapter2Title,
-        before: [[storyModeSpeakerRiker, storyModeChapter2Before1],
-                [storyModeSpeakerSpock, storyModeChapter2Before2]],
-        afterWin: [storyModeSpeakerRiker, storyModeChapter2AfterWin],
-        afterLose: [storyModeSpeakerSpock, storyModeChapter2AfterLose]
-    },
-    3: {
-        title: storyModeChapter3Title,
-        before: [[storyModeSpeakerUhura, storyModeChapter3Before1],
-                [storyModeSpeakerPicard, storyModeChapter3Before2],
-                [storyModeSpeakerData, storyModeChapter3Before3]],
-        afterWin: [storyModeSpeakerUhura, storyModeChapter3AfterWin],
-        afterLose: [storyModeSpeakerUhura, storyModeChapter3AfterLose]
-    },
-    4: {
-        title: storyModeChapter4Title,
-        before: [[storyModeSpeakerScotty, storyModeChapter4Before1],
-                [storyModeSpeakerPicard, storyModeChapter4Before2]],
-        afterWin: [storyModeSpeakerScotty, storyModeChapter4AfterWin],
-        afterLose: [storyModeSpeakerScotty, storyModeChapter4AfterLose]
-    },
-    5: {
-        title: storyModeChapter5Title,
-        before: [[storyModeSpeakerData, storyModeChapter5Before1],
-                [storyModeSpeakerSevenOfNine, storyModeChapter5Before2],
-                [storyModeSpeakerPicard, storyModeChapter5Before3]],
-        afterWin: [storyModeSpeakerSevenOfNine, storyModeChapter5AfterWin],
-        afterLose: [storyModeSpeakerData, storyModeChapter5AfterLose]
-    },
-    6: {
-        title: storyModeChapter6Title,
-        before: [[storyModeSpeakerWorf, storyModeChapter6Before1],
-                [storyModeSpeakerSevenOfNine, storyModeChapter6Before2],
-                [storyModeSpeakerPicard, storyModeChapter6Before3]],
-        afterWin: [storyModeSpeakerData, storyModeChapter6AfterWin],
-        afterLose: [storyModeSpeakerSevenOfNine, storyModeChapter6AfterLose]
-    },
-    7: {
-        title: storyModeChapter7Title,
-        before: [[storyModeSpeakerKhan, storyModeChapter7Before1],
-                [storyModeSpeakerPicard, storyModeChapter7Before2],
-                [storyModeSpeakerData, storyModeChapter7Before3]],
-        afterWin: [storyModeSpeakerData, storyModeChapter7AfterWin],
-        afterLose: [storyModeSpeakerKhan, storyModeChapter7AfterLose]
-    },
-    8: {
-        title: storyModeChapter8Title,
-        before: [[storyModeSpeakerSevenOfNine, storyModeChapter8Before1],
-                [storyModeSpeakerLocutus, storyModeChapter8Before2],
-                [storyModeSpeakerPicard, storyModeChapter8Before3]],
-        afterWin: [storyModeSpeakerData, storyModeChapter8AfterWin],
-        afterLose: [storyModeSpeakerLocutus, storyModeChapter8AfterLose]
+const storyMissionSpeakers = [
+    [storyModeSpeakerComputer, storyModeSpeakerData, storyModeSpeakerPicard],
+    [storyModeSpeakerRiker, storyModeSpeakerSpock, storyModeSpeakerPicard],
+    [storyModeSpeakerUhura, storyModeSpeakerSulu, storyModeSpeakerData],
+    [storyModeSpeakerPicard, storyModeSpeakerSpock, storyModeSpeakerData],
+    [storyModeSpeakerScotty, storyModeSpeakerData, storyModeSpeakerPicard],
+    [storyModeSpeakerWorf, storyModeSpeakerSevenOfNine, storyModeSpeakerPicard],
+    [storyModeSpeakerData, storyModeSpeakerRiker, storyModeSpeakerPicard],
+    [storyModeSpeakerPicard, storyModeSpeakerData, storyModeSpeakerSpock],
+    [storyModeSpeakerSpock, storyModeSpeakerRiker, storyModeSpeakerPicard],
+    [storyModeSpeakerData, storyModeSpeakerSevenOfNine, storyModeSpeakerPicard],
+    [storyModeSpeakerRiker, storyModeSpeakerData, storyModeSpeakerPicard],
+    [storyModeSpeakerScotty, storyModeSpeakerRiker, storyModeSpeakerData],
+    [storyModeSpeakerSulu, storyModeSpeakerData, storyModeSpeakerPicard],
+    [storyModeSpeakerMcCoy, storyModeSpeakerWorf, storyModeSpeakerPicard],
+    [storyModeSpeakerUhura, storyModeSpeakerData, storyModeSpeakerPicard],
+    [storyModeSpeakerRiker, storyModeSpeakerData, storyModeSpeakerPicard],
+    [storyModeSpeakerWorf, storyModeSpeakerData, storyModeSpeakerPicard],
+    [storyModeSpeakerKhan, storyModeSpeakerLocutus, storyModeSpeakerPicard],
+    [storyModeSpeakerData, storyModeSpeakerLocutus, storyModeSpeakerPicard]
+];
+
+const storyMissionDialogues = [
+    [storyModeChapter1Before1, storyModeChapter1Before2, storyModeChapter1Before3],
+    [storyModeChapter2Before1, storyModeChapter2Before2, storyModeChapter2Before3],
+    [storyModeChapter3Before1, storyModeChapter3Before2, storyModeChapter3Before3],
+    [storyModeChapter4Before1, storyModeChapter4Before2, storyModeChapter4Before3],
+    [storyModeChapter5Before1, storyModeChapter5Before2, storyModeChapter5Before3],
+    [storyModeChapter6Before1, storyModeChapter6Before2, storyModeChapter6Before3],
+    [storyModeChapter7Before1, storyModeChapter7Before2, storyModeChapter7Before3],
+    [storyModeChapter8Before1, storyModeChapter8Before2, storyModeChapter8Before3],
+    [storyModeChapter9Before1, storyModeChapter9Before2, storyModeChapter9Before3],
+    [storyModeChapter10Before1, storyModeChapter10Before2, storyModeChapter10Before3],
+    [storyModeChapter11Before1, storyModeChapter11Before2, storyModeChapter11Before3],
+    [storyModeChapter12Before1, storyModeChapter12Before2, storyModeChapter12Before3],
+    [storyModeChapter13Before1, storyModeChapter13Before2, storyModeChapter13Before3],
+    [storyModeChapter14Before1, storyModeChapter14Before2, storyModeChapter14Before3],
+    [storyModeChapter15Before1, storyModeChapter15Before2, storyModeChapter15Before3],
+    [storyModeChapter16Before1, storyModeChapter16Before2, storyModeChapter16Before3],
+    [storyModeChapter17Before1, storyModeChapter17Before2, storyModeChapter17Before3],
+    [storyModeChapter18Before1, storyModeChapter18Before2, storyModeChapter18Before3],
+    [storyModeChapter19Before1, storyModeChapter19Before2, storyModeChapter19Before3]
+]
+
+const STORY_DIALOGUES = Object.fromEntries(storyMissionDialogues.map((lines, index) => [
+    index + 1,
+    {
+        title: storyDetails[index + 1].title.replace(':', ' ·'),
+        before: lines.map((line, lineIndex) => [storyMissionSpeakers[index][lineIndex], line]),
+        afterWin: [storyModeSpeakerData, storyDialogueAfterWin],
+        afterLose: [storyModeSpeakerData, storyDialogueAfterLose]
     }
-};
+]));
 let storyDialogueLines = [];
 let storyDialogueIndex = 0;
 let storyDialogueAfter = false;
 function startStoryDialogue(after = false) {
-    const d = STORY_DIALOGUES[storyPhase] || STORY_DIALOGUES[8];
+    const d = STORY_DIALOGUES[storyPhase] || STORY_DIALOGUES[TOTAL_MISIONES];
     if (after) {
         const won = getStorySeriesWinner() === 1;
-        const reportTitle = won ? storyDialogueContinue : storyDialogueContinue;
-        const outcome = won
-            ? (storyPhase === 7 ? storyDialogueKhan1 : storyPhase === 8 ? storyDialogueKhan2 : storyDialogueKhan3)
-            : (storyPhase === 7 ? storyDialogueKhan4 : storyPhase === 8 ? storyDialogueKhan5 : storyDialogueKhan6);
+        const reportTitle = won ? storyDialogueConsequence : storyDialogueContinue;
+        const outcome = won ? storyDialogueAfterWin : storyDialogueAfterLose;
         const characterReport = won ? d.afterWin : d.afterLose;
         storyDialogueLines = [[reportTitle, outcome], characterReport];
     } else {
@@ -3538,19 +3766,24 @@ function continueStoryDialogue() {
 function drawStoryDialogue() {
     const w = canvas.width,
     h = canvas.height,
-    d = STORY_DIALOGUES[storyPhase] || STORY_DIALOGUES[8];
+    d = STORY_DIALOGUES[storyPhase] || STORY_DIALOGUES[TOTAL_MISIONES];
     ctx.fillStyle = '#020713';
     ctx.fillRect(0, 0, w, h);
     drawParticles(true);
-    text(starTrekExpulsandoElNucleo, w / 2, 44, 13, '#75edff', true);
-    text(d.title, w / 2, 86, 20, '#ffcf70', true);
+    text(starTrekExpulsandoElNucleo, w / 2, 44, 25, '#75edff', true);
+    text(d.title, w / 2, 110, 40, '#ffcf70', true);
     ctx.fillStyle = 'rgba(6,20,38,.94)';
     ctx.strokeStyle = '#49dff4';
     ctx.lineWidth = 2;
-    ctx.fillRect(55, 135, w - 110, 190);
-    ctx.strokeRect(55, 135, w - 110, 190);
+
+    const boxY = 165;
+    const boxHeight = 200;
+
+    ctx.fillRect(55, boxY, w - 110, boxHeight);
+    ctx.strokeRect(55, boxY, w - 110, boxHeight);
     const line = storyDialogueLines[storyDialogueIndex] || [storyModeSpeakerComputer, ''];
-    text(line[0], w / 2, 177, 15, '#78efff', true);
+    // Nombre del emisor (Computadora / Personaje) (ampliado de 15 a 18)
+    text(line[0], w / 2, boxY + 50, 25, '#78efff', false);
     const words = line[1].split(' ');
     let rows = [],
     row = '';
@@ -3563,8 +3796,8 @@ function drawStoryDialogue() {
     }
     if (row)
         rows.push(row);
-    rows.slice(0, 4).forEach((r, i) => text(r, w / 2, 215 + i * 24, 13, '#ffffff'));
-    text(`${storyDialogueIndex + 1}/${storyDialogueLines.length} · ${storyDialoguePressSpace}`, w / 2, h - 42, 12, '#00ffcc', true);
+    rows.slice(0, 4).forEach((r, i) => text(r, w / 2, boxY + 90 + i * 30, 23, '#ffffff'));
+    text(`${storyDialogueIndex + 1}/${storyDialogueLines.length} · ${storyDialoguePressSpace}`, w / 2, h - 42, 22, '#00ffcc', false);
 }
 
 function beginCampaign() {
@@ -3693,6 +3926,10 @@ function advanceStory() {
             return;
         // La serie la ha ganado el jugador. Mostrar la escena posterior antes de avanzar.
         resetStorySeries();
+        if (storyPhase === 4 || storyPhase === TOTAL_MISIONES) {
+            beginShuttleMinigame();
+            return;
+        }
         startStoryDialogue(true);
         return;
     } else if (!humanWonStoryPhase()) {
@@ -3707,7 +3944,7 @@ function advanceStory() {
         return;
     }
 
-    // Tras las misiones 4 y 8 se intercala la fase arcade de lanzadera.
+    // Los bonus de lanzadera se intercalan después de las misiones 4 y 19.
     if (storyPhase === 4 || storyPhase === TOTAL_MISIONES) {
         beginShuttleMinigame();
         return;
@@ -3888,7 +4125,8 @@ function chooseQTrialAction(action) {
     } else if (qTrialStep === 2 && action === 3) {
         qTrialOutcome = 'WIN';
         qTrialMessage = qTrialMessageAction3;
-        campaignCompleted = true;
+        campaignCompleted = true
+        qTrialResultFrame = frameCount;
         gameState = 'Q_TRIAL_RESULT';
         return;
     } else {
@@ -3912,6 +4150,7 @@ function updateQTrial() {
         qTrialTimer = 0;
         qTrialOutcome = 'LOSE';
         qTrialMessage = qTrialMessageOver;
+        qTrialResultFrame = frameCount;
         gameState = 'Q_TRIAL_RESULT';
     }
 }
@@ -3925,6 +4164,7 @@ function drawQTrial() {
     bg.addColorStop(1, '#260d2d');
     ctx.fillStyle = bg;
     ctx.fillRect(0, 0, w, h);
+
     // Estrellas y marco táctico
     for (let i = 0; i < 70; i++) {
         const x = (i * 137 + 31) % w,
@@ -3937,8 +4177,9 @@ function drawQTrial() {
     ctx.strokeStyle = '#66eaff';
     ctx.lineWidth = 2;
     ctx.strokeRect(24, 22, w - 48, h - 44);
-    text(qTrialMessageCourt, w / 2, 55, 27, '#ffe28a', true);
-    text(qTrialMessageExpulse, w / 2, 83, 13, '#82eaff', true);
+
+    text(qTrialMessageCourt, w / 2, 55, 34, '#ffe28a', true);
+    text(qTrialMessageExpulse, w / 2, 83, 23, '#82eaff', false);
     // Retrato de Q desde assets/q_talk.png
     const qBoxX = w / 2 - 105,
     qBoxY = 98,
@@ -3954,9 +4195,10 @@ function drawQTrial() {
         drawH = qTalkImage.naturalHeight * ratio;
         ctx.drawImage(qTalkImage, w / 2 - drawW / 2, qBoxY + (qBoxH - drawH) / 2, drawW, drawH);
     } else {
-        text(qTrialQ, w / 2, 137, 35, '#e7d1ff', true);
+        text(qTrialQ, w / 2, 137, 35, '#e7d1ff', false);
     }
-    text(qTrialInteligence, w / 2, 190, 13, '#f4eaff');
+    text(qTrialInteligence, w / 2, 190, 18, '#f4eaff');
+
     // Temporizador y barra
     const seconds = Math.max(0, qTrialTimer);
     text(`${qTrialTime}${String(Math.floor(seconds / 60)).padStart(2, '0')}:${String(seconds % 60).padStart(2, '0')}`, w / 2, 220, 22, seconds <= 10 ? '#ff5d66' : '#ffd36b', true);
@@ -3966,26 +4208,30 @@ function drawQTrial() {
     ctx.fillRect(w * 0.2, 232, w * 0.6 * Math.max(0, qTrialTimer / 60), 12);
     ctx.strokeStyle = '#d8f8ff';
     ctx.strokeRect(w * 0.2, 232, w * 0.6, 12);
-    text(`${qTrialEnergyQuantity}${qTrialPower}`, w / 2, 272, 14, '#8df5ff', true);
+    text(`${qTrialEnergyQuantity}${qTrialPower}`, w / 2, 272, 14, '#8df5ff', false);
+
     const tasks = [
         qTrialTask1,
         qTrialTask2,
         qTrialTask3
     ];
+
     for (let i = 0; i < tasks.length; i++) {
-        const y = 305 + i * 38;
+        const y = 318 + i * 46;
         ctx.fillStyle = i < qTrialStep ? 'rgba(40,190,130,0.22)' : 'rgba(15,30,48,0.85)';
-        ctx.fillRect(w * 0.14, y - 20, w * 0.72, 29);
+        ctx.fillRect(w * 0.14, y - 20, w * 0.72, 38);
         ctx.strokeStyle = i < qTrialStep ? '#55f0b0' : '#527b99';
-        ctx.strokeRect(w * 0.14, y - 20, w * 0.72, 29);
-        text((i < qTrialStep ? '✓ ' : '') + tasks[i], w / 2, y, 12, i < qTrialStep ? '#79ffc7' : '#e4f6ff', true);
+        ctx.strokeRect(w * 0.14, y - 20, w * 0.72, 38);
+        text((i < qTrialStep ? '✓ ' : '') + tasks[i], w / 2, y+6, 18, i < qTrialStep ? '#79ffc7' : '#e4f6ff', false);
     }
+    const boxBottomY = h - 135;
     ctx.fillStyle = 'rgba(1,5,15,0.92)';
-    ctx.fillRect(w * 0.1, h - 82, w * 0.8, 48);
+    ctx.fillRect(w * 0.1, boxBottomY, w * 0.8, 52);
     ctx.strokeStyle = '#66eaff';
-    ctx.strokeRect(w * 0.1, h - 82, w * 0.8, 48);
-    text(qTrialMessage, w / 2, h - 62, 11, '#ffffff', true);
-    text(qTrialKeyOptions, w / 2, h - 18, 10, '#8df5ff', true);
+    ctx.strokeRect(w * 0.1, boxBottomY, w * 0.8, 52);
+
+    text(qTrialMessage, w / 2, boxBottomY + 31, 18, '#ffffff', false);
+    text(qTrialKeyOptions, w / 2, h - 32, 18, '#8df5ff', false);
 }
 
 function drawQTrialResult() {
@@ -3995,10 +4241,21 @@ function drawQTrialResult() {
     ctx.fillRect(0, 0, w, h);
     overlay(0.72);
     const won = qTrialOutcome === 'WIN';
-    text(won ? qTrialResultWin1 : qTrialResultLose1, w / 2, h / 2 - 48, 30, won ? '#7dffbe' : '#ff6474', true);
-    text(won ? qTrialResultWin2 : qTrialResultLose2, w / 2, h / 2 - 8, 14, '#ffffff', true);
-    text(won ? qTrialResultWin3 : qTrialResultLose3, w / 2, h / 2 + 24, 12, '#d7c8ff', true);
-    text(qTrialKeyToMenu, w / 2, h / 2 + 65, 13, '#8df5ff', true);
+    //text(won ? qTrialResultWin1 : qTrialResultLose1, w / 2, h / 2 - 48, 30, won ? '#7dffbe' : '#ff6474', true);
+    textWithAnimation(
+        won ? qTrialResultWin1 : qTrialResultLose1,
+        w / 2,
+        h / 2 - 48,
+        10,            // Tamaño inicial pequeño
+        130,            // Tamaño final
+        25,
+        (frameCount - qTrialResultFrame),
+        won ? '#7dffbe' : '#ff6474',
+        true
+    );
+    text(won ? qTrialResultWin2 : qTrialResultLose2, w / 2, h / 2 - 8, 24, '#ffffff', false);
+    text(won ? qTrialResultWin3 : qTrialResultLose3, w / 2, h / 2 + 24, 22, '#d7c8ff', false);
+    text(qTrialKeyToMenu, w / 2, h / 2 + 65, 22, '#8df5ff', false);
 }
 
 function updateShuttleMinigame() {
@@ -4071,7 +4328,7 @@ function hitShuttle() {
 function drawShuttleMinigame() {
     const w = canvas.width,
     h = canvas.height;
-    // El hangar solo se dibuja en el minijuego; las ocho arenas originales no cambian.
+    // El hangar solo se dibuja en el minijuego; las 19 arenas de historia mantienen su orden.
     if (shuttleHangarBackground.complete && shuttleHangarBackground.naturalWidth > 0) {
         ctx.drawImage(shuttleHangarBackground, 0, 0, w, h);
         // Ligero velo para mantener legibles el HUD y los efectos del minijuego.
@@ -4119,7 +4376,7 @@ function drawShuttleMinigame() {
         ctx.fillRect(shuttleDrawX, shuttleDrawY + 30, shuttleDrawWidth, 70);
         ctx.fillStyle = '#d62828';
         ctx.fillRect(shuttleDrawX + 100, shuttleDrawY + 65, shuttleDrawWidth - 180, 10);
-        text(shuttleMinigameErrorAsset, w / 2, h * 0.31, 13, '#ffcf4a', true);
+        text(shuttleMinigameErrorAsset, w / 2, h * 0.31, 33, '#ffcf4a', true);
     }
     // El minijuego usa el personaje que el jugador seleccionó para la campaña.
     // Al pulsar ESPACIO/INTRO se muestra brevemente su sprite de ataque.
@@ -4137,10 +4394,10 @@ function drawShuttleMinigame() {
         ctx.drawImage(playerImage, playerDrawX, playerDrawY, playerDrawWidth, playerDrawHeight);
     }
     // HUD arcade
-    text(shuttleMinigameHudText, w / 2, 34, 25, '#ffcf4a', true);
-    text(shuttleMinigameHudTextOrder, w / 2, 62, 15, '#ffffff', true);
-    text(`${shuttleMinigameHudTextTime}${String(Math.ceil(shuttleTimer / 60)).padStart(2, '0')}`, w - 90, 35, 18, '#ffcf4a', true);
-    text(`${shuttleMinigameHudTextHits}${shuttleHits}`, 78, 35, 16, '#8df4ff', true);
+    text(shuttleMinigameHudText, w / 2, 34, 35, '#ffcf4a', false);
+    text(shuttleMinigameHudTextOrder, w / 2, 62, 25, '#ffffff', false);
+    text(`${shuttleMinigameHudTextTime}${String(Math.ceil(shuttleTimer / 60)).padStart(2, '0')}`, w - 90, 35, 18, '#ffcf4a', false);
+    text(`${shuttleMinigameHudTextHits}${shuttleHits}`, 78, 35, 26, '#8df4ff', false);
     ctx.fillStyle = '#273744';
     ctx.fillRect(w * 0.35, 82, w * 0.42, 18);
     ctx.fillStyle = shuttleHealth > (shuttleMaxHealth * 0.4) ? '#41d66b' : '#ff573d';
@@ -4153,17 +4410,28 @@ function drawShuttleMinigame() {
         ctx.fillRect(spark.x, spark.y, 4, 4);
     }
     ctx.globalAlpha = 1;
-    text(shuttleMinigameHudTextKeys, w / 2, h - 25, 12, '#d6e7ef', true);
+    text(shuttleMinigameHudTextKeys, w / 2, h - 25, 23, '#d6e7ef', false);
 }
 
 function drawShuttleResult() {
     drawShuttleMinigame();
     overlay(0.72);
-    text(shuttleResult, canvas.width / 2, canvas.height / 2 - 12, 28,
-        shuttleResult === shuttleMinigameHudTextDestroyed ? '#ffcf4a' : '#ff755e', true);
+    //text(shuttleResult, canvas.width / 2, canvas.height / 2 - 12, 28,
+    //    shuttleResult === shuttleMinigameHudTextDestroyed ? '#ffcf4a' : '#ff755e', true);
+    textWithAnimation(
+        shuttleResult,
+        canvas.width / 2,
+        canvas.height / 2 - 12,
+        10,            // Tamaño inicial pequeño
+        110,           // Tamaño final
+        25,
+        (frameCount - shuttleResultTimer),
+        shuttleResult === shuttleMinigameHudTextDestroyed ? '#ffcf4a' : '#ff755e',
+        true
+    );
     text(shuttleResult === shuttleMinigameHudTextDestroyed ? 'BONUS +10' : shuttleMinigameHudTextContinues,
-        canvas.width / 2, canvas.height / 2 + 22, 15, '#ffffff', true);
-    text(shuttleMinigameHudTextKeyToContinue, canvas.width / 2, canvas.height / 2 + 58, 13, '#8df4ff', true);
+        canvas.width / 2, canvas.height / 2 + 22, 35, '#ffffff', false);
+    text(shuttleMinigameHudTextKeyToContinue, canvas.width / 2, canvas.height / 2 + 58, 23, '#8df4ff', false);
 }
 
 // ------------------------------------------------------------
@@ -4185,7 +4453,7 @@ window.addEventListener('keydown', (e) => {
         e.preventDefault();
     }
 
-    if (gameState === 'TRIBBLES_EASTER_EGG' || gameState === 'SPOCK_EASTER_EGG') {
+    if (gameState === 'TRIBBLES_EASTER_EGG' || gameState === 'SPOCK_EASTER_EGG' || gameState === 'EEN_EASTER_EGG' || gameState === 'DS9_EASTER_EGG') {
         if (e.key === ' ' || e.key === 'Enter' || e.key.toLowerCase() === 'x' || e.key === 'Escape') {
             gameState = 'MENU';
             easterEggKeySequence = [];
@@ -4202,14 +4470,31 @@ window.addEventListener('keydown', (e) => {
         if (easterEggKeySequence.length === TRIBBLES_SECRET_SEQUENCE.length &&
             easterEggKeySequence.every((key, index) => key === TRIBBLES_SECRET_SEQUENCE[index])) {
             gameState = 'TRIBBLES_EASTER_EGG';
+            playSound(soundTribbles);
             easterEggKeySequence = [];
             easterEggLetterBuffer = '';
+            tribbleEasterEggCache = null;
             return;
         }
-        if (e.key.length === 1 && /^[a-z]$/i.test(e.key)) {
+        if (e.key.length === 1 && /^[a-z0-9]$/i.test(e.key)) {
             easterEggLetterBuffer = (easterEggLetterBuffer + e.key.toUpperCase()).slice(-4);
             if (easterEggLetterBuffer === 'LLAP') {
                 gameState = 'SPOCK_EASTER_EGG';
+                playSound(soundSpock);
+                easterEggKeySequence = [];
+                easterEggLetterBuffer = '';
+                return;
+            }
+            if (easterEggLetterBuffer.endsWith('EEN')) {
+                gameState = 'EEN_EASTER_EGG';
+                playSound(soundEen); 
+                easterEggKeySequence = [];
+                easterEggLetterBuffer = '';
+                return;
+            }
+            if (easterEggLetterBuffer.endsWith('DS9')) {
+                gameState = 'DS9_EASTER_EGG';
+                playSound(soundDs9);
                 easterEggKeySequence = [];
                 easterEggLetterBuffer = '';
                 return;
@@ -4298,6 +4583,14 @@ window.addEventListener('keydown', (e) => {
     }
 
     if (gameState === 'TRAINING_COMPLETE') {
+        // Easter Egg Q
+        if (e.key.toLowerCase() === 'q') {
+            qEasterEggActive = !qEasterEggActive;
+            if (qEasterEggActive) {
+                playSound(soundQ);
+            }
+            return;
+        }
         if (e.key === ' ' || e.key === 'Enter' || e.key === 'Escape' || e.key.toLowerCase() === 'x')
             gameState = 'MODE_SELECT';
         return;
@@ -4625,7 +4918,7 @@ window.addEventListener('keydown', (e) => {
         } else if (
             e.key.toLowerCase() === 'x' ||
             e.key === 'Escape') {
-            resetMatch();
+            //resetMatch();
             gameState = 'MENU';
         }
 
@@ -4749,12 +5042,29 @@ function overlay(alpha = 0.8) {
     ctx.fillRect(0, 0, canvas.width, canvas.height);
 }
 
-function text(str, x, y, size = 16, color = '#fff', bold = false) {
+function text(str, x, y, size = 16, color = '#fff', bold = false, font = GAME_FONT) {
     ctx.fillStyle = color;
-    ctx.font = `${bold ? 'bold ' : ''}${size}px monospace`;
+    ctx.font = `${bold ? 'bold ' : ''}${size}px ${font}`;
     ctx.textAlign = 'center';
     ctx.fillText(str, x, y);
 }
+
+// Dibuja un texto animado interpolando su tamaño entre initialSize y finalSize a lo largo de 'duration' fotogramas.
+// Si duration es 0 o no se pasa, o el tiempo transcurrido es mayor que la duración, se usa finalSize.
+function textWithAnimation(str, x, y, initialSize, finalSize, durationFrames, elapsedFrames, color = '#fff', bold = false, font = GAME_FONT) {
+    let currentSize = finalSize;
+    if (durationFrames > 0) {
+        const progress = Math.min(1, Math.max(0, elapsedFrames / durationFrames));
+        // Interpolación lineal entre el tamaño inicial y el final
+        currentSize = initialSize + (finalSize - initialSize) * progress;
+    }
+
+    ctx.save();
+    text(str, x, y, Math.round(currentSize), color, bold, font);
+    ctx.restore();
+}
+
+
 
 // ------------------------------------------------------------
 // ------------------------------------------------------------
@@ -4790,31 +5100,90 @@ function drawTribble(x, y, r, variant = 0) {
     ctx.restore();
 }
 
+let tribbleEasterEggCache = null;
+
 function drawTribbleEasterEgg() {
     drawTitleBackground();
     overlay(0.48);
-    for (let i = 0; i < 42; i++) {
-        const x = 22 + ((i * 137) % Math.max(1, canvas.width - 44));
-        const y = 130 + ((i * 59) % Math.max(1, canvas.height - 180));
-        const r = 10 + (i % 5) * 2;
-        drawTribble(x, y, r, i % 4);
+    // Pintamos aleatoriamente a los Tribbles
+    if (!tribbleEasterEggCache) {
+        tribbleEasterEggCache = [];
+        const total = 65; // Número de tribbles en pantalla
+        for (let i = 0; i < total; i++) {
+            tribbleEasterEggCache.push({
+                x: 30 + Math.random() * (canvas.width - 60),
+                y: 110 + Math.random() * (canvas.height - 180),
+                r: 10 + Math.random() * 18, // Tamaños variados aleatorios
+                variant: Math.floor(Math.random() * 4) // Color aleatorio
+            });
+        }
     }
-    text(tribblesEasterEgg1, canvas.width / 2, 65, 27, '#ffcf72', true);
-    text(tribblesEasterEgg2, canvas.width / 2, 100, 11, '#ffffff', true);
-    text(tribblesEasterEgg3, canvas.width / 2, canvas.height - 57, 12, '#fff1d6');
-    text(tribblesEasterEgg4, canvas.width / 2, canvas.height - 27, 12, '#8df4ff', true);
+
+    // Dibujamos los tribbles usando la caché generada al entrar
+    for (const t of tribbleEasterEggCache) {
+        drawTribble(t.x, t.y, t.r, t.variant);
+    }
+
+    text(tribblesEasterEgg1, canvas.width / 2, 65, 37, '#ffcf72', false);
+    text(tribblesEasterEgg2, canvas.width / 2, 100, 30, '#ffffff', false);
+    text(tribblesEasterEgg3, canvas.width / 2, canvas.height - 100, 32, '#fff1d6');
+    text(tribblesEasterEgg4, canvas.width / 2, canvas.height - 27, 32, '#8df4ff', false);
 }
 
 function drawSpockEasterEgg() {
     drawTitleBackground();
     overlay(0.72);
-    text(spockEasterEgg1, canvas.width / 2, 100, 22, '#8df4ff', true);
-    text(spockEasterEgg2, canvas.width / 2, 235, 104, '#7ce7ff', true);
-    text(spockEasterEgg3, canvas.width / 2, 315, 24, '#ffcf72', true);
-    text(spockEasterEgg4, canvas.width / 2, 360, 14, '#ffffff');
-    text(spockEasterEgg5, canvas.width / 2, 393, 13, '#8df4ff', true);
-    text(spockEasterEgg6, canvas.width / 2, canvas.height - 30, 12, '#8df4ff', true);
+    text(spockEasterEgg1, canvas.width / 2, 100, 64, '#8df4ff', false);
+    text(spockEasterEgg2, canvas.width / 2, 235, 104, '#7ce7ff', false);
+    text(spockEasterEgg3, canvas.width / 2, 315, 54, '#ffcf72', false);
+    text(spockEasterEgg4, canvas.width / 2, 370, 54, '#ffffff', false);
+    text(spockEasterEgg5, canvas.width / 2, 423, 50, '#8df4ff', false);
+    text(spockEasterEgg6, canvas.width / 2, canvas.height - 30, 32, '#8df4ff', false);
 }
+
+function drawEenEasterEgg() {
+    drawTitleBackground();
+    overlay(0.75);
+    text(eenEasterEgg1, canvas.width / 2, 80, 56, '#ffcf72', false);
+    const imgBoxX = canvas.width / 2 - 100;
+    const imgBoxY = 110;
+    const imgBoxW = 250;
+    const imgBoxH = 270;
+
+    if (eenImage.complete && eenImage.naturalWidth > 0) {
+        const ratio = Math.min(imgBoxW / eenImage.naturalWidth, imgBoxH / eenImage.naturalHeight);
+        const drawW = eenImage.naturalWidth * ratio;
+        const drawH = eenImage.naturalHeight * ratio;
+        ctx.drawImage(eenImage, canvas.width / 2 - drawW / 2, imgBoxY + (imgBoxH - drawH) / 2, drawW, drawH);
+    }
+
+    text(eenEasterEgg2, canvas.width / 2, 430, 28, '#ffffff', false);
+    text(eenEasterEgg3, canvas.width / 2, 470, 22, '#7feeff', false);
+    text(eenEasterEgg4, canvas.width / 2, canvas.height - 30, 20, '#8df4ff', false);
+}
+
+function drawDs9EasterEgg() {
+    drawTitleBackground();
+    overlay(0.75);
+    text(ds9EasterEgg1, canvas.width / 2, 80, 56, '#ffcf72', false);
+    const imgBoxX = canvas.width / 2 - 100;
+    const imgBoxY = 110;
+    const imgBoxW = 250;
+    const imgBoxH = 270;
+
+    if (ds9Image.complete && ds9Image.naturalWidth > 0) {
+        const ratio = Math.min(imgBoxW / ds9Image.naturalWidth, imgBoxH / ds9Image.naturalHeight);
+        const drawW = ds9Image.naturalWidth * ratio;
+        const drawH = ds9Image.naturalHeight * ratio;
+        ctx.drawImage(ds9Image, canvas.width / 2 - drawW / 2, imgBoxY + (imgBoxH - drawH) / 2, drawW, drawH);
+    }
+
+    text(ds9EasterEgg2, canvas.width / 2, 430, 28, '#ffffff', false);
+    text(ds9EasterEgg3, canvas.width / 2, 470, 22, '#7feeff', false);
+    text(ds9EasterEgg4, canvas.width / 2, canvas.height - 30, 20, '#8df4ff', false);
+ }
+
+
 
 // MENÚS
 // ------------------------------------------------------------
@@ -4822,22 +5191,22 @@ function drawMainMenu() {
     drawTitleBackground();
     overlay(0.45);
 
-    text(menuTitle, canvas.width / 2, 150, 36, '#00ffff', true);
-    text(menuSubtitle, canvas.width / 2, 195, 23, '#ffcc00', true);
-    text(menuKeys1, canvas.width / 2, 370, 18, '#00ffcc', true);
-    text(menuKeys2, canvas.width / 2, 410, 14);
+    text(menuTitle, canvas.width / 2, 260, 86, 'Red', false, GAME_FONTTNG);
+    text(menuSubtitle, canvas.width / 2, 310, 33, '#ffcc00', false, GAME_FONTDS9);
+    text(menuKeys1, canvas.width / 2, 470, 28, '#00ffcc');
+    text(menuKeys2, canvas.width / 2, 510, 24);
 }
 
 function drawModeSelect() {
     drawTitleBackground();
     overlay(0.84);
 
-    text(menuSelectModeTitle, 400, 90, 25, '#00ffff', true);
-    text(menuSelectModeKeys1, 400, 165, 18, '#ffcc00', true);
-    text(menuSelectModeKeys2, 400, 220, 17, '#ffcc00', true);
-    text(menuSelectModeKeys3, 400, 275, 17, '#00ffcc', true);
-    text(menuSelectModeKeys4, 400, 330, 13, '#8df4ff', true);
-    text(menuSelectModeKeys5, 400, 405, 13);
+    text(menuSelectModeTitle, 500, 210, 35, '#00ffff', true);
+    text(menuSelectModeKeys1, 500, 285, 28, '#ffcc00');
+    text(menuSelectModeKeys2, 500, 340, 27, '#ffcc00');
+    text(menuSelectModeKeys3, 500, 395, 27, '#00ffcc');
+    text(menuSelectModeKeys4, 500, 450, 23, '#8df4ff');
+    text(menuSelectModeKeys5, 500, 525, 23);
 }
 
 // ------------------------------------------------------------
@@ -4877,7 +5246,7 @@ function drawCharacterCard(p, centerX, index) {
     const heading = isVsMachine
         ? (humanPlayerIndex === index ? menuSelectPlayer1 : menuSelectPlayer2)
         : `${menuSelectPlayerNumber}${index}`;
-    text(heading, centerX, 78, 14, color, true);
+    text(heading, centerX, 78, 20, color, true);
 
     if (c.guardImg.complete && c.guardImg.naturalWidth > 0) {
         const spriteWidth = 140;
@@ -4906,29 +5275,29 @@ function drawCharacterCard(p, centerX, index) {
         ctx.restore();
     }
 
-    text(c.name, centerX, 320, 20, '#fff', true);
-    text(c.role, centerX, 343, 11, '#00ffcc');
+    text(c.name, centerX, 320, 24, '#fff', true);
+    text(c.role, centerX, 343, 16, '#00ffcc');
     text(`${menuSelectPlayerCharacter}${p.charIndex + 1}/${availableCharacters.length}`,
         centerX,
         365,
-        12);
+        16);
 }
 
 // Selector en cuadrícula para Player vs Máquina: todos los luchadores visibles.
 function drawVsMachineRoster() {
-    const cols = 8;
+    const cols = 6; // Reducimos de 8 a 6 columnas para hacer las cajas más anchas
     const rows = Math.ceil(availableCharacters.length / cols);
-    const marginX = 24;
-    const topY = 68;
-    const gapX = 6;
-    const gapY = 7;
+    const marginX = 40; // Margen lateral ampliado
+    const topY = 60;    // Margen superior
+    const gapX = 12;    // Separación horizontal entre cajas
+    const gapY = 12;    // Separación vertical entre cajas
     const cardW = (canvas.width - marginX * 2 - gapX * (cols - 1)) / cols;
-    const cardH = Math.min(82, (canvas.height - topY - 65 - gapY * (rows - 1)) / rows);
+    const cardH = Math.min(115, (canvas.height - topY - 65 - gapY * (rows - 1)) / rows); // Altura mayor (hasta 115px)
     const humanIndex = humanPlayerIndex === 1 ? player1.charIndex : player2.charIndex;
     const machineIndex = humanPlayerIndex === 1 ? player2.charIndex : player1.charIndex;
 
-    text(menuSelectMachineRosterTitle, canvas.width / 2, 42, 21, '#00ffff', true);
-    text(menuSelectMachineRosterSubtitle, canvas.width / 2, canvas.height - 13, 9, '#00ffcc', true);
+    text(menuSelectMachineRosterTitle, canvas.width / 2, 38, 40, '#00ffff', true);
+    text(menuSelectMachineRosterSubtitle, canvas.width / 2, canvas.height - 15, 24, '#00ffcc');
 
     for (let i = 0; i < availableCharacters.length; i++) {
         const col = i % cols;
@@ -4944,19 +5313,20 @@ function drawVsMachineRoster() {
         ctx.fillStyle = isHuman ? 'rgba(0,180,255,0.22)' : (isMachine ? 'rgba(255,140,0,0.16)' : 'rgba(5,18,34,0.86)');
         ctx.fillRect(x, y, cardW, cardH);
         ctx.strokeStyle = color;
-        ctx.lineWidth = (isHuman || isMachine) ? 2 : 1;
+        ctx.lineWidth = (isHuman || isMachine) ? 3 : 1;
         ctx.strokeRect(x, y, cardW, cardH);
 
         if (ch.guardImg && ch.guardImg.complete && ch.guardImg.naturalWidth > 0) {
-            const iw = 36;
-            const ih = cardH - 24;
-            ctx.drawImage(ch.guardImg, x + (cardW - iw) / 2, y + 3, iw, ih);
+            const iw = cardW * 0.55; // Sprite del personaje ampliado proporcionalmente
+            const ih = cardH - 28;
+            ctx.drawImage(ch.guardImg, x + (cardW - iw) / 2, y + 4, iw, ih);
         }
-        text(ch.name, x + cardW / 2, y + cardH - 8, 10, isHuman ? '#7df7ff' : (isMachine ? '#ffc078' : '#ffffff'), true);
+        // Texto del nombre más grande y legible (13px en lugar de 10px)
+        text(ch.name, x + cardW / 2, y + cardH - 8, 13, isHuman ? '#7df7ff' : (isMachine ? '#ffc078' : '#ffffff'), true);
         if (isHuman || isMachine) {
             ctx.fillStyle = color;
             ctx.beginPath();
-            ctx.arc(x + cardW - 7, y + 7, 3, 0, Math.PI * 2);
+            ctx.arc(x + cardW - 9, y + 9, 4, 0, Math.PI * 2);
             ctx.fill();
         }
         ctx.restore();
@@ -4964,14 +5334,14 @@ function drawVsMachineRoster() {
 }
 
 function selectRosterCharacterAt(x, y) {
-    const cols = 8;
-    const marginX = 24;
-    const topY = 68;
-    const gapX = 6;
-    const gapY = 7;
+    const cols = 6; // Debe coincidir exactamente con drawVsMachineRoster
+    const marginX = 40;
+    const topY = 60;
+    const gapX = 12;
+    const gapY = 12;
     const rows = Math.ceil(availableCharacters.length / cols);
     const cardW = (canvas.width - marginX * 2 - gapX * (cols - 1)) / cols;
-    const cardH = Math.min(82, (canvas.height - topY - 65 - gapY * (rows - 1)) / rows);
+    const cardH = Math.min(115, (canvas.height - topY - 65 - gapY * (rows - 1)) / rows);
     const col = Math.floor((x - marginX) / (cardW + gapX));
     const row = Math.floor((y - topY) / (cardH + gapY));
     if (col < 0 || col >= cols || row < 0 || row >= rows)
@@ -4988,7 +5358,6 @@ function selectRosterCharacterAt(x, y) {
     const machine = humanPlayerIndex === 1 ? player2 : player1;
     human.charIndex = idx;
     updatePlayerAttributes(human);
-    // Evita que la máquina use el mismo personaje: avanza al siguiente disponible.
     if (machine.charIndex === idx) {
         machine.charIndex = (idx + 1) % availableCharacters.length;
         updatePlayerAttributes(machine);
@@ -5002,46 +5371,46 @@ function drawCharacterSelect() {
 
     if (isVsMachine && !isStoryMode) {
         drawVsMachineRoster();
-        text(`${characterSelectKey2}${machineDifficulty}`, 400, 57, 10, '#ffcc00');
+        text(`${characterSelectKey2}${machineDifficulty}`, 400, 57, 18, '#ffcc00');
         return;
     }
 
-    text(characterSelectTitle, 400, 40, 23, '#00ffff', true);
-    drawCharacterCard(player1, 200, 1);
-    drawCharacterCard(player2, 600, 2);
+    text(characterSelectTitle, 500, 40, 26, '#00ffff', true);
+    drawCharacterCard(player1, 300, 1);
+    drawCharacterCard(player2, 700, 2);
     if (isVsMachine) {
-        text(characterSelectKey1, 400, 380, 12);
-        text(`${characterSelectKey2}${machineDifficulty}`, 400, 400, 12, '#ffcc00');
+        text(characterSelectKey1, 500, 380, 14);
+        text(`${characterSelectKey2}${machineDifficulty}`, 500, 520, 18, '#ffcc00');
     }
 
-    text(characterSelectKey3, 400, 420, 11);
-    text(characterSelectKey4, 400, 440, 11, '#00ffcc');
+    text(characterSelectKey3, 500, 440, 24);
+    text(characterSelectKey4, 500, 470, 24, '#00ffcc');
 }
 
 function drawCredits() {
     drawTitleBackground();
     overlay(0.85);
-    text(creditsTitle, 500, 90, 45, '#00ffff', true);
-    text(creditsSubtitle, 400, 145, 16, '#ffcc00');
-    text(creditsText1, 400, 185, 14);
-    text(creditsText2, 400, 240, 14, '#00ffcc');
-    text(creditsText3, 400, 300, 14, '#ff9900');
-    text(creditsKeys, 400, 390, 14);
+    text(creditsTitle, 500, 90, 85, '#00ffff', false, GAME_FONT);
+    text(creditsSubtitle, 500, 185, 36, '#ffcc00', false, GAME_FONTDS9);
+    text(creditsText1, 500, 325, 24, '#ffcc00', false, GAME_FONTKLINGON);
+    text(creditsText2, 500, 380, 24, '#00ffcc', false, GAME_FONTROMULAN);
+    text(creditsText3, 500, 440, 24, '#ff9900', false, GAME_FONTTNG);
+    text(creditsKeys, 500, 510, 24);
 }
 
 // ------------------------------------------------------------
-// INTRODUCCIÓN DE LA CAMPAÑA: OCHO MISIONES
+// INTRODUCCIÓN DE LA CAMPAÑA: 19 MISIONES
 // ------------------------------------------------------------
 function drawIntro() {
     drawTitleBackground();
     overlay(0.88);
-    text(introTitle, 400, 90, 23, '#00ffff', true);
-    text(`${introSubTitle}${getHumanPlayer().name}`, 400, 145, 18, '#ffcc00', true);
-    text(introLine1, 400, 195, 14);
-    text(introLine2, 400, 225, 14);
-    text(introLine3, 400, 270, 15, '#ff7777', true);
-    text(introLine4, 400, 305, 13);
-    text(introLine5, 400, 385, 15, '#00ffcc', true);
+    text(introTitle, 500, 90, 64, '#00ffff', true);
+    text(`${introSubTitle}${getHumanPlayer().name}`, 500, 160, 28, '#ffcc00', true);
+    text(introLine1, 500, 220, 24);
+    text(introLine2, 500, 270, 24);
+    text(introLine3, 500, 320, 25, '#ff7777', true);
+    text(introLine4, 500, 370, 23);
+    text(introLine5, 500, 560, 25, '#00ffcc', true);
 }
 
 // ------------------------------------------------------------
@@ -5076,16 +5445,16 @@ function drawDecision() {
 }
 
 // ------------------------------------------------------------
-// MAPA DE LAS OCHO MISIONES
+// MAPA DE LAS 19 MISIONES
 // ------------------------------------------------------------
 function drawStoryMap() {
     ctx.fillStyle = '#030712';
     ctx.fillRect(0, 0, canvas.width, canvas.height);
     drawParticles(true);
 
-    text('', 400, 30, 17, '#00ffff', true);
+    text(storyMapTitle, canvas.width / 2, 30, 37, '#00ffff', false);
     text(`${storyMapSubtitleA} ${storyPhase}/${TOTAL_MISIONES} ${storyMapSubtitleB} ${campaignAttempts}/3`,
-        400, 57, 14, '#ffcc00', true);
+        canvas.width / 2, 57, 24, '#ffcc00', true);
 
     ctx.strokeStyle = 'rgba(0,255,255,0.4)';
     ctx.setLineDash([5, 5]);
@@ -5107,7 +5476,7 @@ function drawStoryMap() {
         ctx.arc(
             n.x,
             n.y,
-            nodeNumber === storyPhase ? 11 : 7,
+            nodeNumber === storyPhase ? 13 : 10,
             0,
             Math.PI * 2);
 
@@ -5119,8 +5488,8 @@ function drawStoryMap() {
             : '#4b5563';
         ctx.fill();
 
-        text(String(nodeNumber), n.x, n.y + 4, 9, '#030712', true);
-        text(n.name, n.x, n.y + 20, 8, '#fff');
+        text(String(nodeNumber), n.x, n.y + 4, 20, '#030712', true);
+        text(n.name, n.x, n.y + 20, 15, '#fff', false);
     });
 
     const target = galaxyNodes[storyPhase - 1];
@@ -5128,12 +5497,12 @@ function drawStoryMap() {
     shuttleY += (target.y - shuttleY) * 0.1;
     text('▲', shuttleX, shuttleY - 13, 15, '#00ffcc', true);
     const info = storyDetails[storyPhase];
-    text(info.title, 400, 330, 14, '#ffcc00', true);
-    text(info.desc, 400, 355, 11);
-    text(storyMapKeys, 400, 385, 13, '#00ffcc', true);
+    text(info.title, canvas.width / 2, 430, 24, '#ffcc00');
+    text(info.desc, canvas.width / 2, 455, 22);
+    text(storyMapKeys, canvas.width / 2, 500, 23, '#00ffcc');
 
     if (storyDecisionText) {
-        text(storyDecisionText, 400, 420, 9, '#fff');
+        text(storyDecisionText, canvas.width / 2, 540, 9, '#fff');
     }
 
 }
@@ -5160,18 +5529,19 @@ function drawHUD() {
     ctx.fillRect(45, 50, 2 * clamp(player1.energy || 0, 0, player1.maxEnergy || 100), 8);
     ctx.fillRect(canvas.width - 255, 50, 2 * clamp(player2.energy || 0, 0, player2.maxEnergy || 100), 8);
 
-    text(player1.name, 145, 25, 12, '#fff', true);
-    text(player2.name, canvas.width - 155, 25, 12, '#fff', true);
-    text(timeText, canvas.width / 2, 39, 16, '#ffcc00', true);
+    text(player1.name, 145, 25, 18, '#fff', false);
+    text(player2.name, canvas.width - 155, 25, 18, '#fff', false);
+    text(timeText, canvas.width / 2, 39, 26, '#ffcc00', false, GAME_FONTKLINGON);
     if (isStoryMode) {
         text(`${hudStoryModeText1A} ${storyPhase}/${TOTAL_MISIONES} ${hudStoryModeText1B} ${campaignAttempts}/3`,
-            canvas.width / 2, 65, 12, '#ffcc00', true);
-        text(`${hudStoryModeText2A} ${storySeriesHumanWins}-${storySeriesMachineWins} ${hudStoryModeText2B} ${Math.min(storySeriesRoundsPlayed + 1, 3)}/3`, canvas.width / 2, 82, 10, '#8df4ff', true);
+            canvas.width / 2, 65, 18, '#ffcc00', false);
+        text(`${hudStoryModeText2A} ${storySeriesHumanWins}-${storySeriesMachineWins} ${hudStoryModeText2B} ${Math.min(storySeriesRoundsPlayed + 1, 3)}/3`,
+            canvas.width / 2, 82, 16, '#8df4ff', false);
     } else {
         const arenaName = arenaNames[currentArena - 1] || 'Arena';
 
         text(`${hudNoStoryModeText1A} ${currentArena}/${TOTAL_ARENAS}: ${arenaName} ${hudNoStoryModeText1B}`,
-            canvas.width / 2, 65, 10, '#ffcc00');
+            canvas.width / 2, 65, 18, '#ffcc00');
     }
 
     if (getCharacter(player1).name === 'RIKER' || getCharacter(player2).name === 'RIKER') {
@@ -5244,10 +5614,18 @@ function drawSprite(p) {
     if (p.name === 'MARINA')
         y -= 40;
 
+    // Preparado para cuando otro jugador tenga la imagen de victoria
     // Picard toca la flauta cuando gana el combate.
-    if (gameOver && picardVictory && c.name === 'PICARD' && imageIsReady(picardFlute)) {
-        drawCharacterImage(p, picardFlute, y);
-        return;
+    // Cada personaje tendra una posicion de victoria diferente
+    if (gameOver && c.victoryImg) {
+        const winner = getRoundWinner();
+        const playerNumber = p === player1 ? 1 : 2;
+        const isWinner = winner !== 0 && winner === playerNumber;
+
+        if (isWinner && imageIsReady(c.victoryImg)) {
+            if (drawCharacterImage(p, c.victoryImg, y))
+                return;
+        }
     }
 
     if (gameOver) {
@@ -5259,39 +5637,24 @@ function drawSprite(p) {
         // El vencedor termina de pie, en pose neutral, no congelado a mitad de golpe.
         if (drawCharacterImage(p, c.guardImg, y))
             return;
-    } else if (c.name === 'RIKER') {
+    } else if (c.name === 'RIKER' || c.name === 'LAFORGE') {
         // Alterna entre las dos poses normales y las dos poses con silla.
         // Si alguna imagen adicional falta o tarda en cargar, vuelve a la pose normal.
+        const useExtra = (c.name === 'RIKER' && isRikerExtraGuardHeld(p)) ||
+                        (c.name === 'LAFORGE' && isLaForgeExtraGuardHeld(p));
         if (p.isAttacking) {
-            const attackImg = p.attackStyle === 'chair' ? c.chairPunchImg : c.punchImg;
+            // Usa el ataque extra (especial) si attackStyle es 'extra', o el normal si no
+            const attackImg = p.attackStyle === 'extra' ? c.extraPunchImg : c.punchImg;
             if (drawCharacterImage(p, attackImg, y))
                 return;
-            if (p.attackStyle === 'chair' && drawCharacterImage(p, c.punchImg, y))
+            if (p.attackStyle === 'extra' && drawCharacterImage(p, c.punchImg, y))
                 return;
             if (drawCharacterImage(p, c.guardImg, y))
                 return;
         } else {
-            const guardImg = isRikerExtraGuardHeld(p) ? c.extraGuardImg : c.guardImg;
+            // Muestra la guardia extra si se mantiene S/Abajo, o la guardia normal en caso contrario
+            const guardImg = useExtra ? c.extraGuardImg : c.guardImg;
             if (drawCharacterImage(p, guardImg, y))
-                return;
-            if (drawCharacterImage(p, c.guardImg, y))
-                return;
-            if (drawCharacterImage(p, c.punchImg, y))
-                return;
-        }
-        return;
-    } else if (c.name === 'LAFORGE') {
-        if (p.isAttacking) {
-            const attackImg = p.attackStyle === 'kick' ? c.kickImg : c.punchImg;
-            if (drawCharacterImage(p, attackImg, y))
-                return;
-            // Si la nueva imagen aún no carga, conserva un sprite visible.
-            if (p.attackStyle === 'kick' && drawCharacterImage(p, c.punchImg, y))
-                return;
-            if (drawCharacterImage(p, c.guardImg, y))
-                return;
-        } else {
-            if (drawCharacterImage(p, c.guardImg, y))
                 return;
             if (drawCharacterImage(p, c.punchImg, y))
                 return;
@@ -5335,7 +5698,58 @@ function drawGameOver() {
     }
 
     overlay(0.82);
-    text(roundWinnerMessage, canvas.width / 2, canvas.height / 2 - 30, 21, '#ffcc00', true);
+    //text(roundWinnerMessage, canvas.width / 2, canvas.height / 2 - 30, 50, '#ffcc00', true);
+    // Fotogramas transcurridos desde que aparece la pantalla de resultado
+    const animElapsed = (frameCount - gameOverFrame) - GAME_OVER_PAUSE_FRAMES;
+    const animDuration = 30; // Duración de la animación (30 fotogramas = 0.5 segundos a 60fps)
+
+    // Comprobamos si es un mensaje de victoria por jugador (que contiene el salto de línea \n)
+    //const cuantoSubir = roundWinnerHasTwoLines ? 65 : 30;
+    //const centerY = (canvas.height / 2) - cuantoSubir;
+
+    if (roundWinnerHasTwoLines) {
+        const ganadorTexto = roundWinnerMessage.split('\n')[0] || roundWinnerMessage;
+
+        // Nombre del jugador
+        textWithAnimation(
+            ganadorTexto,
+            canvas.width / 2,
+            (canvas.height / 2) - 85,
+            10,           // Tamaño inicial (pequeño)
+            150,           // Tamaño final (grande)
+            animDuration,
+            animElapsed,
+            '#ffcc00',
+            false
+        );
+
+        // Resultado
+        textWithAnimation(
+            winnerMessageWhoWins,
+            canvas.width / 2,
+            (canvas.height / 2) + 35,
+            10,           // Tamaño inicial (pequeño)
+            150,           // Tamaño final (grande)
+            animDuration,
+            animElapsed,
+            '#ffcc00',
+            false
+        );
+    }
+    else {
+        // Va creciendo desde un tamaño inicial (10px) hasta el tamaño final (50px)
+        textWithAnimation(
+            roundWinnerMessage,
+            canvas.width / 2,
+            (canvas.height / 2) - 60,
+            10,           // Tamaño inicial (pequeño)
+            150,           // Tamaño final (grande)
+            animDuration,
+            animElapsed,
+            '#ffcc00',
+            false
+        );
+    }
 
     if (isStoryMode) {
         const boutWinner = getRoundWinner();
@@ -5350,12 +5764,12 @@ function drawGameOver() {
         } else {
             headline = `${endCombatLose} ${storySeriesHumanWins}-${storySeriesMachineWins}`;
         }
-        text(headline, canvas.width / 2, canvas.height / 2 + 10, 15, '#ffffff', true);
-        text(`${endCombatLine1A} ${storyPhase}/${TOTAL_MISIONES} ${endCombatLine1B} ${storySeriesRoundsPlayed}/3`, canvas.width / 2, canvas.height / 2 + 34, 13, '#ffcc00', true);
-        text(`${endCombatLine2} ${storySeriesHumanWins}-${storySeriesMachineWins}`, canvas.width / 2, canvas.height / 2 + 56, 13, '#00ffcc', true);
-        text(seriesWinner === 1 ? endCombatLine3A : endCombatLine3B, canvas.width / 2, canvas.height / 2 + 82, 13, '#00ffcc', true);
+        text(headline, canvas.width / 2, canvas.height / 2 + 10, 25, '#ffffff', true);
+        text(`${endCombatLine1A} ${storyPhase}/${TOTAL_MISIONES} ${endCombatLine1B} ${storySeriesRoundsPlayed}/3`, canvas.width / 2, canvas.height / 2 + 55, 23, '#ffcc00');
+        text(`${endCombatLine2} ${storySeriesHumanWins}-${storySeriesMachineWins}`, canvas.width / 2, canvas.height / 2 + 80, 23, '#00ffcc');
+        text(seriesWinner === 1 ? endCombatLine3A : endCombatLine3B, canvas.width / 2, canvas.height / 2 + 110, 23, '#00ffcc');
     } else {
-        text(endCombatLine4, canvas.width / 2, canvas.height / 2 + 30, 14, '#00ffcc');
+        text(endCombatLine4, canvas.width / 2, canvas.height / 2 + 60, 24, '#00ffcc');
     }
 }
 
@@ -5456,13 +5870,24 @@ function drawCampaignEnd(completed) {
     drawTitleBackground();
     overlay(0.88);
 
-    text(
+    //text(
+    //    completed ? campaignEndDone : campaignEndFailed,
+    //    400,
+    //    160,
+    //    27,
+    //    completed ? '#00ffcc' : '#ff4444',
+    //    true);
+    textWithAnimation(
         completed ? campaignEndDone : campaignEndFailed,
         400,
         160,
-        27,
+        10,            // Tamaño inicial pequeño
+        127,            // Tamaño final
+        30,
+        (frameCount - campaignEndFrame),
         completed ? '#00ffcc' : '#ff4444',
-        true);
+        true
+    );
 
     if (completed) {
         text(campaignEndCompletedTitle, 400, 205, 15);
@@ -5498,7 +5923,28 @@ function drawRetry() {
 }
 
 function updateAndDrawCombat() {
-    if (!gameOver) {
+    // --- COMPROBAR SI ESTÁ EN PAUSA DE INICIO ---
+    if (matchStartDelay > 0) {
+        matchStartDelay--;
+
+        drawBackground();
+        drawSprite(player1);
+        drawSprite(player2);
+        drawHUD();
+        const elapsed = frameCount - matchStartFrame;
+        textWithAnimation(
+            startFight,
+            canvas.width / 2,
+            canvas.height / 2,
+            10,                          // Tamaño inicial pequeño
+            240,                         // Tamaño máximo al que llega
+            120,                         // Duración total (coincide con matchStartDelay)
+            elapsed,
+            '#ffcc00',                   // Color dorado/amarillo trekkie
+            true                         // Negrita
+        );
+        return;
+    } else if (!gameOver) {
         if (frameCount % 60 === 0 && matchTimeLeft > 0) {
             matchTimeLeft--;
 
@@ -5574,6 +6020,12 @@ function gameLoop() {
                 break;
             case 'SPOCK_EASTER_EGG':
                 drawSpockEasterEgg();
+                break;
+            case 'EEN_EASTER_EGG':
+                drawEenEasterEgg();
+                break;
+            case 'DS9_EASTER_EGG':
+                drawDs9EasterEgg();
                 break;
             case 'MENU':
                 drawMainMenu();
@@ -5652,6 +6104,7 @@ function gameLoop() {
                 drawPicardNexusEnding();
                 break;
             case 'CAMPAIGN_COMPLETE':
+                campaignEndFrame = frameCount;
                 drawCampaignEnd(true);
                 break;
             case 'CAMPAIGN_FAILED':
@@ -5690,5 +6143,17 @@ function gameLoop() {
 // ------------------------------------------------------------
 // INICIO DEL JUEGO
 // ------------------------------------------------------------
-
-requestAnimationFrame(gameLoop);
+Promise.all([
+    document.fonts.load(`16px 'StarTrekFont'`),
+    document.fonts.load(`16px 'StarTrekFontDS9'`),
+    document.fonts.load(`16px 'StarTrekFontKlingon'`),
+    document.fonts.load(`16px 'StarTrekFontRomulan'`),
+    document.fonts.load(`16px 'StarTrekFontTNG'`)
+]).then(() => {
+    console.log('Todas las fuentes se han cargado correctamente.');
+    requestAnimationFrame(gameLoop);
+}).catch((err) => {
+    console.error('Error al cargar alguna de las fuentes:', err);
+// Iniciar de todos modos por si acaso
+    requestAnimationFrame(gameLoop);
+});

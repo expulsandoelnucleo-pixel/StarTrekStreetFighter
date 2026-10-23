@@ -595,7 +595,7 @@ const holodeckLevelLives = 'VIDAS ';
 const holodeckLevelStars = 'INSIGNIAS ';
 const holodeckLevelInstructions = 'MOVER: A/D O FLECHAS · SALTAR: ESPACIO / W / ↑ · X: SALIR';
 const holodeckLevelCompleted1 = '¡CIRCUITO ';
-const holodeckLevelCompleted2 = ' COMPLETADO!`';
+const holodeckLevelCompleted2 = ' COMPLETADO!';
 const holodeckLevelFail = 'SIMULACIÓN FALLIDA';
 const holodeckLevelPoints = ' · PUNTUACIÓN ';
 const holodeckLevelKeyStart = 'ESPACIO / INTRO: PRUEBA DE INTELIGENCIA';
@@ -649,29 +649,52 @@ const trainingComplete4 = 'Has completado Kobayashi Maru: la Flota registra tu c
 const trainingComplete5 = 'ESPACIO / INTRO: VOLVER A LOS MODOS';
 
 // Story
-const storyDetailsTitle1 = 'CAPÍTULO 1: LA NOCHE EN LA ENTERPRISE';
-const storyDetailsDescription1 = 'Una señal alienígena invade la nave y convierte a la tripulación en una amenaza.';
-const storyDetailsTitle2 = 'CAPÍTULO 2: NADIE ES DE FIAR';
-const storyDetailsDescription2 = 'Avanza por los pasillos y descubre cómo se propaga el control mental.';
-const storyDetailsTitle3 = 'CAPÍTULO 3: ÓRDENES FALSAS';
-const storyDetailsDescription3 = 'La entidad ha tomado las comunicaciones y está enfrentando a la tripulación.';
-const storyDetailsTitle4 = 'CAPÍTULO 4: INGENIERÍA BAJO ASEDIO';
-const storyDetailsDescription4 = 'Recupera los motores antes de que la nave sea arrastrada hacia la señal.';
-const storyDetailsTitle5 = 'CAPÍTULO 5: EL HILO CONDUCTOR';
-const storyDetailsDescription5 = 'Las pistas revelan una red neuronal alienígena distribuida por la nave.';
-const storyDetailsTitle6 = 'CAPÍTULO 6: LA ÚLTIMA DEFENSA';
-const storyDetailsDescription6 = 'Rompe el cordón de seguridad y alcanza el origen de la señal.';
-const storyDetailsTitle7 = 'CAPÍTULO 7: KHAN';
-const storyDetailsDescription7 = 'Khan aprovecha la invasión para apoderarse de la Enterprise. Detén sus planes.';
-const storyDetailsTitle8 = 'CAPÍTULO 8: LOCUTUS';
-const storyDetailsDescription8 = 'Enfréntate al amplificador Borg y libera a la tripulación del control mental.';
+const storyDetailsTitle1 = 'CAPÍTULO 1: PUENTE DE LA U.S.S. ENTERPRISE';
+const storyDetailsDescription1 = 'Una señal desconocida altera las percepciones de la tripulación. Los compañeros se enfrentan creyendo que el otro ha sido infiltrado.';
+const storyDetailsTitle2 = 'CAPÍTULO 2: ESTACIÓN ESPACIAL 9';
+const storyDetailsDescription2 = 'Los registros de la estación revelan que la señal provoca miedo y agresividad, aunque sus víctimas siguen siendo ellas mismas.';
+const storyDetailsTitle3 = 'CAPÍTULO 3: NAVE KLINGON';
+const storyDetailsDescription3 = 'La señal ha llegado a una nave Klingon. Su capitán cree que la Federación ha saboteado sus sistemas y la lucha amenaza con iniciar una guerra.';
+const storyDetailsTitle4 = 'CAPÍTULO 4: TERRAZA ROMULANA';
+const storyDetailsDescription4 = 'Los romulanos retienen un fragmento del transmisor. La tripulación debe recuperarlo antes de que la señal se propague a otros mundos.';
+const storyDetailsTitle5 = 'CAPÍTULO 5: INGENIERÍA DE LA ENTERPRISE';
+const storyDetailsDescription5 = 'De vuelta en la Enterprise, la señal toma el control de los sistemas. Scotty y la tripulación luchan para recuperar los motores y evitar que la nave sea guiada hacia su origen.';
+const storyDetailsTitle6 = 'CAPÍTULO 6: PASILLO BORG';
+const storyDetailsDescription6 = 'El fragmento contiene tecnología Borg. La señal explota el temor de la tripulación a la asimilación y hace que cada oficial vea a sus compañeros como una amenaza.';
+const storyDetailsTitle7 = 'CAPÍTULO 7: SALA DEL TRANSPORTADOR';
+const storyDetailsDescription7 = 'Data detecta que el transmisor salta entre patrones de energía. Aislar los transportadores puede cortar la señal, pero los equipos de seguridad han recibido órdenes falsas.';
+const storyDetailsTitle8 = 'CAPÍTULO 8: PLANETA TALOS IV';
+const storyDetailsDescription8 = 'Una ilusión telepática distorsiona los recuerdos de la tripulación. Para avanzar, los oficiales deben reconocerse y resistir las imágenes que los vuelven unos contra otros.';
+const storyDetailsTitle9 = 'CAPÍTULO 9: DESIERTO REMOTO';
+const storyDetailsDescription9 = 'Lejos de la nave, la señal sigue activa en una baliza enterrada. El calor y las alucinaciones convierten cada encuentro en una prueba de confianza.';
+const storyDetailsTitle10 = 'CAPÍTULO 10: RUINAS ANTIGUAS';
+const storyDetailsDescription10 = 'Las ruinas esconden el primer registro de la entidad: no controla a sus víctimas por completo, sino que amplifica sus sospechas hasta provocar enfrentamientos.';
+const storyDetailsTitle11 = 'CAPÍTULO 11: ACADEMIA DE LA FEDERACIÓN';
+const storyDetailsDescription11 = 'La baliza ha alcanzado la Academia. Los cadetes reciben simulaciones contradictorias y creen que sus instructores han sido sustituidos.';
+const storyDetailsTitle12 = 'CAPÍTULO 12: HANGAR DE LANZADERAS';
+const storyDetailsDescription12 = 'La señal intenta escapar a bordo de una lanzadera. La tripulación protege el hangar y prepara una ruta segura para seguir el rastro.';
+const storyDetailsTitle13 = 'CAPÍTULO 13: CINTURÓN DE ASTEROIDES';
+const storyDetailsDescription13 = 'La baliza se oculta entre los asteroides. Las interferencias impiden distinguir aliados de enemigos y obligan a la tripulación a coordinarse sin comunicaciones.';
+const storyDetailsTitle14 = 'CAPÍTULO 14: SELVA EXÓTICA';
+const storyDetailsDescription14 = 'La entidad usa la vegetación y sus esporas para intensificar la desconfianza. Nadie pelea por voluntad propia: intentan defenderse de amenazas que solo ellos perciben.';
+const storyDetailsTitle15 = 'CAPÍTULO 15: OBSERVATORIO ESTELAR';
+const storyDetailsDescription15 = 'El observatorio localiza el pulso original en una estructura Borg. Los datos confirman que destruir los repetidores liberará a la tripulación.';
+const storyDetailsTitle16 = 'CAPÍTULO 16: PUENTE DAÑADO';
+const storyDetailsDescription16 = 'La señal vuelve a la Enterprise y falsifica las órdenes del puente. La tripulación se enfrenta para impedir que la nave ataque a sus propios aliados.';
+const storyDetailsTitle17 = 'CAPÍTULO 17: ESTACIÓN ORBITAL';
+const storyDetailsDescription17 = 'Una estación orbital mantiene encendida la baliza. Sus defensores creen que la Enterprise viene a destruirla; la tripulación debe detener el combate y desconectar el repetidor.';
+const storyDetailsTitle18 = 'CAPÍTULO 18: TEMPLO BORG';
+const storyDetailsDescription18 = 'En el templo, Locutus revela que la red ha amplificado el pulso para someter a todos. Khan aprovechó el caos para intentar apoderarse de la Enterprise, pero nunca fue el origen de la señal.';
+const storyDetailsTitle19 = 'CAPÍTULO 19: NÚCLEO BORG';
+const storyDetailsDescription19 = 'El núcleo transmite la señal que enfrenta a los compañeros. La tripulación debe abrirse paso hasta el emisor, liberar a Locutus y apagar la red antes de que toda la Flota quede conectada.';
 
 // WinnerMessage
+const startFight = 'FIGHT !!'
 const winnerMessageDraw = 'DRAW';
 const winnerMessagePerfect = 'PERFECT!';
 const winnerMessageWin = 'YOU WIN!';
 const winnerMessageLose = 'YOU LOSE!';
-const winnerMessageWhoWins = ' GANA EL COMBATE!';
+const winnerMessageWhoWins = '\nGANA EL COMBATE!';
 
 // MODO HISTORIA
 // Who talks
@@ -679,6 +702,8 @@ const storyModeSpeakerComputer = 'COMPUTADORA';
 const storyModeSpeakerPicard = 'PICARD';
 const storyModeSpeakerRiker = 'RIKER';
 const storyModeSpeakerSpock = 'SPOCK';
+const storyModeSpeakerMcCoy = 'MCCOY';
+const storyModeSpeakerSulu = 'SULU';
 const storyModeSpeakerData = 'DATA';
 const storyModeSpeakerSevenOfNine = 'SEVEN OF NINE';
 const storyModeSpeakerScotty = 'SCOTTY';
@@ -688,68 +713,100 @@ const storyModeSpeakerKhan = 'KHAN';
 const storyModeSpeakerLocutus = 'LOCUTUS';
 // Chapter 1
 const storyModeChapter1Title = 'CAPÍTULO 1 · LA NOCHE EN LA ENTERPRISE';
-const storyModeChapter1Before1 = 'Alerta roja. Una forma de vida desconocida ha entrado por los conductos de mantenimiento.';
-const storyModeChapter1Before2 = 'No está atacando los cuerpos: está alterando los impulsos eléctricos del cerebro. La tripulación no controla sus actos.';
-const storyModeChapter1Before3 = 'Nadie dispara para matar. Contened a nuestros compañeros y encontrad el origen de esta señal.';
-
-const storyModeChapter1AfterWin = 'El tripulante ha recuperado el conocimiento. La señal sigue activa y se ha desplazado hacia las cubiertas de servicio.';
-const storyModeChapter1AfterLose = 'No confundáis a los afectados con el enemigo. Reorganizad la defensa; debemos detenerlos sin abandonarlos.';
+const storyModeChapter1Before1 = 'Alerta roja. Algo ha alterado las percepciones de la tripulación.';
+const storyModeChapter1Before2 = 'Los escáneres no muestran un enemigo visible. La señal está provocando miedo y respuestas defensivas.';
+const storyModeChapter1Before3 = 'No queremos herir a nadie. Contened a vuestros compañeros y busquemos el origen.';
+//const storyModeChapter1AfterWin = 'El tripulante ha recuperado el conocimiento. La señal sigue activa y se ha desplazado hacia las cubiertas de servicio.';
+//const storyModeChapter1AfterLose = 'No confundáis a los afectados con el enemigo. Reorganizad la defensa; debemos detenerlos sin abandonarlos.';
 // Chapter 2
 const storyModeChapter2Title = 'CAPÍTULO 2 · NADIE ES DE FIAR';
-const storyModeChapter2Before1 = 'Los equipos de seguridad se atacan entre sí. La señal convierte el miedo en furia y bloquea cualquier orden racional.';
-const storyModeChapter2Before2 = 'La conducta agresiva es inducida. Si localizamos el transmisor, podremos liberar a todos a la vez.';
-const storyModeChapter2AfterWin = 'Hemos abierto el paso a la cubierta de comunicaciones. Los registros muestran que la computadora está transmitiendo órdenes falsas.';
-const storyModeChapter2AfterLose = 'La entidad aprende de nuestros patrones. Cambiad de estrategia y evitad reaccionar a sus provocaciones.';
+const storyModeChapter2Before1 = 'La estación ha recibido llamadas de auxilio de ambos bandos.';
+const storyModeChapter2Before2 = 'Cada equipo cree que el otro está infiltrado, pero sus signos vitales son normales.';
+const storyModeChapter2Before3 = 'Separad a los combatientes y recuperad los registros del transmisor.';
+//const storyModeChapter2AfterWin = 'Hemos abierto el paso a la cubierta de comunicaciones. Los registros muestran que la computadora está transmitiendo órdenes falsas.';
+//const storyModeChapter2AfterLose = 'La entidad aprende de nuestros patrones. Cambiad de estrategia y evitad reaccionar a sus provocaciones.';
 // Chapter 3
 const storyModeChapter3Title = 'CAPÍTULO 3 · ÓRDENES FALSAS';
-const storyModeChapter3Before1 = 'La computadora está imitando nuestras voces y enviando instrucciones contradictorias por toda la nave.';
-const storyModeChapter3Before2 = 'Aísle las comunicaciones internas. Yo abriré paso hasta el panel de control.';
-const storyModeChapter3Before3 = 'La señal principal procede de ingeniería. Los combates están siendo utilizados para distraernos.';
-const storyModeChapter3AfterWin = 'Canales seguros restablecidos. Ya podemos distinguir las órdenes reales de las falsificaciones.';
-const storyModeChapter3AfterLose = 'No he podido aislar todos los canales. Seguid adelante: cada repetidor que desactivemos debilitará el control.';
+const storyModeChapter3Before1 = 'Los Klingon creen que la Federación atacó primero.';
+const storyModeChapter3Before2 = 'La misma señal ha falsificado nuestros mensajes y alimentado su desconfianza.';
+const storyModeChapter3Before3 = 'Demostremos que no somos sus enemigos y encontremos la baliza.';
+//const storyModeChapter3AfterWin = 'Canales seguros restablecidos. Ya podemos distinguir las órdenes reales de las falsificaciones.';
+//const storyModeChapter3AfterLose = 'No he podido aislar todos los canales. Seguid adelante: cada repetidor que desactivemos debilitará el control.';
 // Chapter 4
 const storyModeChapter4Title = 'CAPÍTULO 4 · INGENIERÍA BAJO ASEDIO';
-const storyModeChapter4Before1 = '¡Los motores están respondiendo a órdenes que yo no he dado! Si la señal toma el núcleo de propulsión, perderemos la nave.';
-const storyModeChapter4Before2 = 'Recupere el control manual. Nosotros mantendremos despejada la sala de máquinas.';
-const storyModeChapter4AfterWin = 'Motores bajo control manual. He encontrado una secuencia oculta: la señal está reuniendo las mentes de los huéspedes en una sola conciencia.';
-const storyModeChapter4AfterLose = 'Los motores siguen comprometidos. He aislado una parte del sistema, pero la fuente continúa activa. No tenemos tiempo que perder.';
+const storyModeChapter4Before1 = 'Los romulanos custodian un fragmento del emisor.';
+const storyModeChapter4Before2 = 'No confían en nosotros y la señal está agravando cada sospecha.';
+const storyModeChapter4Before3 = 'Recuperemos el fragmento sin permitir que la crisis se convierta en una guerra.';
+//const storyModeChapter4AfterWin = 'Motores bajo control manual. He encontrado una secuencia oculta: la señal está reuniendo las mentes de los huéspedes en una sola conciencia.';
+//const storyModeChapter4AfterLose = 'Los motores siguen comprometidos. He aislado una parte del sistema, pero la fuente continúa activa. No tenemos tiempo que perder.';
 // Chapter 5
 const storyModeChapter5Title = 'CAPÍTULO 5 · EL HILO CONDUCTOR';
-const storyModeChapter5Before1 = 'La entidad funciona como una red. Cada tripulante controlado actúa como repetidor y extiende su alcance.';
-const storyModeChapter5Before2 = 'No es tecnología Borg, aunque utiliza un principio parecido: una voluntad central y muchas mentes subordinadas.';
-const storyModeChapter5Before3 = 'Entonces iremos desconectando la red hasta que su controlador tenga que mostrarse.';
-const storyModeChapter5AfterWin = 'La red se ha fragmentado. He detectado una señal secundaria que no pertenece al organismo alienígena: alguien está aprovechando la invasión.';
-const storyModeChapter5AfterLose = 'La señal ha cambiado de frecuencia. La red está aprendiendo, pero ahora sabemos que existe un segundo emisor dentro de la nave.';
+const storyModeChapter5Before1 = 'La señal ha tomado los controles de ingeniería y bloquea los motores.';
+const storyModeChapter5Before2 = 'Scotty y su equipo se defienden porque creen que les hemos saboteado la nave.';
+const storyModeChapter5Before3 = 'Ayudadles a recuperar el control manual. Nadie está eligiendo esta pelea.';
+//const storyModeChapter5AfterWin = 'La red se ha fragmentado. He detectado una señal secundaria que no pertenece al organismo alienígena: alguien está aprovechando la invasión.';
+//const storyModeChapter5AfterLose = 'La señal ha cambiado de frecuencia. La red está aprendiendo, pero ahora sabemos que existe un segundo emisor dentro de la nave.';
 // Chapter 6
 const storyModeChapter6Title = 'CAPÍTULO 6 · LA ÚLTIMA DEFENSA';
-const storyModeChapter6Before1 = 'La seguridad ha levantado una barricada. Mis propios oficiales intentan impedirnos el paso.';
-const storyModeChapter6Before2 = 'Puedo aislar la señal alienígena, pero alguien está protegiendo deliberadamente el transmisor.';
-const storyModeChapter6Before3 = 'No hemos llegado hasta aquí para entregar la Enterprise. Despejad el camino.';
-const storyModeChapter6AfterWin = 'La señal primaria está localizada. El intruso que se aprovecha de la crisis es Khan. Más allá de él, la señal se conecta a una interfaz Borg.';
-const storyModeChapter6AfterLose = 'La red aún domina esta cubierta. Pero he identificado a quien está aprovechando el caos: Khan. Si cae, podremos llegar a la interfaz Borg.';
+const storyModeChapter6Before1 = 'El fragmento reacciona ante tecnología Borg en este pasillo.';
+const storyModeChapter6Before2 = 'La tripulación teme la asimilación y ve un dron en cada compañero.';
+const storyModeChapter6Before3 = 'No son drones: son oficiales bajo una percepción alterada. Desconectad el repetidor.';
+//const storyModeChapter6AfterWin = 'La señal primaria está localizada. El intruso que se aprovecha de la crisis es Khan. Más allá de él, la señal se conecta a una interfaz Borg.';
+//const storyModeChapter6AfterLose = 'La red aún domina esta cubierta. Pero he identificado a quien está aprovechando el caos: Khan. Si cae, podremos llegar a la interfaz Borg.';
 // Chapter 7
 const storyModeChapter7Title = 'CAPÍTULO 7 · KHAN';
-const storyModeChapter7Before1 = 'Mientras vuestra tripulación se despedaza, yo tomaré el puente. Una nave como esta merece un capitán más fuerte.';
-const storyModeChapter7Before2 = 'No permitiré que uses el sufrimiento de mis oficiales para conquistar la Enterprise.';
-const storyModeChapter7Before3 = 'Khan no es el origen del control mental; es un oportunista que pretende hacerse con la nave. Detenerlo es imprescindible para llegar al transmisor.';
-const storyModeChapter7AfterWin = 'Khan ha sido derrotado y sus fuerzas se retiran. Antes de caer, confirmó que la señal está conectada a una interfaz Borg en el núcleo.';
-const storyModeChapter7AfterLose = 'Khan ha sido derrotado, pero su influencia persiste. La señal sigue activa y la interfaz Borg sigue operativa.Vuestra resistencia se desmorona. La Enterprise será mía y el caos habrá hecho el trabajo por mí.';
+const storyModeChapter7Before1 = 'La energía de la señal se dispersa por los transportadores.';
+const storyModeChapter7Before2 = 'Las órdenes falsas han puesto a seguridad contra el resto de la tripulación.';
+const storyModeChapter7Before3 = 'Aislaremos los patrones y los traeremos de vuelta; mantened despejada la sala.';
+//const storyModeChapter7AfterWin = 'Khan ha sido derrotado y sus fuerzas se retiran. Antes de caer, confirmó que la señal está conectada a una interfaz Borg en el núcleo.';
+//const storyModeChapter7AfterLose = 'Khan ha sido derrotado, pero su influencia persiste. La señal sigue activa y la interfaz Borg sigue operativa.Vuestra resistencia se desmorona. La Enterprise será mía y el caos habrá hecho el trabajo por mí.';
 // Chapter 8
 const storyModeChapter8Title = 'CAPÍTULO 8 · LOCUTUS';
-const storyModeChapter8Before1 = 'La interfaz Borg ha encontrado un huésped: Locutus. La entidad alienígena la usa para amplificar el control mental por toda la nave.';
-const storyModeChapter8Before2 = 'Vuestras identidades serán silenciadas. Una sola voluntad decidirá por todos. La resistencia solo prolongará el sufrimiento.';
-const storyModeChapter8Before3 = 'Sé que aún hay alguien detrás de esa voz. Voy a detener la señal y devolverle a cada persona su propia mente.';
-const storyModeChapter8AfterWin = 'La señal madre se ha extinguido. Los tripulantes están recuperando la consciencia y la computadora vuelve a obedecer a la tripulación. La Enterprise está a salvo.';
-const storyModeChapter8AfterLose = 'La red permanece intacta. Vuestras mentes se unirán al colectivo y la Enterprise será el primer nodo de una nueva conciencia.';
+const storyModeChapter8Before1 = 'Talos IV está proyectando recuerdos que parecen reales.';
+const storyModeChapter8Before2 = 'La entidad convierte antiguos temores en acusaciones contra nuestros compañeros.';
+const storyModeChapter8Before3 = 'Concentraos en lo que sabéis de los demás y resistid la ilusión.';
+//const storyModeChapter8AfterWin = 'La señal madre se ha extinguido. Los tripulantes están recuperando la consciencia y la computadora vuelve a obedecer a la tripulación. La Enterprise está a salvo.';
+//const storyModeChapter8AfterLose = 'La red permanece intacta. Vuestras mentes se unirán al colectivo y la Enterprise será el primer nodo de una nueva conciencia.';
+// NUEVO ----------------------------------
+const storyModeChapter9Before1 = 'La baliza sigue activa en este desierto remoto.';
+const storyModeChapter9Before2 = 'Sin comunicaciones, cada ruido parece una emboscada.';
+const storyModeChapter9Before3 = 'Avancemos juntos. La señal quiere separarnos y hacernos reaccionar por miedo.';
+const storyModeChapter10Before1 = 'Las ruinas contienen un registro de la primera transmisión.';
+const storyModeChapter10Before2 = 'La entidad amplifica dudas; no borra la voluntad ni convierte a nadie en un monstruo.';
+const storyModeChapter10Before3 = 'Ahora sabemos por qué luchan: intentan protegerse de amenazas que la señal inventa.';
+const storyModeChapter11Before1 = 'La Academia está recibiendo simulaciones contradictorias.';
+const storyModeChapter11Before2 = 'Los cadetes creen que sus instructores han sido reemplazados.';
+const storyModeChapter11Before3 = 'Desactivemos el repetidor y expliquémosles que las imágenes no son reales.';
+const storyModeChapter12Before1 = 'Una lanzadera está preparada para llevar la señal fuera del sistema.';
+const storyModeChapter12Before2 = 'El personal del hangar cree que queremos destruir sus naves.';
+const storyModeChapter12Before3 = 'Proteged el hangar y cerrad las compuertas mientras aislamos la baliza.';
+const storyModeChapter13Before1 = 'El pulso se oculta entre las rocas y distorsiona los sensores.';
+const storyModeChapter13Before2 = 'No podemos distinguir las señales de nuestros aliados.';
+const storyModeChapter13Before3 = 'Usaremos señales manuales y avanzaremos sin dejar a nadie atrás.';
+const storyModeChapter14Before1 = 'Las esporas aumentan la irritabilidad y confunden los sentidos.';
+const storyModeChapter14Before2 = 'Los equipos de exploración se enfrentan porque cada uno percibe una amenaza distinta.';
+const storyModeChapter14Before3 = 'La agresividad no es voluntaria. Desactivemos la fuente y saquémoslos de aquí.';
+const storyModeChapter15Before1 = 'El observatorio ha localizado el pulso original.';
+const storyModeChapter15Before2 = 'La red converge en una estructura Borg; si apagamos sus repetidores, liberaremos a todos.';
+const storyModeChapter15Before3 = 'Preparaos para volver a la Enterprise y detener la transmisión desde el núcleo.';
+const storyModeChapter16Before1 = 'La señal vuelve a falsificar órdenes desde el puente dañado.';
+const storyModeChapter16Before2 = 'Los oficiales creen que sus compañeros pretenden lanzar un ataque.';
+const storyModeChapter16Before3 = 'Restablezcamos el mando y evitemos que la Enterprise dispare contra sus aliados.';
+const storyModeChapter17Before1 = 'La estación orbital mantiene encendido otro repetidor.';
+const storyModeChapter17Before2 = 'Sus defensores nos ven como una fuerza invasora.';
+const storyModeChapter17Before3 = 'Bajad las armas cuando podamos y desconectad el transmisor.';
+const storyModeChapter18Before1 = 'El templo confirma que Locutus amplifica el pulso Borg.';
+const storyModeChapter18Before2 = 'Khan aprovechó la confusión para hacerse con la Enterprise; no creó la señal.';
+const storyModeChapter18Before3 = 'Rescatemos a Locutus y sigamos la transmisión hasta el núcleo.';
+const storyModeChapter19Before1 = 'Hemos llegado al emisor central. La señal enfrenta a compañeros y pueblos enteros.';
+const storyModeChapter19Before2 = 'Si cae el núcleo, cada persona recuperará sus recuerdos y su voluntad.';
+const storyModeChapter19Before3 = 'Voy a llegar hasta ti, Locutus. Terminemos con esta red y traigamos a todos de vuelta.';
+
+const storyDialogueAfterWin = 'La señal se debilita y los combatientes empiezan a recuperar el control.';
+const storyDialogueAfterLose = 'La red sigue activa. La tripulación resiste, pero la señal continúa explotando sus temores.';
 // Consequences
 const storyDialogueConsequence = 'CONSECUENCIA';
 const storyDialogueContinue = 'LA AMENAZA CONTINÚA';
-const storyDialogueKhan1 = 'Khan ha sido apartado del camino. La señal que controla a la tripulación sigue activa en la interfaz Borg.';
-const storyDialogueKhan2 = 'La señal ha sido cortada. La tripulación empieza a recuperar el control de sus actos.';
-const storyDialogueKhan3 = 'La resistencia de esta cubierta ha cedido. El equipo ha obtenido una pista para llegar al origen de la invasión.';
-const storyDialogueKhan4 = 'Khan sigue controlando el puente y la Enterprise corre el riesgo de caer en sus manos.';
-const storyDialogueKhan5 = 'Locutus mantiene activa la red. La tripulación continúa atrapada bajo el control mental.';
-const storyDialogueKhan6 = 'La tripulación sigue bajo influencia alienígena. La ruta hacia el transmisor permanece peligrosa.';
 // Space to continue
 const storyDialoguePressSpace = 'ESPACIO / INTRO: CONTINUAR';
 
@@ -830,6 +887,22 @@ const spockEasterEgg3 = 'LARGA VIDA Y PROSPERIDAD';
 const spockEasterEgg4 = 'La lógica indica que has encontrado un secreto.';
 const spockEasterEgg5 = '— SPOCK';
 const spockEasterEgg6 = 'ESPACIO / INTRO / X: VOLVER AL MENÚ';
+// Q
+const qEasterEgg1 = '⚠️ TRANSMISIÓN DEL CONTINUUM Q ⚠️';
+const qEasterEgg2 = '«¿Creías que una simple simulación de la Flota Estelar me engañaría?»'
+const qEasterEgg3 = '«¡Qué seres tan predecibles y entrañables!»';
+const qEasterEgg4 = '[ Rango Oculto: Juez del Tribunal Q ]';
+// Expulsando el Núcleo
+const eenEasterEgg1 = 'EXPULSANDO EL NÚCLEO';
+const eenEasterEgg2 = '¡Si no conoces el podcast, ya tardas en oirlo!';
+const eenEasterEgg3 = 'Busca "EXPULSANDO EL NÚCLEO" en tu gestor de podcasts';
+const eenEasterEgg4 = 'ESPACIO / INTRO / X: VOLVER AL MENÚ';
+// DS9 replay
+const ds9EasterEgg1 = 'Star Trek DS9 Replay';
+const ds9EasterEgg2 = '¡Si no conoces el podcast, ya tardas en oirlo!';
+const ds9EasterEgg3 = 'Busca "Star Trek Replay" en tu gestor de podcasts';
+const ds9EasterEgg4 = 'ESPACIO / INTRO / X: VOLVER AL MENÚ';
+
 
 // MENÚS
 const menuTitle = 'STAR TREK';
@@ -861,16 +934,16 @@ const characterSelectKey4 = 'ESPACIO: CONFIRMAR | X: VOLVER';
 // Credits
 const creditsTitle = 'CRÉDITOS';
 const creditsSubtitle = 'Star Trek: Expulsando el núcleo';
-const creditsText1 = 'Creado con JavaScript y Canvas';
-const creditsText2 = 'Un regalo sin ánimo de lucro';
-const creditsText3 = 'Con cariño, el hermano de Ramón.';
+const creditsText1 = 'Creado con JavaScript y Canvas y mucho cariño';
+const creditsText2 = 'Un regalo sin ánimo de lucro para vosotros';
+const creditsText3 = 'Con cariño, el hermano de Ramón y Emilio.';
 const creditsKeys = 'X / ESC: VOLVER';
 
 // Intro
 const introTitle = 'ACADEMIA DE LA FLOTA ESTELAR';
 const introSubTitle = 'Cadete ';
-const introLine1 = 'Tu entrenamiento determinará tu futuro.';
-const introLine2 = 'Supera las ocho misiones y expulsa el núcleo.';
+const introLine1 = 'Bienvenido cadete. Tu entrenamiento determinará el éxito de la misión.';
+const introLine2 = 'Tendrás que afrontar diecinueve misiones y expulsar el núcleo.';
 const introLine3 = 'Dispones de TRES INTENTOS para toda la campaña.';
 const introLine4 = 'Las decisiones pueden ayudarte en los próximos combates.';
 const introLine5 = 'PRESIONA ESPACIO PARA COMENZAR';
@@ -890,13 +963,13 @@ const decisionNonEmergencyKey2 = '[ 2 ] PERSEGUIR AL ENEMIGO: +DAÑO';
 const decisionNonEmergencyKey3 = '[ 3 ] ASEGURAR EL OBJETIVO: EQUILIBRIO';
 const decisionTextToSelect = 'PULSA 1, 2 O 3 PARA DECIDIR';
 
-// MAPA DE LAS OCHO MISIONES
+// MAPA DE LAS 19 MISIONES
 const storyMapTitle = 'STAR TREK: CRISIS EN LA ENTERPRISE';
-const storyMapSubtitleA = 'ARENA1';
+const storyMapSubtitleA = 'MISIÓN';
 const storyMapSubtitleB = '| INTENTOS:';
 const storyMapKeys ='ESPACIO: INICIAR MISIÓN';
 
-// HHUD: SALUD, TIEMPO Y NOMBRE DE LA ARENA
+// HUD: SALUD, TIEMPO Y NOMBRE DE LA ARENA
 const hudStoryModeText1A = 'HISTORIA';
 const hudStoryModeText1B = '| INTENTOS';
 const hudStoryModeText2A = 'SERIE';
@@ -945,7 +1018,7 @@ const picardNexusEndingKeys2 = 'ESPACIO / INTRO: VER INFORME FINAL';
 // Campaign End
 const campaignEndDone = '¡CAMPAÑA COMPLETADA!';
 const campaignEndFailed = 'CAMPAÑA FALLIDA';
-const campaignEndCompletedTitle = 'Has superado las ocho misiones.';
+const campaignEndCompletedTitle = 'Has superado las 19 misiones.';
 const campaignEndCompletedPicardLine1 = 'Con Kirk impediste que Soran destruyera la estrella veridiana.';
 const campaignEndCompletedPicardLine2A = '¡Felicidades,';
 const campaignEndCompletedPicardLine2B = '!';

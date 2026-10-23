@@ -1,0 +1,109 @@
+LICENCIA DE USO NO COMERCIAL Star Trek: Expulsando el Núcleo
+
+Copyright (c) 2026. Derechos sobre el código y los materiales
+originales: sus respectivos titulares.
+
+IMPORTANTE: Esta licencia se aplica únicamente a los elementos del
+proyecto sobre los que quien la concede tiene derechos suficientes. No
+concede derechos sobre Star Trek ni sobre materiales de terceros.
+
+1.  USOS PERMITIDOS
+
+Siempre que se respeten las condiciones de esta licencia, se permite:
+
+-   Descargar, ejecutar y jugar gratuitamente.
+-   Consultar y estudiar el código fuente.
+-   Modificar el código y crear versiones derivadas.
+-   Añadir personajes, escenarios, modos de juego, mejoras y otras
+    funcionalidades.
+-   Compartir gratuitamente el proyecto original o versiones
+    modificadas.
+-   Publicar las modificaciones, conservando este aviso de licencia,
+    reconociendo la autoría del proyecto original e indicando los
+    cambios realizados cuando corresponda.
+
+2.  USOS NO COMERCIALES
+
+No se permite, sin autorización previa y expresa del titular de los
+derechos correspondientes:
+
+-   Vender el juego, el código fuente o versiones modificadas.
+-   Cobrar por descargar, acceder, instalar o utilizar el juego.
+-   Obtener ingresos mediante publicidad, suscripciones, micropagos,
+    patrocinios u otros mecanismos de monetización vinculados a la
+    distribución o explotación del juego.
+-   Distribuir el proyecto como parte de un producto o servicio
+    comercial de pago.
+-   Utilizar el código o los materiales originales cubiertos por esta
+    licencia con fines comerciales.
+
+Estas restricciones se aplican también a las versiones derivadas en la
+medida en que incorporen elementos protegidos por esta licencia.
+
+3.  DISTRIBUCIÓN Y MODIFICACIONES
+
+Al compartir el proyecto o una versión modificada, debes:
+
+-   Hacerlo gratuitamente y sin monetizar su distribución o uso.
+-   Conservar este archivo LICENSE.txt y el aviso de licencia.
+-   Reconocer la autoría del proyecto original.
+-   Indicar las modificaciones realizadas, cuando corresponda.
+-   No presentar una versión modificada como si fuera el proyecto
+    oficial original.
+-   No imponer condiciones que contradigan las restricciones de esta
+    licencia sobre los elementos cubiertos por ella.
+
+4.  DERECHOS DE TERCEROS
+
+Este proyecto es una creación de aficionado inspirada en el universo de
+Star Trek. Los nombres, personajes, marcas, logotipos y demás elementos
+de Star Trek pertenecen a sus respectivos titulares.
+
+Esta licencia no concede ni transfiere derechos sobre Star Trek ni sobre
+imágenes, música, fuentes, código u otros recursos de terceros incluidos
+en el proyecto. Dichos elementos pueden estar sujetos a derechos de
+autor, marcas registradas o licencias independientes. Su uso,
+modificación y redistribución deben respetar los permisos y condiciones
+que les sean aplicables.
+
+Cada persona que distribuya, modifique o utilice el proyecto es
+responsable de comprobar los derechos y licencias de los materiales que
+incluya o utilice.
+
+5.  AUSENCIA DE GARANTÍA
+
+El proyecto se proporciona «tal cual», sin garantías expresas o
+implícitas, incluidas, en la medida permitida por la legislación
+aplicable, las garantías de funcionamiento, disponibilidad o idoneidad
+para un propósito concreto.
+
+Quien utilice el proyecto lo hace bajo su propia responsabilidad. Nada
+de esta cláusula limita los derechos que no puedan excluirse legalmente.
+
+6.  PERMISOS ESPECIALES Y MONETIZACIÓN
+
+Si deseas vender, monetizar, integrar el proyecto en un producto
+comercial o utilizar con fines comerciales elementos cubiertos por esta
+licencia, debes obtener autorización previa y expresa del titular de los
+derechos correspondientes.
+
+Para consultar dudas, proponer una colaboración o solicitar
+autorización, contacta con:
+
+Emilio Correo electrónico: emihermesdevelopment@gmail.com
+Jordi Correo electrónico: expulsandoelnucleo@gmail.com
+
+Cualquier autorización se limita a los derechos que pueda conceder la
+persona que la otorga y no sustituye los permisos que deban obtenerse de
+terceros.
+
+7.  ALCANCE
+
+Esta licencia regula únicamente los derechos sobre los que quien la
+concede tiene capacidad legal para hacerlo. No debe interpretarse como
+una autorización para utilizar materiales de terceros fuera de los
+permisos que esos titulares hayan concedido.
+
+------------------------------------------------------------------------
+
+Fin de la licencia.
