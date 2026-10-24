@@ -112,7 +112,7 @@ const scottyPunch = loadImage('assets/scotty_punch.png');
 // Jordi
 const jordiGuard = loadImage('assets/jordi_guard.png');
 const jordiKick = loadImage('assets/jordi_kick.png');
-//const jordiVictory = loadImage('assets/jordi_victory.png');
+const jordiVictory = loadImage('assets/jordi_victory.png');
 // Marina
 const marinaGuard = loadImage('assets/marina_guard.png');
 const marinaKick = loadImage('assets/marina_kick.png');
@@ -135,6 +135,9 @@ const dataPunch = loadImage('assets/data_punch.png');
 // WORF: guardia y ataque normal.
 const worfGuard = loadImage('assets/worf_guard.png');
 const worfPunch = loadImage('assets/worf_punch.png');
+const worfExtraGuard = loadImage('assets/worf_extra_guard.png');
+const worfExtraPunch = loadImage('assets/worf_extra_punch.png');
+const worfVictory = loadImage('assets/worf_victory.png');
 // LAFORGE: guardia, ataque normal y patada especial.
 const laforgeGuard = loadImage('assets/laforge_guard.png');
 const laforgePunch = loadImage('assets/laforge_punch.png');
@@ -168,14 +171,16 @@ const jesusVictory = loadImage('assets/jesus_victory.png');
 const emilioGuard = loadImage('assets/emilio_guard.png');
 const emilioPunch = loadImage('assets/emilio_kick.png');
 const emilioVictory = loadImage('assets/emilio_victory.png');
+const emilioExtraGuard = loadImage('assets/emilio_extra_guard.png');
+const emilioExtraPunch = loadImage('assets/emilio_extra_punch.png');
 // Ramón
 const ramonGuard = loadImage('assets/ramon_guard.png');
 const ramonPunch = loadImage('assets/ramon_kick.png');
-//const ramonVictory = loadImage('assets/ramon_victory.png');
+const ramonVictory = loadImage('assets/ramon_victory.png');
 // Txús
 const txusGuard = loadImage('assets/txus_guard.png');
 const txusPunch = loadImage('assets/txus_kick.png');
-//const txusVictory = loadImage('assets/txus_victory.png');
+const txusVictory = loadImage('assets/txus_victory.png');
 
 // Y luego creas tu array usando la clase:
 const availableCharacters = [
@@ -239,7 +244,7 @@ const availableCharacters = [
             name: 'JORDI',
             guardImg: jordiGuard,
             punchImg: jordiKick,
-            //victoryImg: jordiVictory,
+            victoryImg: jordiVictory,
             role: 'Explorador de la Flota'
         }
     ),
@@ -308,6 +313,9 @@ const availableCharacters = [
             name: 'WORF',
             guardImg: worfGuard,
             punchImg: worfPunch,
+            extraGuardImg: worfExtraGuard,
+            extraPunchImg: worfExtraPunch,
+            victoryImg: worfVictory,
             role: 'Oficial de seguridad klingon',
             damage: 9,
             attackRange: 115,
@@ -424,6 +432,8 @@ const availableCharacters = [
             guardImg: emilioGuard,
             punchImg: emilioPunch,
             victoryImg: emilioVictory,
+            extraGuardImg: emilioExtraGuard,
+            extraPunchImg: emilioExtraPunch,
             role: 'AKA Anónimo Aguacate',
         }
     ),
@@ -433,7 +443,7 @@ const availableCharacters = [
             name: 'RAMON',
             guardImg: ramonGuard,
             punchImg: ramonPunch,
-            //victoryImg: ramonVictory,
+            victoryImg: ramonVictory,
             role: 'Bro 1',
         }
     ), new Character(
@@ -442,7 +452,7 @@ const availableCharacters = [
             name: 'TXUS',
             guardImg: txusGuard,
             punchImg: txusPunch,
-            //victoryImg: txusVictory,
+            victoryImg: txusVictory,
             role: 'Bro2',
         }
     )

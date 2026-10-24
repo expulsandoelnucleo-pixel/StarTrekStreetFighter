@@ -3339,11 +3339,32 @@ function isLaForgeExtraGuardHeld(p) {
     return false;
 }
 
+function isWorfExtraGuardHeld(p) {
+    if (getCharacter(p).name !== 'WORF')
+        return false;
+    if (p === player1)
+        return !!(keys.s || keys.S);
+    if (p === player2)
+        return !!keys.ArrowDown;
+    return false;
+}
+
+function isEmilioExtraGuardHeld(p) {
+    if (getCharacter(p).name !== 'EMILIO')
+        return false;
+    if (p === player1)
+        return !!(keys.s || keys.S);
+    if (p === player2)
+        return !!keys.ArrowDown;
+    return false;
+}
+
 function startAttack(p) {
     if (p.isAttacking || gameOver || p.stunTimer > 0 || p.attackCooldown > 0)
         return;
     const c = getCharacter(p);
-    const useExtra = (c.name === 'RIKER' && isRikerExtraGuardHeld(p)) || (c.name === 'LAFORGE' && isLaForgeExtraGuardHeld(p));
+    const useExtra = (c.name === 'RIKER' && isRikerExtraGuardHeld(p)) || (c.name === 'LAFORGE' && isLaForgeExtraGuardHeld(p)) ||
+        (c.name === 'WORF' && isWorfExtraGuardHeld(p)) || (c.name === 'EMILIO' && isEmilioExtraGuardHeld(p));
     p.attackStyle = useExtra ? 'extra' : 'normal';
     p.activeAttackDuration = useExtra
         ? (c.extraAttackDuration || c.attackDuration)
@@ -5637,11 +5658,14 @@ function drawSprite(p) {
         // El vencedor termina de pie, en pose neutral, no congelado a mitad de golpe.
         if (drawCharacterImage(p, c.guardImg, y))
             return;
-    } else if (c.name === 'RIKER' || c.name === 'LAFORGE') {
+    } else if (c.name === 'RIKER' || c.name === 'LAFORGE' ||
+        c.name === 'WORF' || c.name === 'EMILIO') {
         // Alterna entre las dos poses normales y las dos poses con silla.
         // Si alguna imagen adicional falta o tarda en cargar, vuelve a la pose normal.
         const useExtra = (c.name === 'RIKER' && isRikerExtraGuardHeld(p)) ||
-                        (c.name === 'LAFORGE' && isLaForgeExtraGuardHeld(p));
+            (c.name === 'LAFORGE' && isLaForgeExtraGuardHeld(p)) ||
+            (c.name === 'WORF' && isWorfExtraGuardHeld(p)) ||
+            (c.name === 'EMILIO' && isEmilioExtraGuardHeld(p));
         if (p.isAttacking) {
             // Usa el ataque extra (especial) si attackStyle es 'extra', o el normal si no
             const attackImg = p.attackStyle === 'extra' ? c.extraPunchImg : c.punchImg;
