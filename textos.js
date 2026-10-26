@@ -916,7 +916,8 @@ const menuSelectModeKeys1 = '[ 1 ] COMBATE LIBRE (2 JUGADORES)';
 const menuSelectModeKeys2 = '[ 2 ] COMBATE LIBRE CONTRA LA MÁQUINA';
 const menuSelectModeKeys3 = '[ 3 ] MODO HISTORIA CONTRA LA MÁQUINA';
 const menuSelectModeKeys4 = '[ 4 ] ENTRENAMIENTO ESTELAR: PUENTE + PHASERS + HOLODECK';
-const menuSelectModeKeys5 = 'X / ESC: VOLVER';
+const menuSelectModeKeys5 = '[ 5 ] COMECOCOS: EL LABERINTO';
+const menuSelectModeKeysExit = 'X / ESC: VOLVER';
 // Character Card
 const menuSelectPlayer1 = 'TÚ';
 const menuSelectPlayer2 = 'MÁQUINA';
@@ -1039,6 +1040,14 @@ const retryRemain2 = 'INTENTO(S)`';
 const retryRetryIt = 'Puedes volver a intentarlo, cadete.';
 const retryKeys = 'ESPACIO: REINTENTAR | X: MENÚ';
 
+// Comecocos
+const cocoGanado = '¡LABERINTO COMPLETADO!';
+const cocoPerdido = '¡TE HAN ATRAPADO!';
+const cocoPuntos = 'PUNTOS:';
+const cocoVidas = 'VIDAS:';
+const cocoKeys = 'FLECHAS / W A S D · X / ESC: SALIR';
+const cocoPuntuacionFinal = 'PUNTUACIÓN:';
+const cocoEndKeys = 'ESPACIO: JUGAR OTRA VEZ · X / ESC: SALIR';
 
 
 // -- FIN DE FICHERO
