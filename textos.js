@@ -521,7 +521,7 @@ const holodeckCourseName3 = 'SECTOR VOLCÁNICO';
 const holodeckCourseName4 = 'LABORATORIO DE CRIOGÉNESIS';
 
 // HUD
-// Starshio mode
+// Starship mode
 const hudStarshipModeText1 = 'STARFLEET: PILOTAJE';
 const hudStarshipModeText2 = 'PUNTOS ';
 const hudStarshipModeText3 = 'VIDAS ';
@@ -862,6 +862,7 @@ const qTrialResultLose2 = 'El núcleo ha colapsado. Q dicta sentencia.';
 const qTrialResultWin3 = '«Admito que los humanos aún pueden sorprenderme.» — Q';
 const qTrialResultLose3 = '«Qué decepción. Volved a intentarlo, si os atrevéis.» — Q';
 const qTrialKeyToMenu = 'ESPACIO / INTRO: VOLVER AL MENÚ';
+const qTrialHiddenEasterEgg = 'Q';
 
 // Shuttle Minigame
 const shuttleMinigameErrorAsset = 'FALTAN LOS PNG DE GALILEO EN assets/';

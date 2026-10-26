@@ -2928,6 +2928,8 @@ function drawTrainingComplete() {
     text(`${trainingComplete3A}${intelligenceScore}/${intelligenceQuestions.length}${trainingComplete3B}${triviaScore}/${starTrekTriviaQuestions.length}`, canvas.width / 2, 235, 30, '#ffdc72', false);
     text(trainingComplete4, canvas.width / 2, 295, 30, '#7feeff');
     text(trainingComplete5, canvas.width / 2, 385, 26, '#ffdc72', false);
+    // Easter Egg
+    text(qTrialHiddenEasterEgg, 15, 15, 14, '#ffffff', false);
 
     // Easster Eggde Q
     if (qEasterEggActive) {
@@ -3139,7 +3141,7 @@ function setArenaCombatants(arenaNumber) {
 
     const [character1, character2] = arenaCombatants[arenaIndex];
 
-    if (isVsMachine) {
+    if (isVsMachine && isStoryMode) {
         // En los modos contra la máquina, se conserva el personaje
         // elegido por el jugador humano y se adapta el rival a la arena.
         const human = getHumanPlayer();
@@ -3457,7 +3459,9 @@ function updateAttack(attacker, defender) {
     const distance = Math.abs(attacker.x - defender.x);
     const vertical = Math.abs(attacker.y - defender.y);
     const activeDuration = attacker.activeAttackDuration || c.attackDuration;
-    const extraAttack = (c.name === 'RIKER' || c.name === 'LAFORGE') && attacker.attackStyle === 'extra';
+    const extraAttack =
+        ['RIKER', 'LAFORGE', 'WORF', 'EMILIO'].includes(c.name) &&
+        attacker.attackStyle === 'extra';
     const specialAttack = extraAttack;
     const attackRange = extraAttack ? (c.extraAttackRange || c.attackRange) : c.attackRange;
     const attackDamage = extraAttack ? (c.extraDamage || c.damage) : c.damage;
@@ -5343,7 +5347,7 @@ function drawVsMachineRoster() {
             ctx.drawImage(ch.guardImg, x + (cardW - iw) / 2, y + 4, iw, ih);
         }
         // Texto del nombre más grande y legible (13px en lugar de 10px)
-        text(ch.name, x + cardW / 2, y + cardH - 8, 13, isHuman ? '#7df7ff' : (isMachine ? '#ffc078' : '#ffffff'), true);
+        text(ch.name, x + cardW / 2, y + cardH - 8, 20, isHuman ? '#7df7ff' : (isMachine ? '#ffc078' : '#ffffff'), false, GAME_FONTKLINGON);
         if (isHuman || isMachine) {
             ctx.fillStyle = color;
             ctx.beginPath();
@@ -5589,18 +5593,31 @@ function imageIsReady(img) {
     return !!(img && img.complete && img.naturalWidth > 0 && img.naturalHeight > 0);
 }
 
-function drawCharacterImage(p, img, y) {
+function drawCharacterImage(p, img, y, scale = 1) {
     if (!imageIsReady(img))
         return false;
+
+    const drawWidth = p.width * scale;
+    const drawHeight = p.height * scale;
+    // Mantener la imagen centrada en su posición original.
+    const drawX = p.x + (p.width - drawWidth) / 2;
+    const drawY = y + (p.height - drawHeight) / 2;
+
     ctx.save();
     if (p.hitFlashTimer > 0)
         ctx.filter = 'brightness(2.1) saturate(0.18)';
     if (p.facing === -1) {
         ctx.translate(p.x + p.width / 2, y + p.height / 2);
         ctx.scale(-1, 1);
-        ctx.drawImage(img, -p.width / 2, -p.height / 2, p.width, p.height);
+        ctx.drawImage(
+            img,
+            -drawWidth / 2,
+            -drawHeight / 2,
+            drawWidth,
+            drawHeight
+        );
     } else {
-        ctx.drawImage(img, p.x, y, p.width, p.height);
+        ctx.drawImage(img, drawX, drawY, drawWidth, drawHeight);
     }
     ctx.restore();
     return true;
@@ -5653,8 +5670,19 @@ function drawSprite(p) {
         const winner = getRoundWinner();
         const playerNumber = p === player1 ? 1 : 2;
         const isDefeated = winner === 0 || winner !== playerNumber;
-        if (isDefeated && drawDefeatedCharacterImage(p, c.guardImg, y))
-            return;
+        if (isDefeated) {
+            // Si el personaje tiene una imagen propia de derrota,
+            // ya está tumbado: se dibuja sin girarla.
+            if (imageIsReady(c.deadImg)) {
+                if (drawCharacterImage(p, c.deadImg, y, 0.60))
+                    return;
+            } else {
+                // Si no tiene imagen de derrota, utiliza su imagen
+                // normal y la gira 90 grados como hasta ahora.
+                if (drawDefeatedCharacterImage(p, c.guardImg, y))
+                    return;
+            }
+        }
         // El vencedor termina de pie, en pose neutral, no congelado a mitad de golpe.
         if (drawCharacterImage(p, c.guardImg, y))
             return;
