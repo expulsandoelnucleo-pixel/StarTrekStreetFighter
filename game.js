@@ -4544,6 +4544,11 @@ window.addEventListener('keydown', (e) => {
         return;
     }
 
+    if (gameState === 'NUCLEO_GAME') {
+        handleNucleoKey(e.key);
+        return;
+    }
+
     if (gameState === 'ASTEROIDES_GAME') {
         asteroidesHandleKey(e.key);
         return;
@@ -4594,6 +4599,8 @@ window.addEventListener('keydown', (e) => {
             beginAsteroidesGame();
             console.log('Estado después de iniciar asteroides:', gameState);
             //gameState = 'ASTEROIDES_GAME';
+        } else if (e.key === '7') {
+            beginNucleoGame();
         } else if (
             e.key.toLowerCase() === 'x' ||
             e.key === 'Escape') {
@@ -5285,6 +5292,7 @@ function drawModeSelect() {
     text(menuSelectModeKeys4, 500, 340, 27, '#8df4ff', false, GAME_FONTDS9);
     text(menuSelectModeKeys5, 500, 385, 27, '#ffdc72', false, GAME_FONTDS9);
     text(menuSelectModeKeys6, 500, 430, 27, '#ffdc72', false, GAME_FONTDS9);
+    text(menuSelectModeKeys7, 500, 475, 27, '#ffdc72', false, GAME_FONTDS9);
     text(menuSelectModeKeysExit, 500, 525, 23, '#ffffff', false, GAME_FONTKLINGON);
 }
 
@@ -6140,6 +6148,10 @@ function gameLoop() {
             case 'ASTEROIDES_GAME':
                 updateAsteroidesGame();
                 drawAsteroidesGame();
+                break;
+            case 'NUCLEO_GAME':
+                updateNucleoGame();
+                drawNucleoGame();
                 break;
             case 'CHARACTER_SELECT':
                 drawCharacterSelect();

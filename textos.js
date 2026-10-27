@@ -918,6 +918,7 @@ const menuSelectModeKeys3 = '[ 3 ] MODO HISTORIA CONTRA LA MÁQUINA';
 const menuSelectModeKeys4 = '[ 4 ] ENTRENAMIENTO ESTELAR: PUENTE + PHASERS + HOLODECK';
 const menuSelectModeKeys5 = '[ 5 ] COMECOCOS: EL LABERINTO';
 const menuSelectModeKeys6 = '[ 6 ] ASTEROIDES: ZONA DE PELIGRO';
+const menuSelectModeKeys7 = '[ 7 ] REPARA EL NÚCLEO O MUERE';
 const menuSelectModeKeysExit = 'X / ESC: VOLVER';
 // Character Card
 const menuSelectPlayer1 = 'TÚ';
