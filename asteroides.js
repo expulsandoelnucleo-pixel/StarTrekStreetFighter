@@ -6,6 +6,8 @@
 // definidos en game.js.
 
 const asteroidesPlayer = loadImage('assets/enterprise_asteroides.png');
+const asteroidesBorg = loadImage('assets/borg.png');
+
 
 const asteroidesShipRadius = 15;
 const asteroidesKeys = Object.create(null);
@@ -26,6 +28,7 @@ function beginAsteroidesGame() {
         lives: 3,
         elapsed: 0,
         spawnTimer: 0,
+        fireTimer: 0,
         invulnerable: 2,
         player: {
             x: w / 2,
@@ -36,10 +39,13 @@ function beginAsteroidesGame() {
         },
         asteroids: [],
         bullets: [],
+        borg: null,
+        borgSpawnTimer: asteroidesRandom(12, 18),
+        borgBullets: [],
         particles: []
     };
 
-    for (const key in asteroidesKeys) delete asteroidesKeys[key];
+    asteroidesClearKeys();
 
     // Crear los primeros asteroides lejos de la nave.
     for (let i = 0; i < 5; i++) {
@@ -179,6 +185,69 @@ function asteroidesCreateExplosion(g, x, y, count, color = '#a9dfff') {
     }
 }
 
+function asteroidesSpawnBorg(g) {
+    const w = g.width;
+    const h = g.height;
+    const fromLeft = Math.random() < 0.5;
+    const borgSize = 76;
+
+    g.borg = {
+        x: fromLeft ? -borgSize : w + borgSize,
+        y: asteroidesRandom(75, Math.max(76, h - 75)),
+        vx: (fromLeft ? 1 : -1) * asteroidesRandom(65, 90),
+        size: borgSize,
+        hp: 5,
+        maxHp: 5,
+        fireTimer: asteroidesRandom(2.8, 4.2)
+    };
+}
+
+function asteroidesBorgShoot(g) {
+    const borg = g.borg;
+    const p = g.player;
+
+    if (!borg) return;
+
+    // Apuntar hacia la posición actual de la Enterprise.
+    const dx = p.x - borg.x;
+    const dy = p.y - borg.y;
+    const distance = Math.hypot(dx, dy) || 1;
+    const shotSpeed = 175;
+
+    g.borgBullets.push({
+        x: borg.x,
+        y: borg.y,
+        vx: dx / distance * shotSpeed,
+        vy: dy / distance * shotSpeed,
+        life: 4
+    });
+
+    // Disparos poco frecuentes para mantener una dificultad razonable.
+    borg.fireTimer = asteroidesRandom(3.5, 5);
+}
+
+function asteroidesLoseLife(g) {
+    const p = g.player;
+
+    g.lives--;
+
+    if (g.lives <= 0) {
+        g.over = true;
+        g.overFrame = frameCount;
+        asteroidesClearKeys();
+        return;
+    }
+
+    // Reaparecer en el centro con invulnerabilidad temporal.
+    p.x = g.width / 2;
+    p.y = g.height / 2;
+    p.vx = 0;
+    p.vy = 0;
+    p.angle = -Math.PI / 2;
+
+    g.invulnerable = 2;
+}
+
 function updateAsteroidesGame() {
     const g = asteroidesGame;
     if (!g || g.over) return;
@@ -224,8 +293,8 @@ function updateAsteroidesGame() {
     p.y += p.vy * dt;
     asteroidesWrap(p, w, h);
 
-    // Disparo con espacio, con cadencia limitada.
-    g.fireTimer = Math.max(0, (g.fireTimer || 0) - dt);
+    // Disparo de la Enterprise con espacio.
+    g.fireTimer = Math.max(0, g.fireTimer - dt);
 
     if (asteroidesKey(' ') && g.fireTimer === 0) {
         asteroidesShoot(g);
@@ -236,7 +305,7 @@ function updateAsteroidesGame() {
         g.invulnerable -= dt;
     }
 
-    // Proyectiles.
+    // Proyectiles de la Enterprise.
     for (const b of g.bullets) {
         b.x += b.vx * dt;
         b.y += b.vy * dt;
@@ -254,7 +323,45 @@ function updateAsteroidesGame() {
         asteroidesWrap(a, w, h, a.radius);
     }
 
-    // Aparición progresiva de nuevos asteroides.
+    // Aparición ocasional del cubo Borg.
+    g.borgSpawnTimer -= dt;
+
+    if (!g.borg && g.borgSpawnTimer <= 0) {
+        asteroidesSpawnBorg(g);
+    }
+
+    if (g.borg) {
+        const borg = g.borg;
+
+        borg.x += borg.vx * dt;
+        borg.fireTimer -= dt;
+
+        if (borg.fireTimer <= 0) {
+            asteroidesBorgShoot(g);
+        }
+
+        // Desaparece al cruzar completamente la pantalla.
+        if ((borg.vx > 0 && borg.x > w + borg.size) ||
+            (borg.vx < 0 && borg.x < -borg.size)) {
+            g.borg = null;
+            g.borgSpawnTimer = asteroidesRandom(18, 28);
+        }
+    }
+
+    // Movimiento de los disparos Borg.
+    for (const b of g.borgBullets) {
+        b.x += b.vx * dt;
+        b.y += b.vy * dt;
+        b.life -= dt;
+    }
+
+    g.borgBullets = g.borgBullets.filter(b =>
+        b.life > 0 &&
+        b.x > -10 && b.x < w + 10 &&
+        b.y > -10 && b.y < h + 10
+    );
+
+    // Aparición progresiva de asteroides.
     g.spawnTimer -= dt;
 
     if (g.spawnTimer <= 0) {
@@ -267,7 +374,7 @@ function updateAsteroidesGame() {
         g.spawnTimer = Math.max(0.65, 2.4 - g.elapsed * 0.012);
     }
 
-    // Impactos de los disparos.
+    // Impactos de los disparos de la Enterprise contra asteroides.
     for (const b of g.bullets) {
         if (b.life <= 0) continue;
 
@@ -295,33 +402,72 @@ function updateAsteroidesGame() {
         }
     }
 
+    // Los disparos de la Enterprise dañan al cubo Borg.
+    if (g.borg) {
+        const borg = g.borg;
+
+        for (const b of g.bullets) {
+            if (b.life <= 0) continue;
+
+            if (Math.abs(b.x - borg.x) < borg.size * 0.55 &&
+                Math.abs(b.y - borg.y) < borg.size * 0.55) {
+                b.life = 0;
+                borg.hp--;
+
+                asteroidesCreateExplosion(g, b.x, b.y, 5, '#69ff75');
+
+                if (borg.hp <= 0) {
+                    asteroidesCreateExplosion(g, borg.x, borg.y, 38, '#55ff66');
+
+                    g.score += 500;
+                    g.borg = null;
+                    g.borgBullets = [];
+                    g.borgSpawnTimer = asteroidesRandom(18, 28);
+                }
+
+                break;
+            }
+        }
+    }
+
     g.bullets = g.bullets.filter(b => b.life > 0);
 
-    // Colisión de la nave contra los asteroides.
+    // Impacto de un proyectil Borg contra la Enterprise.
+    if (g.invulnerable <= 0) {
+        for (const b of g.borgBullets) {
+            if (Math.hypot(p.x - b.x, p.y - b.y) <
+                asteroidesShipRadius + 5) {
+                b.life = 0;
+
+                asteroidesCreateExplosion(g, p.x, p.y, 24, '#55ff66');
+                asteroidesLoseLife(g);
+                break;
+            }
+        }
+    }
+
+    g.borgBullets = g.borgBullets.filter(b => b.life > 0);
+
+    // Colisión de la Enterprise contra el cubo Borg.
+    if (g.borg && g.invulnerable <= 0 &&
+        Math.hypot(p.x - g.borg.x, p.y - g.borg.y) <
+        g.borg.size * 0.55 + asteroidesShipRadius) {
+        asteroidesCreateExplosion(g, p.x, p.y, 24, '#55ff66');
+        asteroidesLoseLife(g);
+    }
+
+    // Colisión de la Enterprise contra los asteroides.
     if (g.invulnerable <= 0) {
         for (let i = g.asteroids.length - 1; i >= 0; i--) {
             const a = g.asteroids[i];
 
-            if (Math.hypot(p.x - a.x, p.y - a.y) <
+            if(Math.hypot(p.x - a.x, p.y - a.y) <
                 a.radius + asteroidesShipRadius * 0.65) {
 
                 g.asteroids.splice(i, 1);
+
                 asteroidesCreateExplosion(g, p.x, p.y, 28, '#ff7184');
-                g.lives--;
-
-                if (g.lives <= 0) {
-                    g.over = true;
-                    g.overFrame = frameCount;
-                    asteroidesClearKeys();
-                } else {
-                    p.x = w / 2;
-                    p.y = h / 2;
-                    p.vx = 0;
-                    p.vy = 0;
-                    p.angle = -Math.PI / 2;
-                    g.invulnerable = 2;
-                }
-
+                asteroidesLoseLife(g);
                 break;
             }
         }
@@ -344,11 +490,17 @@ function drawAsteroidesGame() {
     const w = canvas.width;
     const h = canvas.height;
 
+    ctx.save();
+    ctx.shadowColor = 'transparent';
+    ctx.shadowBlur = 0;
+    ctx.globalAlpha = 1;
+    ctx.globalCompositeOperation = 'source-over';
+
     // Fondo espacial.
     ctx.fillStyle = '#020611';
     ctx.fillRect(0, 0, w, h);
 
-    // Estrellas estáticas generadas de forma determinista.
+    // Estrellas estáticas.
     for (let i = 0; i < 100; i++) {
         const x = (i * 137.5 + 19) % w;
         const y = (i * 83.7 + 31) % h;
@@ -388,7 +540,7 @@ function drawAsteroidesGame() {
         ctx.lineWidth = 2;
         ctx.stroke();
 
-        // Algunas grietas para dar textura.
+        // Grietas para dar textura.
         ctx.strokeStyle = 'rgba(160,180,210,0.45)';
         ctx.lineWidth = 1;
 
@@ -401,7 +553,56 @@ function drawAsteroidesGame() {
         ctx.restore();
     }
 
-    // Disparos.
+    // Cubo Borg y barra de resistencia.
+    if (g.borg && asteroidesBorg && asteroidesBorg.complete &&
+        asteroidesBorg.naturalWidth > 0) {
+        const borg = g.borg;
+
+        ctx.save();
+        ctx.shadowColor = '#55ff66';
+        ctx.shadowBlur = 14;
+
+        ctx.drawImage(
+            asteroidesBorg,
+            borg.x - borg.size / 2,
+            borg.y - borg.size / 2,
+            borg.size,
+            borg.size
+        );
+
+        ctx.restore();
+
+        const barWidth = borg.size;
+        const barY = borg.y - borg.size / 2 - 10;
+
+        ctx.fillStyle = 'rgba(0,0,0,0.75)';
+        ctx.fillRect(borg.x - barWidth / 2, barY, barWidth, 5);
+
+        ctx.fillStyle = '#55ff66';
+        ctx.fillRect(
+            borg.x - barWidth / 2,
+            barY,
+            barWidth * borg.hp / borg.maxHp,
+            5
+        );
+    }
+
+
+    // Disparos verdes del cubo Borg.
+    ctx.save();
+    ctx.fillStyle = '#55ff66';
+    ctx.shadowColor = '#39ff14';
+    ctx.shadowBlur = 13;
+
+    for (const b of g.borgBullets) {
+        ctx.beginPath();
+        ctx.arc(b.x, b.y, 4, 0, Math.PI * 2);
+        ctx.fill();
+    }
+
+    ctx.restore();
+
+    // Disparos de la Enterprise.
     ctx.save();
     ctx.fillStyle = '#8df4ff';
     ctx.shadowColor = '#54e8ff';
@@ -462,6 +663,8 @@ function drawAsteroidesGame() {
         Math.floor(g.invulnerable * 10) % 2 === 0;
 
     if (visible && !g.over) {
+        ctx.shadowColor = 'transparent';
+        ctx.shadowBlur = 0;
         ctx.save();
         ctx.translate(p.x, p.y);
         ctx.rotate(p.angle + Math.PI / 2);
@@ -471,7 +674,8 @@ function drawAsteroidesGame() {
         const shipHeight = 80;
 
         // Dibujar la imagen centrada en la posición de la nave.
-        if (asteroidesPlayer && asteroidesPlayer.complete) {
+        if (asteroidesPlayer && asteroidesPlayer.complete &&
+            asteroidesPlayer.naturalWidth > 0) {
             ctx.drawImage(
                 asteroidesPlayer,
                 -shipWidth / 2,
@@ -549,4 +753,8 @@ function drawAsteroidesGame() {
         text(`${asteroidesPuntuacionFinal} ` + g.score, w / 2, h / 2 + 22, 24, '#ffffff', true);
         text(asteroidesEndKeys, w / 2, h / 2 + 66, 18, '#8df4ff', true);
     }
+
+    ctx.restore();
 }
+
+window.asteroidesHandleKeyUp = asteroidesHandleKeyUp;
