@@ -15,8 +15,8 @@
 //   Enter / R      : repetir la misión al terminar
 // ============================================================
 
-const exploracionSpockImage =
-    loadImage('assets/exploracion_spock.png');
+const exploracionSpockImage = loadImage('assets/exploracion_spock.png');
+const exploracionGornImage = loadImage('assets/exploracion_gorn.png');
 
 const exploracionKeys = Object.create(null);
 
@@ -84,6 +84,7 @@ function beginExploracionGame() {
         caves: [],
         anomalies: [],
         hazards: [],
+        gorns: [],
 
         extraction: {
             x: worldWidth - 110,
@@ -92,6 +93,37 @@ function beginExploracionGame() {
     };
 
     const g = exploracionGame;
+
+    // Crear los Gorn que habitan el planeta.
+    g.gorns = [
+        {
+            x: worldWidth * 0.42,
+            y: worldHeight * 0.30,
+            radius: 17,
+            direction: 0,
+            animation: 0,
+            walking: false,
+            speed: 65,
+            moveTimer: 1,
+            targetX: 0,
+            targetY: 0,
+            chasing: false
+        },
+        {
+            x: worldWidth * 0.68,
+            y: worldHeight * 0.72,
+            radius: 17,
+            direction: 0,
+            animation: 0,
+            walking: false,
+            speed: 72,
+            moveTimer: 2,
+            targetX: 0,
+            targetY: 0,
+            chasing: false
+        }
+    ];
+
     const enterpriseSeed = 1701;
     const seed = (enterpriseSeed + Math.floor(Math.random() * 4294967296)) >>> 0;
     const rand = exploracionRandomGenerator(seed);
@@ -380,6 +412,11 @@ function updateExploracionGame() {
         }
     }
 
+    // Actualizar los Gorn.
+    exploracionUpdateGorns(g, dt);
+
+    if (g.over) return;
+
     if (g.invulnerable > 0) {
         g.invulnerable = Math.max(0, g.invulnerable - dt);
     }
@@ -470,6 +507,7 @@ function drawExploracionGame() {
     exploracionDrawAnomalies(g);
     exploracionDrawHazards(g);
     exploracionDrawExtraction(g);
+    exploracionDrawGorns(g);
 
     // Oscurecer el territorio desconocido y atenuar el explorado.
     if (g.fogCanvas) {
@@ -786,6 +824,49 @@ function exploracionDrawSpock(g) {
 }
 
 // ------------------------------------------------------------
+// DIBUJAR GORN
+// ------------------------------------------------------------
+
+function exploracionDrawGorns(g) {
+    const img = exploracionGornImage;
+
+    for (const gorn of g.gorns) {
+        if (img && img.complete && img.naturalWidth > 0) {
+            const columns = 4;
+            const rows = 4;
+
+            const frameWidth = img.naturalWidth / columns;
+            const frameHeight = img.naturalHeight / rows;
+
+            const frame = gorn.walking
+                ? Math.floor(gorn.animation) % columns
+                : 0;
+
+            ctx.drawImage(
+                img,
+                frame * frameWidth,
+                gorn.direction * frameHeight,
+                frameWidth,
+                frameHeight,
+                gorn.x - 22,
+                gorn.y - 28,
+                44,
+                56
+            );
+        } else {
+            // Representación provisional mientras carga la imagen.
+            ctx.fillStyle = '#82934b';
+            ctx.beginPath();
+            ctx.arc(
+                gorn.x, gorn.y,
+                gorn.radius, 0, Math.PI * 2
+            );
+            ctx.fill();
+        }
+    }
+}
+
+// ------------------------------------------------------------
 // INTERFAZ
 // ------------------------------------------------------------
 
@@ -963,4 +1044,133 @@ function exploracionRevealArea(g, x, y) {
     fog.fill();
 
     fog.restore();
+}
+
+// ------------------------------------------------------------
+// GORN: MOVIMIENTO Y PERSECUCIÓN
+// ------------------------------------------------------------
+
+function exploracionUpdateGorns(g, dt) {
+    const p = g.player;
+
+    for (const gorn of g.gorns) {
+        const distance = exploracionDistance(
+            gorn.x, gorn.y,
+            p.x, p.y
+        );
+
+        // Detectar a Spock.
+        if (distance < 240) {
+            gorn.chasing = true;
+        } else if (distance > 320) {
+            gorn.chasing = false;
+        }
+
+        let dx = 0;
+        let dy = 0;
+
+        if (gorn.chasing) {
+            // Perseguir a Spock.
+            dx = p.x - gorn.x;
+            dy = p.y - gorn.y;
+
+            const length = Math.hypot(dx, dy);
+
+            if (length > 0) {
+                dx /= length;
+                dy /= length;
+            }
+        } else {
+            // Patrullar cambiando de dirección periódicamente.
+            gorn.moveTimer -= dt;
+
+            if (gorn.moveTimer <= 0) {
+                const angle = Math.random() * Math.PI * 2;
+
+                gorn.targetX = Math.cos(angle);
+                gorn.targetY = Math.sin(angle);
+                gorn.moveTimer = 1 + Math.random() * 2;
+            }
+
+            dx = gorn.targetX;
+            dy = gorn.targetY;
+
+            const length = Math.hypot(dx, dy);
+
+            if (length > 0) {
+                dx /= length;
+                dy /= length;
+            }
+        }
+
+        // Actualizar dirección y animación.
+        if (Math.abs(dx) > Math.abs(dy)) {
+            gorn.direction = dx < 0 ? 1 : 2;
+        } else if (Math.abs(dx) > 0 || Math.abs(dy) > 0) {
+            gorn.direction = dy < 0 ? 3 : 0;
+        }
+
+        gorn.walking = Math.abs(dx) > 0 || Math.abs(dy) > 0;
+
+        if (gorn.walking) {
+            gorn.animation += dt * 10;
+        } else {
+            gorn.animation = 0;
+        }
+
+        // Movimiento con límites del planeta.
+        const speed = gorn.chasing
+            ? gorn.speed * 1.25
+            : gorn.speed;
+
+        const nextX = gorn.x + dx * speed * dt;
+        const nextY = gorn.y + dy * speed * dt;
+
+        if (!exploracionCollidesWithCave(
+            nextX, gorn.y, gorn.radius, g
+        )) {
+            gorn.x = nextX;
+        }
+
+        if (!exploracionCollidesWithCave(
+            gorn.x, nextY, gorn.radius, g
+        )) {
+            gorn.y = nextY;
+        }
+
+        gorn.x = exploracionClamp(
+            gorn.x, gorn.radius,
+            g.worldWidth - gorn.radius
+        );
+
+        gorn.y = exploracionClamp(
+            gorn.y, gorn.radius,
+            g.worldHeight - gorn.radius
+        );
+
+        // Contacto con Spock.
+        const contactDistance = exploracionDistance(
+            gorn.x, gorn.y,
+            p.x, p.y
+        );
+
+        if (
+            contactDistance < gorn.radius + p.radius &&
+            g.invulnerable <= 0
+        ) {
+            g.health--;
+            g.invulnerable = 1.2;
+
+            g.message = '¡Un Gorn ha alcanzado a Spock!';
+            g.messageTime = 2;
+
+            if (g.health <= 0) {
+                g.health = 0;
+                exploracionEndGame(false);
+                return;
+            }
+
+            playSound(soundExploracionVidaMenos);
+        }
+    }
 }
