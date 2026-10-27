@@ -22,6 +22,7 @@ const exploracionKeys = Object.create(null);
 
 let exploracionGame = null;
 let exploracionLastFrame = null;
+let exploracionScanKeyPressed = false;
 
 // ------------------------------------------------------------
 // NIEBLA DE GUERRA
@@ -233,6 +234,7 @@ function exploracionHandleKey(key) {
     }
 
     if (k === 'e' || key === ' ') {
+        exploracionScanKeyPressed = true;
         exploracionScan();
         return;
     }
@@ -246,7 +248,13 @@ function exploracionHandleKey(key) {
 }
 
 function exploracionHandleKeyUp(key) {
-    delete exploracionKeys[key.toLowerCase()];
+    const k = key.toLowerCase();
+
+    delete exploracionKeys[k];
+
+    if (k === 'e' || key === ' ') {
+        exploracionScanKeyPressed = false;
+    }
 }
 
 function exploracionClearKeys() {
@@ -362,9 +370,13 @@ function updateExploracionGame() {
 
             if (g.health <= 0) {
                 g.health = 0;
+                playSound(soundExploracionMuerte);
                 exploracionEndGame(false);
                 return;
             }
+
+            // Sonido al perder una vida, excepto en la muerte final.
+            playSound(soundExploracionVidaMenos);
         }
     }
 
@@ -393,6 +405,7 @@ function updateExploracionGame() {
             g.extraction.x, g.extraction.y
         ) < 48
     ) {
+        playSound(soundExploracionLogrado);
         exploracionEndGame(true);
     }
 }
@@ -404,6 +417,8 @@ function updateExploracionGame() {
 function exploracionScan() {
     const g = exploracionGame;
     if (!g || g.over) return;
+
+    playSound(soundExploracionTricorder);
 
     const p = g.player;
 
@@ -424,6 +439,7 @@ function exploracionScan() {
 
     g.message = `Anomalía analizada: ${g.scans}/${g.scansRequired}`;
     g.messageTime = 2.5;
+    playSound(soundExploracionDescubierto);
 
     if (g.scans >= g.scansRequired) {
         g.extractionActive = true;
@@ -860,7 +876,12 @@ function exploracionEndGame(won) {
     g.won = won;
     g.endAnimationFrames = 0;
 
+    // Detener el sonido del tricorder si todavía está sonando.
+    soundExploracionTricorder.pause();
+    soundExploracionTricorder.currentTime = 0;
+
     exploracionClearKeys();
+    exploracionScanKeyPressed = false;
 }
 
 // ------------------------------------------------------------

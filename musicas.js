@@ -90,6 +90,21 @@ soundReparaNucleoExplota.volume = 0.6;
 const soundReparaNucleoLogrado = new Audio('assets/audios/nucleo_afirmativo.mp3');
 soundReparaNucleoLogrado.volume = 0.6;
 
+// ------------------------------------------------------------
+// EFECTOS DE SONIDO DE EXPLORACION
+// ------------------------------------------------------------
+const soundExploracionTricorder = new Audio('assets/audios/exploracion_tricorder.mp3');
+soundExploracionTricorder.volume = 0.6;
+const soundExploracionDescubierto = new Audio('assets/audios/exploracion_engage.mp3');
+soundExploracionDescubierto.volume = 0.6;
+const soundExploracionVidaMenos = new Audio('assets/audios/exploracion_failed.mp3');
+soundExploracionVidaMenos.volume = 0.6;
+const soundExploracionMuerte = new Audio('assets/audios/exploracion_dead.mp3');
+soundExploracionMuerte.volume = 0.6;
+const soundExploracionLogrado = new Audio('assets/audios/exploracion_transporter.mp3');
+soundExploracionLogrado.volume = 0.6;
+
+
 
 // ------------------------------------------------------------
 // CREACIÓN DE PISTAS DE MÚSICA
