@@ -1243,7 +1243,8 @@ function beginStarshipRace() {
                 lane: (Math.random() * 1.35) - 0.675,
                 hit: false,
                 spin: Math.random() * Math.PI * 2
-            })),
+        })),
+        nextHazardProgress: 690 + 8 * 910,
         stars: Array.from({
             length: 100
         }, () => ({
@@ -1308,6 +1309,20 @@ function updateStarshipRace() {
         rival.progress += rival.speed + Math.sin(g.frame / 85 + rival.phase) * 0.035;
         // Cambios suaves de carril; todos permanecen dentro de los límites.
         rival.lane = clamp(rival.lane + Math.sin(g.frame / 90 + rival.phase) * 0.0009, -0.31, 0.31);
+    }
+
+    // Generar nuevas boyas a lo largo de toda la carrera.
+    while (g.nextHazardProgress < g.progress + 1200 &&
+        g.nextHazardProgress < g.finishDistance) {
+
+        g.hazards.push({
+            progress: g.nextHazardProgress + Math.random() * 210,
+            lane: (Math.random() * 1.35) - 0.675,
+            hit: false,
+            spin: Math.random() * Math.PI * 2
+        });
+
+        g.nextHazardProgress += 910;
     }
 
     // Boyas energéticas que el cadete debe esquivar.
