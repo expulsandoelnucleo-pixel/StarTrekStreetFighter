@@ -919,6 +919,7 @@ const menuSelectModeKeys4 = '[ 4 ] ENTRENAMIENTO ESTELAR: PUENTE + PHASERS + HOL
 const menuSelectModeKeys5 = '[ 5 ] COMECOCOS: EL LABERINTO';
 const menuSelectModeKeys6 = '[ 6 ] ASTEROIDES: ZONA DE PELIGRO';
 const menuSelectModeKeys7 = '[ 7 ] REPARA EL NÚCLEO O MUERE';
+const menuSelectModeKeys8 = '[ 8 ] Nuevos mundos extraños';
 const menuSelectModeKeysExit = 'X / ESC: VOLVER';
 // Character Card
 const menuSelectPlayer1 = 'TÚ';
@@ -940,7 +941,7 @@ const creditsTitle = 'CRÉDITOS';
 const creditsSubtitle = 'Star Trek: Expulsando el núcleo';
 const creditsText1 = 'Creado con JavaScript y Canvas y mucho cariño';
 const creditsText2 = 'Un regalo sin ánimo de lucro para vosotros';
-const creditsText3 = 'Con cariño, el hermano de Ramón y Emilio.';
+const creditsText3 = 'Con cariño, Emilio y el hermano de Ramón.';
 const creditsKeys = 'X / ESC: VOLVER';
 
 // Intro

@@ -24,6 +24,13 @@ let exploracionGame = null;
 let exploracionLastFrame = null;
 
 // ------------------------------------------------------------
+// NIEBLA DE GUERRA
+// ------------------------------------------------------------
+const EXPLORACION_VISION_RADIUS = 100;
+const EXPLORACION_VISION_FEATHER = 45;
+
+
+// ------------------------------------------------------------
 // INICIAR PARTIDA
 // ------------------------------------------------------------
 
@@ -183,6 +190,20 @@ function beginExploracionGame() {
         y: worldHeight * (0.15 + rand() * 0.70)
     };
 
+    // Crear una máscara persistente para el terreno descubierto.
+    g.fogCanvas = document.createElement('canvas');
+    g.fogCanvas.width = Math.ceil(worldWidth);
+    g.fogCanvas.height = Math.ceil(worldHeight);
+
+    g.fogContext = g.fogCanvas.getContext('2d');
+
+    // Todo el planeta comienza oculto.
+    g.fogContext.fillStyle = '#000';
+    g.fogContext.fillRect(0, 0, worldWidth, worldHeight);
+
+    // Descubrir la zona inicial alrededor de Spock.
+    exploracionRevealArea(g, g.player.x, g.player.y);
+
     exploracionClearKeys();
     exploracionLastFrame = performance.now();
 
@@ -318,6 +339,9 @@ function updateExploracionGame() {
     p.x = exploracionClamp(p.x, p.radius, g.worldWidth - p.radius);
     p.y = exploracionClamp(p.y, p.radius, g.worldHeight - p.radius);
 
+    // Descubrir continuamente el terreno alrededor de Spock.
+    exploracionRevealArea(g, p.x, p.y);
+
     // Actualizar zonas peligrosas.
     for (const hazard of g.hazards) {
         hazard.pulse += dt * 2;
@@ -418,19 +442,30 @@ function drawExploracionGame() {
 
     ctx.save();
 
-    ctx.fillStyle = '#343b37';
+    // Fondo.
+    ctx.fillStyle = '#050807';
     ctx.fillRect(0, 0, canvas.width, canvas.height);
 
+    // Pasar de coordenadas del mundo a coordenadas de pantalla.
     ctx.translate(-g.camera.x, -g.camera.y);
 
+    // Primero dibujar el planeta y todos sus elementos.
     exploracionDrawTerrain(g);
     exploracionDrawAnomalies(g);
     exploracionDrawHazards(g);
     exploracionDrawExtraction(g);
+
+    // Oscurecer el territorio desconocido y atenuar el explorado.
+    if (g.fogCanvas) {
+        ctx.drawImage(g.fogCanvas, 0, 0);
+    }
+
+    // Spock permanece visible sobre la niebla.
     exploracionDrawSpock(g);
 
     ctx.restore();
 
+// La interfaz queda siempre visible.
     exploracionDrawInterface(g);
 }
 
@@ -865,4 +900,39 @@ function exploracionRandomPosition(rand, worldWidth, worldHeight, margin = 100) 
         x: margin + rand() * (worldWidth - margin * 2),
         y: margin + rand() * (worldHeight - margin * 2)
     };
+}
+
+// ------------------------------------------------------------
+// NIEBLA DE GUERRA: DESCUBRIR TERRENO
+// ------------------------------------------------------------
+function exploracionRevealArea(g, x, y) {
+    if (!g || !g.fogContext) return;
+
+    const fog = g.fogContext;
+
+    const innerRadius = EXPLORACION_VISION_RADIUS;
+    const outerRadius =
+        EXPLORACION_VISION_RADIUS + EXPLORACION_VISION_FEATHER;
+
+    // Borrar progresivamente la máscara negra.
+    // El centro queda completamente descubierto y el borde
+    // conserva una transición suave.
+    fog.save();
+    fog.globalCompositeOperation = 'destination-out';
+
+    const gradient = fog.createRadialGradient(
+        x, y, innerRadius * 0.65,
+        x, y, outerRadius
+    );
+
+    gradient.addColorStop(0, 'rgba(0,0,0,1)');
+    gradient.addColorStop(0.75, 'rgba(0,0,0,0.9)');
+    gradient.addColorStop(1, 'rgba(0,0,0,0)');
+
+    fog.fillStyle = gradient;
+    fog.beginPath();
+    fog.arc(x, y, outerRadius, 0, Math.PI * 2);
+    fog.fill();
+
+    fog.restore();
 }

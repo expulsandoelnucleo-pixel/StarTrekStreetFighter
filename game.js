@@ -5311,14 +5311,15 @@ function drawModeSelect() {
     drawTitleBackground();
     overlay(0.84);
 
-    text(menuSelectModeTitle, 500, 120, 40, '#00ffff', false, GAME_FONTKLINGON);
-    text(menuSelectModeKeys1, 500, 205, 28, '#ffcc00', false, GAME_FONTDS9);
-    text(menuSelectModeKeys2, 500, 250, 27, '#ffcc00', false, GAME_FONTDS9);
-    text(menuSelectModeKeys3, 500, 295, 27, '#00ffcc', false, GAME_FONTDS9);
-    text(menuSelectModeKeys4, 500, 340, 27, '#8df4ff', false, GAME_FONTDS9);
-    text(menuSelectModeKeys5, 500, 385, 27, '#ffdc72', false, GAME_FONTDS9);
-    text(menuSelectModeKeys6, 500, 430, 27, '#ffdc72', false, GAME_FONTDS9);
-    text(menuSelectModeKeys7, 500, 475, 27, '#ffdc72', false, GAME_FONTDS9);
+    text(menuSelectModeTitle, 500, 100, 40, '#00ffff', false, GAME_FONTKLINGON);
+    text(menuSelectModeKeys1, 500, 160, 28, '#ffcc00', false, GAME_FONTDS9);
+    text(menuSelectModeKeys2, 500, 205, 27, '#ffcc00', false, GAME_FONTDS9);
+    text(menuSelectModeKeys3, 500, 250, 27, '#00ffcc', false, GAME_FONTDS9);
+    text(menuSelectModeKeys4, 500, 295, 27, '#8df4ff', false, GAME_FONTDS9);
+    text(menuSelectModeKeys5, 500, 340, 27, '#ffdc72', false, GAME_FONTDS9);
+    text(menuSelectModeKeys6, 500, 385, 27, '#ffdc72', false, GAME_FONTDS9);
+    text(menuSelectModeKeys7, 500, 430, 27, '#ffdc72', false, GAME_FONTDS9);
+    text(menuSelectModeKeys8, 500, 475, 27, '#ffdc72', false, GAME_FONTDS9);
     text(menuSelectModeKeysExit, 500, 525, 23, '#ffffff', false, GAME_FONTKLINGON);
 }
 
