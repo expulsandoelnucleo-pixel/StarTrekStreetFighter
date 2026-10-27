@@ -4559,6 +4559,12 @@ window.addEventListener('keydown', (e) => {
         return;
     }
 
+
+    if (gameState === 'EXPLORACION_GAME') {
+        exploracionHandleKey(e.key);
+        return;
+    }
+
     if (gameState === 'NUCLEO_GAME') {
         handleNucleoKey(e.key);
         return;
@@ -4612,10 +4618,12 @@ window.addEventListener('keydown', (e) => {
             //gameState = 'COCO_GAME';
         } else if (e.key === '6') {
             beginAsteroidesGame();
-            console.log('Estado después de iniciar asteroides:', gameState);
+            //console.log('Estado después de iniciar asteroides:', gameState);
             //gameState = 'ASTEROIDES_GAME';
         } else if (e.key === '7') {
             beginNucleoGame();
+        } else if (e.key === '8') {
+            beginExploracionGame();
         } else if (
             e.key.toLowerCase() === 'x' ||
             e.key === 'Escape') {
@@ -5053,6 +5061,9 @@ window.addEventListener('keyup', (e) => {
 
     // Liberar las teclas de ComeCocos.
     handleCocoKeyUp(e.key);
+
+    // Liberar las teclas de Exploracion
+    exploracionHandleKeyUp(e.key);
 });
 
 window.addEventListener('blur', () => {
@@ -6167,6 +6178,10 @@ function gameLoop() {
             case 'NUCLEO_GAME':
                 updateNucleoGame();
                 drawNucleoGame();
+                break;
+            case 'EXPLORACION_GAME':
+                updateExploracionGame();
+                drawExploracionGame();
                 break;
             case 'CHARACTER_SELECT':
                 drawCharacterSelect();
