@@ -230,8 +230,10 @@ function asteroidesLoseLife(g) {
     const p = g.player;
 
     g.lives--;
+    playSound(soundAsteroidesExplosion);
 
     if (g.lives <= 0) {
+        playSound(soundAsteroidesExplosion);
         g.over = true;
         g.overFrame = frameCount;
         asteroidesClearKeys();
@@ -298,6 +300,7 @@ function updateAsteroidesGame() {
 
     if (asteroidesKey(' ') && g.fireTimer === 0) {
         asteroidesShoot(g);
+        playSound(soundAsteroidesDisparo);
         g.fireTimer = 0.22;
     }
 
@@ -328,6 +331,7 @@ function updateAsteroidesGame() {
 
     if (!g.borg && g.borgSpawnTimer <= 0) {
         asteroidesSpawnBorg(g);
+        playSound(soundAsteroidesSaleBorg);
     }
 
     if (g.borg) {
@@ -338,6 +342,7 @@ function updateAsteroidesGame() {
 
         if (borg.fireTimer <= 0) {
             asteroidesBorgShoot(g);
+            playSound(soundAsteroidesDisparoBorg);
         }
 
         // Desaparece al cruzar completamente la pantalla.

@@ -69,6 +69,29 @@ const soundComeCocosFin = new Audio('assets/audios/ken-s-death.mp3');
 soundComeCocosFin.volume = 0.6;
 
 // ------------------------------------------------------------
+// EFECTOS DE SONIDO DE LOS ASTEROIDES
+// ------------------------------------------------------------
+const soundAsteroidesDisparo = new Audio('assets/audios/asteroides_torpedo.mp3');
+soundAsteroidesDisparo.volume = 0.6;
+const soundAsteroidesExplosion = new Audio('assets/audios/asteroides_explosion.mp3');
+soundAsteroidesExplosion.volume = 0.6;
+const soundAsteroidesSaleBorg = new Audio('assets/audios/asteroides_borg_flyby.mp3');
+soundAsteroidesSaleBorg.volume = 0.6;
+const soundAsteroidesDisparoBorg = new Audio('assets/audios/asteroides_borg_phaser.mp3');
+soundAsteroidesDisparoBorg.volume = 0.6;
+
+// ------------------------------------------------------------
+// EFECTOS DE SONIDO DE REPARA EL NÚCLEO
+// ------------------------------------------------------------
+const soundReparaNucleoComprueba = new Audio('assets/audios/nucleo_transfercomplete.mp3');
+soundReparaNucleoComprueba.volume = 0.6;
+const soundReparaNucleoExplota = new Audio('assets/audios/nucleo_explosion.mp3');
+soundReparaNucleoExplota.volume = 0.6;
+const soundReparaNucleoLogrado = new Audio('assets/audios/nucleo_afirmativo.mp3');
+soundReparaNucleoLogrado.volume = 0.6;
+
+
+// ------------------------------------------------------------
 // CREACIÓN DE PISTAS DE MÚSICA
 // ------------------------------------------------------------
 function createAudioTrack(filename) {
@@ -121,7 +144,11 @@ const musicTracks = {
     // Evaluación final del entrenamiento
     MODO4_TEST_FINAL: createAudioTrack('modo4_test_fin.mp3'),
     // ComeCocos
-    COCO_GAME: createAudioTrack('comecocos.m4a')
+    COCO_GAME: createAudioTrack('comecocos.m4a'),
+    // Asteroides
+    ASTEROIDES_GAME: createAudioTrack('asteroides.mp3'),
+    // Repara el núcleo
+    NUCLEO_GAME: createAudioTrack('repara_nucleo.mp3')
 };
 
 // ------------------------------------------------------------
@@ -247,6 +274,15 @@ function getMusicScreen() {
         // ComeCocos
         case 'COCO_GAME':
             return 'COCO_GAME';
+
+        // Asteroides
+        case 'ASTEROIDES_GAME':
+            return 'ASTEROIDES_GAME';
+
+        // Repara núcleo
+        case 'NUCLEO_GAME':
+            return 'NUCLEO_GAME';
+
     }
 
     // Combate normal y modo historia: música según arena.
@@ -348,7 +384,11 @@ async function playTrackForCurrentScreen() {
                 MODO4_MARIO_4: '🔊 Holodeck: nivel 4',
                 MODO4_TEST_FINAL: '🔊 Evaluación del entrenamiento',
 
-                COCO_GAME: '🔊 Música de ComeCocos'
+                COCO_GAME: '🔊 Música de ComeCocos',
+
+                ASTEROIDES_GAME: '🔊 Música de Asteroides',
+
+                NUCLEO_GAME: '🔊 Música de Núcleo'
             };
             musicButton.textContent = labels[desiredState] || '🔊 Música automática';
             musicButton.style.borderColor = '#7CFC00';
