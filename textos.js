@@ -912,7 +912,7 @@ const menuKeys1 = 'PRESIONA [ ESPACIO ] PARA JUGAR';
 const menuKeys2 = '[ C ] CRÉDITOS';
 // Mode Select
 const menuSelectModeTitle = 'SELECCIONA MODO DE JUEGO';
-const menuSelectModeKeys1 = '[ 1 ] COMBATE LIBRE (🧍‍♂️🧍‍♂️⛹️‍♀)';
+const menuSelectModeKeys1 = '[ 1 ] COMBATE LIBRE (🧍‍♂️🧍‍♂️)';
 const menuSelectModeKeys2 = '[ 2 ] COMBATE LIBRE CONTRA LA MÁQUINA';
 const menuSelectModeKeys3 = '[ 3 ] MODO HISTORIA CONTRA LA MÁQUINA';
 const menuSelectModeKeys4 = '[ 4 ] ENTRENAMIENTO ESTELAR: PUENTE + PHASERS + HOLODECK';
