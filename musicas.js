@@ -163,7 +163,9 @@ const musicTracks = {
     // Asteroides
     ASTEROIDES_GAME: createAudioTrack('asteroides.mp3'),
     // Repara el núcleo
-    NUCLEO_GAME: createAudioTrack('repara_nucleo.mp3')
+    NUCLEO_GAME: createAudioTrack('repara_nucleo.mp3'),
+    // Exploración
+    EXPLORACION_GAME: createAudioTrack('exploracion_ambiente.mp3')
 };
 
 // ------------------------------------------------------------
@@ -298,6 +300,9 @@ function getMusicScreen() {
         case 'NUCLEO_GAME':
             return 'NUCLEO_GAME';
 
+        // Exploración
+        case 'EXPLORACION_GAME':
+            return 'EXPLORACION_GAME';
     }
 
     // Combate normal y modo historia: música según arena.
@@ -403,7 +408,9 @@ async function playTrackForCurrentScreen() {
 
                 ASTEROIDES_GAME: '🔊 Música de Asteroides',
 
-                NUCLEO_GAME: '🔊 Música de Núcleo'
+                NUCLEO_GAME: '🔊 Música de Núcleo',
+
+                EXPLORACION_GAME: '🔊 Música de Exploración'
             };
             musicButton.textContent = labels[desiredState] || '🔊 Música automática';
             musicButton.style.borderColor = '#7CFC00';

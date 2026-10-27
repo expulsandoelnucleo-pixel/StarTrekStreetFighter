@@ -370,7 +370,7 @@ function updateExploracionGame() {
 
             if (g.health <= 0) {
                 g.health = 0;
-                playSound(soundExploracionMuerte);
+                //playSound(soundExploracionMuerte);
                 exploracionEndGame(false);
                 return;
             }
@@ -879,6 +879,13 @@ function exploracionEndGame(won) {
     // Detener el sonido del tricorder si todavía está sonando.
     soundExploracionTricorder.pause();
     soundExploracionTricorder.currentTime = 0;
+
+    // Sonido final de la misión.
+    if (won) {
+        playSound(soundExploracionLogrado);
+    } else {
+        playSound(soundExploracionMuerte);
+    }
 
     exploracionClearKeys();
     exploracionScanKeyPressed = false;
