@@ -167,6 +167,7 @@ let shuttleBonus = 0;
 let shuttleResumeStoryPhase = null;
 
 // Modo entrenamiento: puente, combate espacial, holodeck, razonamiento y Preguntas Trekkies.
+let trainingBridgeSoundPlayed = false;
 let starshipGame = null;
 let trainingRangeGame = null;
 let starshipRaceGame = null;
@@ -700,6 +701,7 @@ function beginTrainingMode() {
     kobayashiMaruStage = 0;
     kobayashiMaruChoice = -1;
     kobayashiMaruOutcome = '';
+    trainingBridgeSoundPlayed = false;
     // Parte del personaje que ya tenía seleccionado el jugador 1. Se puede
     // cambiar desde el puente con A/D o las flechas.
     trainingCharacterIndex = clamp(player1.charIndex, 0, availableCharacters.length - 1);
@@ -1721,6 +1723,10 @@ function drawTrainingBridge() {
     ctx.fillRect(38, 24, canvas.width - 76, 80);
     text(trainingBridgeAcademy, canvas.width / 2, 52, 37, '#79edff', false);
     text(trainingBridgeModus, canvas.width / 2, 78, 22, '#ffd66b', false);
+    if (!trainingBridgeSoundPlayed) {
+        playSound(sound4Bienvenida);
+        trainingBridgeSoundPlayed = true;
+    }
     const d = trainingDialogue[trainingDialogueIndex];
     ctx.fillStyle = 'rgba(3, 12, 25, 0.91)';
     ctx.fillRect(52, canvas.height * 0.64, canvas.width - 104, 126);
@@ -2022,8 +2028,8 @@ function beginHolodeckLevel(circuitIndex = trainingCircuitIndex) {
             w: 25,
             h: 37,
             vy: 0,
-            speed: 3.6,
-            jump: -10.6,
+            speed: 8,// TODO - RESTORE VALUE 3.6,
+            jump: -20,// TODO - RESTORE VALUE -10.6,
             onGround: true,
             invulnerable: 0,
             jumpRequested: false,
@@ -2086,7 +2092,7 @@ function updateHolodeckLevel() {
         }
     }
     if (p.y > h + 90) {
-        g.lives--;
+        //g.lives--;  // TODO - DESCOMENTAR
         p.x = 35;
         p.y = h - 43 - p.h;
         p.vy = 0;
@@ -2121,7 +2127,7 @@ function updateHolodeckLevel() {
                 p.vy = -6.2;
                 g.score += 100;
             } else {
-                g.lives--;
+                //g.lives--;  // TODO - DESCOMENTAR
                 p.invulnerable = 90;
                 p.vy = -5;
                 p.x = Math.max(0, p.x - 60);
@@ -4499,7 +4505,7 @@ window.addEventListener('keydown', (e) => {
         if (easterEggKeySequence.length === TRIBBLES_SECRET_SEQUENCE.length &&
             easterEggKeySequence.every((key, index) => key === TRIBBLES_SECRET_SEQUENCE[index])) {
             gameState = 'TRIBBLES_EASTER_EGG';
-            playSound(soundTribbles);
+            //playSound(soundTribbles);
             easterEggKeySequence = [];
             easterEggLetterBuffer = '';
             tribbleEasterEggCache = null;
@@ -4509,21 +4515,21 @@ window.addEventListener('keydown', (e) => {
             easterEggLetterBuffer = (easterEggLetterBuffer + e.key.toUpperCase()).slice(-4);
             if (easterEggLetterBuffer === 'LLAP') {
                 gameState = 'SPOCK_EASTER_EGG';
-                playSound(soundSpock);
+                //playSound(soundSpock);
                 easterEggKeySequence = [];
                 easterEggLetterBuffer = '';
                 return;
             }
             if (easterEggLetterBuffer.endsWith('EEN')) {
                 gameState = 'EEN_EASTER_EGG';
-                playSound(soundEen);
+                //playSound(soundEen);
                 easterEggKeySequence = [];
                 easterEggLetterBuffer = '';
                 return;
             }
             if (easterEggLetterBuffer.endsWith('DS9')) {
                 gameState = 'DS9_EASTER_EGG';
-                playSound(soundDs9);
+                //playSound(soundDs9);
                 easterEggKeySequence = [];
                 easterEggLetterBuffer = '';
                 return;
@@ -4537,6 +4543,20 @@ window.addEventListener('keydown', (e) => {
         }
         return;
     }
+
+    if (gameState === 'ASTEROIDES_GAME') {
+        asteroidesHandleKey(e.key);
+        return;
+        //if (
+        //    (e.key === ' ' || e.key === 'Enter') &&
+        //    asteroidesGame &&
+        //    asteroidesGame.over
+        //) {
+        //    beginAsteroidesGame();
+        //    return;
+        //}
+    }
+
     if (gameState === 'COCO_GAME') {
         if ((e.key === ' ' || e.key === 'Enter') && cocoGame && cocoGame.over) {
             beginCocoGame();
@@ -4566,8 +4586,14 @@ window.addEventListener('keydown', (e) => {
             gameState = 'CHARACTER_SELECT';
         } else if (e.key === '4') {
             beginTrainingMode();
+            //gameState = 'TRAINING';
         } else if (e.key === '5') {
             beginCocoGame();
+            //gameState = 'COCO_GAME';
+        } else if (e.key === '6') {
+            beginAsteroidesGame();
+            console.log('Estado después de iniciar asteroides:', gameState);
+            //gameState = 'ASTEROIDES_GAME';
         } else if (
             e.key.toLowerCase() === 'x' ||
             e.key === 'Escape') {
@@ -4999,11 +5025,23 @@ window.addEventListener('keydown', (e) => {
 
 window.addEventListener('keyup', (e) => {
     keys[e.key] = false;
+
+    // Liberar las teclas de los asteroides.
+    asteroidesHandleKeyUp(e.key);
+
+    // Liberar las teclas de ComeCocos.
+    handleCocoKeyUp(e.key);
 });
 
 window.addEventListener('blur', () => {
     for (const k in keys)
         keys[k] = false;
+
+    asteroidesClearKeys();
+
+    for (const k in cocoPressedKeys) {
+        delete cocoPressedKeys[k];
+    }
 });
 
 // ------------------------------------------------------------
@@ -5240,13 +5278,14 @@ function drawModeSelect() {
     drawTitleBackground();
     overlay(0.84);
 
-    text(menuSelectModeTitle, 500, 185, 35, '#00ffff', true);
-    text(menuSelectModeKeys1, 500, 255, 28, '#ffcc00');
-    text(menuSelectModeKeys2, 500, 300, 27, '#ffcc00');
-    text(menuSelectModeKeys3, 500, 345, 27, '#00ffcc');
-    text(menuSelectModeKeys4, 500, 390, 27, '#8df4ff');
-    text(menuSelectModeKeys5, 500, 435, 27, '#ffdc72');
-    text(menuSelectModeKeysExit, 500, 525, 23, '#ffffff');
+    text(menuSelectModeTitle, 500, 120, 40, '#00ffff', false, GAME_FONTKLINGON);
+    text(menuSelectModeKeys1, 500, 205, 28, '#ffcc00', false, GAME_FONTDS9);
+    text(menuSelectModeKeys2, 500, 250, 27, '#ffcc00', false, GAME_FONTDS9);
+    text(menuSelectModeKeys3, 500, 295, 27, '#00ffcc', false, GAME_FONTDS9);
+    text(menuSelectModeKeys4, 500, 340, 27, '#8df4ff', false, GAME_FONTDS9);
+    text(menuSelectModeKeys5, 500, 385, 27, '#ffdc72', false, GAME_FONTDS9);
+    text(menuSelectModeKeys6, 500, 430, 27, '#ffdc72', false, GAME_FONTDS9);
+    text(menuSelectModeKeysExit, 500, 525, 23, '#ffffff', false, GAME_FONTKLINGON);
 }
 
 // ------------------------------------------------------------
@@ -6097,6 +6136,10 @@ function gameLoop() {
             case 'COCO_GAME':
                 updateCocoGame();
                 drawCocoGame();
+                break;
+            case 'ASTEROIDES_GAME':
+                updateAsteroidesGame();
+                drawAsteroidesGame();
                 break;
             case 'CHARACTER_SELECT':
                 drawCharacterSelect();

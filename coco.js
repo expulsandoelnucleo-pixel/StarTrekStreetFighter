@@ -6,8 +6,8 @@ const cocoCols = 32;
 const cocoRows = 18;
 const playerSpeed = 18;
 const cocoSpeed = 250;
-const cocoPlayerImage = loadImage('assets/playerCoCo.png');
-const cocoGhostImage = loadImage('assets/fantasmaCoco.png');
+const cocoPlayerImage = loadImage('assets/player_coco.png');
+const cocoGhostImage = loadImage('assets/fantasma_coco.png');
 let cocoGame = null;
 const cocoPressedKeys = Object.create(null);
 
@@ -233,7 +233,7 @@ function beginCocoGame() {
         }
     }
     cocoGame = {
-        maze, dots, score: 0, lives: 3, frame: 0, over: false, won: false,
+        maze, dots, score: 0, lives: 3, frame: 0, over: false, won: false, finSoundPlayed: false,
         player: { x: 1, y: 1, dirX: 0, dirY: 0, nextX: 0, nextY: 0, moveTimer: 0 },
         ghosts: [
             { x: cocoCols - 2, y: 1, moveTimer: 0, color: '#ff5468' },
@@ -290,7 +290,10 @@ function updateCocoGame() {
         }
         p.moveTimer = playerSpeed;
         const dot = `${p.x},${p.y}`;
-        if (g.dots.delete(dot)) g.score += 10;
+        if (g.dots.delete(dot)) {
+            g.score += 10;
+            playSound(soundComeCocosComePunto);
+        }
         if (g.dots.size === 0) { g.over = true; g.won = true; g.overFrame = frameCount; }
     }
     for (const ghost of g.ghosts) {
@@ -306,6 +309,7 @@ function updateCocoGame() {
         }
         ghost.moveTimer = cocoSpeed;
         if (ghost.x === p.x && ghost.y === p.y) {
+            playSound(soundComeCocosComido);
             g.lives--;
             if (g.lives <= 0) { g.over = true; g.won = false; g.overFrame = frameCount; }
             else {
@@ -401,6 +405,10 @@ function drawCocoGame() {
         ctx.strokeRect(w / 2 - 430, h / 2 - 105, 860, 200);
         //cocoText(g.won ? cocoGanado : cocoPerdido, w / 2, h / 2 - 15, 46, g.won ? '#ffdf35' : '#ff6478', true);
         const elapsed = frameCount - g.overFrame;
+        if (!g.finSoundPlayed) {
+            playSound(soundComeCocosFin);
+            g.finSoundPlayed = true;
+        }
         cocoTextWithAnimation(g.won ? cocoGanado : cocoPerdido,
             w / 2,
             h / 2 - 15,

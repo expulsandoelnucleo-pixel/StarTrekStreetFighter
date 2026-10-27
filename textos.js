@@ -912,11 +912,12 @@ const menuKeys1 = 'PRESIONA [ ESPACIO ] PARA JUGAR';
 const menuKeys2 = '[ C ] CRÉDITOS';
 // Mode Select
 const menuSelectModeTitle = 'SELECCIONA MODO DE JUEGO';
-const menuSelectModeKeys1 = '[ 1 ] COMBATE LIBRE (2 JUGADORES)';
+const menuSelectModeKeys1 = '[ 1 ] COMBATE LIBRE (🧍‍♂️🧍‍♂️⛹️‍♀)';
 const menuSelectModeKeys2 = '[ 2 ] COMBATE LIBRE CONTRA LA MÁQUINA';
 const menuSelectModeKeys3 = '[ 3 ] MODO HISTORIA CONTRA LA MÁQUINA';
 const menuSelectModeKeys4 = '[ 4 ] ENTRENAMIENTO ESTELAR: PUENTE + PHASERS + HOLODECK';
 const menuSelectModeKeys5 = '[ 5 ] COMECOCOS: EL LABERINTO';
+const menuSelectModeKeys6 = '[ 6 ] ASTEROIDES: ZONA DE PELIGRO';
 const menuSelectModeKeysExit = 'X / ESC: VOLVER';
 // Character Card
 const menuSelectPlayer1 = 'TÚ';
@@ -1048,6 +1049,17 @@ const cocoVidas = 'VIDAS:';
 const cocoKeys = 'FLECHAS / W A S D · X / ESC: SALIR';
 const cocoPuntuacionFinal = 'PUNTUACIÓN:';
 const cocoEndKeys = 'ESPACIO: JUGAR OTRA VEZ · X / ESC: SALIR';
+
+
+// Asteroides
+const asteroides = '';
+const asteroidesEnd = 'NAVE DESTRUIDA';
+const asteroidesPuntos = 'PUNTOS';
+const asteroidesVidas = 'VIDAS';
+const asteroidesTiempo1 = 'TIEMPO';
+const asteroidesTiempo2 = 's';
+const asteroidesPuntuacionFinal = 'PUNTUACIÓN FINAL:';
+const asteroidesEndKeys = 'ENTER: VOLVER A JUGAR    X / ESC: SALIR';
 
 
 // -- FIN DE FICHERO
