@@ -1,1 +1,8 @@
-temas
+Temas musicales
+
+
+Quedan por hacer los sonidos de golpes
+Supongo que habría que añadir:
+ - cuando Picard gana, un sonido de flauta
+ - easter egg de Spock, una música
+ - easter egg de Tribbles, una música 

@@ -15,6 +15,7 @@ class Character {
         height = 600,
         // Propiedades especiales opcionales (con valores por defecto si no las tienen)
         victoryImg = null,
+        deadImg = null,
         extraGuardImg = null,
         extraPunchImg = null,
         extraDamage = 0,
@@ -42,19 +43,14 @@ class Character {
         this.height = height;
         // Habilidades especiales
         this.victoryImg = victoryImg,
-        this.extraGuardImg = extraGuardImg;
-        this.extraPunchImg = extraPunchImg;
-        this.extraDamage = extraDamage;
-        this.extraAttackRange = extraAttackRange;
-        this.extraAttackDuration = extraAttackDuration;
-        this.extraAttackCooldown = extraAttackCooldown;
-        this.extraKnockback = extraKnockback;
-        this.kickImg = kickImg;
-        this.kickDamage = kickDamage;
-        this.kickAttackRange = kickAttackRange;
-        this.kickAttackDuration = kickAttackDuration;
-        this.kickAttackCooldown = kickAttackCooldown;
-        this.kickKnockback = kickKnockback;
+        this.deadImg = deadImg,
+        this.extraGuardImg = extraGuardImg || guardImg;
+        this.extraPunchImg = extraPunchImg || kickImg || punchImg;
+        this.extraDamage = extraDamage || kickDamage || damage;
+        this.extraAttackRange = extraAttackRange || kickAttackRange || attackRange;
+        this.extraAttackDuration = extraAttackDuration || kickAttackDuration || attackDuration;
+        this.extraAttackCooldown = extraAttackCooldown || kickAttackCooldown || 8;
+        this.extraKnockback = extraKnockback || kickKnockback || 15;
     }
 }
 
@@ -118,9 +114,13 @@ const scottyPunch = loadImage('assets/scotty_punch.png');
 // Jordi
 const jordiGuard = loadImage('assets/jordi_guard.png');
 const jordiKick = loadImage('assets/jordi_kick.png');
+const jordiVictory = loadImage('assets/jordi_victory.png');
+const jordiDead = loadImage('assets/jordi_dead.png');
 // Marina
 const marinaGuard = loadImage('assets/marina_guard.png');
 const marinaKick = loadImage('assets/marina_kick.png');
+const marinaVictory = loadImage('assets/marina_victory.png');
+const marinaDead = loadImage('assets/marina_dead.png');
 // Khan
 const kanImage = loadImage('assets/khan_guard.png');
 const khanPunch = loadImage('assets/khan_punch.png');
@@ -131,27 +131,31 @@ const picardVictoryImg = loadImage('assets/picard_flute.png');
 // Riker tiene guardia y golpe normales, ademÃ¡s de dos poses con silla.
 const rikerGuard = loadImage('assets/ricker_guard.png');
 const rikerPunch = loadImage('assets/ricker_kick.png');
-const rikerChairGuard = loadProjectAsset('ricker_silla_guard.png');
-const rikerChairPunch = loadProjectAsset('ricker_silla_punch.png');
+const rikerChairGuard = loadImage('assets/ricker_silla_guard.png');
+const rikerChairPunch = loadImage('assets/ricker_silla_punch.png');
 // DATA: androide de la Flota Estelar, con guardia y ataque normales.
-const dataGuard = loadProjectAsset('data_guard.png');
-const dataPunch = loadProjectAsset('data_punch.png');
+const dataGuard = loadImage('assets/data_guard.png');
+const dataPunch = loadImage('assets/data_punch.png');
 // WORF: guardia y ataque normal.
-const worfGuard = loadProjectAsset('worf_guard.png');
-const worfPunch = loadProjectAsset('worf_punch.png');
+const worfGuard = loadImage('assets/worf_guard.png');
+const worfPunch = loadImage('assets/worf_punch.png');
+const worfExtraGuard = loadImage('assets/worf_extra_guard.png');
+const worfExtraPunch = loadImage('assets/worf_extra_punch.png');
+const worfVictory = loadImage('assets/worf_victory.png');
 // LAFORGE: guardia, ataque normal y patada especial.
-const laforgeGuard = loadProjectAsset('laforge_guard.png');
-const laforgePunch = loadProjectAsset('laforge_punch.png');
-const laforgeKick = loadProjectAsset('laforge_kick.png');
+const laforgeGuard = loadImage('assets/laforge_guard.png');
+const laforgePunch = loadImage('assets/laforge_punch.png');
+const laforgeExtraGuard = loadImage('assets/laforge_extra_guard.png');
+const laforgeExtraPunch = loadImage('assets/laforge_extra_punch.png');
 // CHEKOV: guardia y ataque normal.
-const chekovGuard = loadProjectAsset('chekov_guard.png');
-const chekovPunch = loadProjectAsset('chekov_punch.png');
+const chekovGuard = loadImage('assets/chekov_guard.png');
+const chekovPunch = loadImage('assets/chekov_punch.png');
 // GORN: guardia y ataque normal.
-const gornGuard = loadProjectAsset('gorn_guard.png');
-const gornPunch = loadProjectAsset('gorn_punch.png');
+const gornGuard = loadImage('assets/gorn_guard.png');
+const gornPunch = loadImage('assets/gorn_punch.png');
 // TASHA YAR: jefa de seguridad; sprites propios opcionales en assets/.
-const tashaGuard = loadProjectAsset('tasha_guard.png');
-const tashaPunch = loadProjectAsset('tasha_punch.png');
+const tashaGuard = loadImage('assets/tasha_guard.png');
+const tashaPunch = loadImage('assets/tasha_punch.png');
 // Seven of Nine
 const sevenGuard = loadImage('assets/seven_guard.png');
 const sevenKick = loadImage('assets/seven_kick.png');
@@ -162,14 +166,30 @@ const locutusPunch = loadImage('assets/locutus_punch.png');
 // Andreu
 const andreuGuard = loadImage('assets/andreu_guard.png');
 const andreuPunch = loadImage('assets/andreu_kick.png');
+const andreuVictory = loadImage('assets/andreu_victory.png');
+const andreuDead = loadImage('assets/andreu_dead.png');
 // Jesús
 const jesusGuard = loadImage('assets/jesus_guard.png');
 const jesusPunch = loadImage('assets/jesus_kick.png');
+const jesusVictory = loadImage('assets/jesus_victory.png');
+const jesusDead = loadImage('assets/jesus_dead.png');
 // Emilio
 const emilioGuard = loadImage('assets/emilio_guard.png');
 const emilioPunch = loadImage('assets/emilio_kick.png');
-
-
+const emilioVictory = loadImage('assets/emilio_victory.png');
+const emilioDead = loadImage('assets/emilio_dead.png');
+const emilioExtraGuard = loadImage('assets/emilio_extra_guard.png');
+const emilioExtraPunch = loadImage('assets/emilio_extra_punch.png');
+// Ramón
+const ramonGuard = loadImage('assets/ramon_guard.png');
+const ramonPunch = loadImage('assets/ramon_kick.png');
+const ramonVictory = loadImage('assets/ramon_victory.png');
+const ramonDead = loadImage('assets/ramon_dead.png');
+// Txús
+const txusGuard = loadImage('assets/txus_guard.png');
+const txusPunch = loadImage('assets/txus_kick.png');
+const txusVictory = loadImage('assets/txus_victory.png');
+const txusDead = loadImage('assets/txus_dead.png');
 
 // Y luego creas tu array usando la clase:
 const availableCharacters = [
@@ -233,6 +253,8 @@ const availableCharacters = [
             name: 'JORDI',
             guardImg: jordiGuard,
             punchImg: jordiKick,
+            victoryImg: jordiVictory,
+            deadImg:jordiDead,
             role: 'Explorador de la Flota'
         }
     ),
@@ -242,6 +264,8 @@ const availableCharacters = [
             name: 'MARINA',
             guardImg: marinaGuard,
             punchImg: marinaKick,
+            victoryImg: marinaVictory,
+            deadImg: marinaDead,
             role: 'Oficial de la Flota'
         }
     ),
@@ -283,7 +307,7 @@ const availableCharacters = [
             extraKnockback: 19
         }
     ),
-        new Character(
+    new Character(
         {
             id: 12,
             name: 'DATA',
@@ -300,6 +324,9 @@ const availableCharacters = [
             name: 'WORF',
             guardImg: worfGuard,
             punchImg: worfPunch,
+            extraGuardImg: worfExtraGuard,
+            extraPunchImg: worfExtraPunch,
+            victoryImg: worfVictory,
             role: 'Oficial de seguridad klingon',
             damage: 9,
             attackRange: 115,
@@ -313,13 +340,14 @@ const availableCharacters = [
             name: 'LAFORGE',
             guardImg: laforgeGuard,
             punchImg: laforgePunch,
-            kickImg: laforgeKick,
+            extraGuardImg: laforgeExtraGuard,
+            extraPunchImg: laforgeExtraPunch,
             role: 'Ingeniero jefe del Enterprise',
-            kickDamage: 10,
-            kickAttackRange: 145,
-            kickAttackDuration: 22,
-            kickAttackCooldown: 15,
-            kickKnockback: 20
+            extraDamage: 10,
+            extraAttackRange: 145,
+            extraAttackDuration: 22,
+            extraAttackCooldown: 15,
+            extraKnockback: 20
         }
     ),
     new Character(
@@ -394,6 +422,8 @@ const availableCharacters = [
             name: 'ANDREU',
             guardImg: andreuGuard,
             punchImg: andreuPunch,
+            victoryImg: andreuVictory,
+            deadImg: andreuDead,
             role: 'Padrino 1',
         }
     ),
@@ -403,6 +433,8 @@ const availableCharacters = [
             name: 'JESÚS',
             guardImg: jesusGuard,
             punchImg: jesusPunch,
+            victoryImg: jesusVictory,
+            deadImg: jesusDead,
             role: 'Padrino 2',
          }
     ),
@@ -412,7 +444,32 @@ const availableCharacters = [
             name: 'EMILIO',
             guardImg: emilioGuard,
             punchImg: emilioPunch,
+            victoryImg: emilioVictory,
+            deadImg: emilioDead,
+            extraGuardImg: emilioExtraGuard,
+            extraPunchImg: emilioExtraPunch,
             role: 'AKA Anónimo Aguacate',
+        }
+    ),
+    new Character(
+        {
+            id: 23,
+            name: 'RAMON',
+            guardImg: ramonGuard,
+            punchImg: ramonPunch,
+            victoryImg: ramonVictory,
+            deadImg: ramonDead,
+            role: 'Bro 1',
+        }
+    ), new Character(
+        {
+            id: 24,
+            name: 'TXUS',
+            guardImg: txusGuard,
+            punchImg: txusPunch,
+            victoryImg: txusVictory,
+            deadImg: txusDead,
+            role: 'Bro2',
         }
     )
   // ... y así con el resto de personajes
