@@ -1,21 +1,26 @@
 # 🚀 Star Trek: Expulsando el Núcleo
 
-¡Bienvenido a **Star Trek: Expulsando el Núcleo**, un juego arcade de lucha y aventura en 2D inspirado en el universo de Star Trek! Combina combates estelares, duelos clásicos uno contra uno, misiones de historia ramificadas y minijuegos retro basados en la serie.
+¡Bienvenido a _**Star Trek: Expulsando el Núcleo**_, un juego arcade de lucha y aventura en 2D inspirado en el universo de Star Trek! Combina combates estelares, duelos clásicos uno contra uno, misiones de historia ramificadas y minijuegos retro basados en la serie.
 
 ---
 
 ## 📖 Descripción del Juego
 
-El motor de la nave está en peligro y Q ha lanzado un desafío final. En este juego podrás revivir enfrentamientos épicos entre los personajes más emblemáticos de la Flota Estelar y sus mayores rivales. 
+El motor de la nave está en peligro y _Q_ ha lanzado un desafío final. En este juego podrás revivir enfrentamientos épicos entre los personajes más emblemáticos de la Flota Estelar y sus mayores rivales.
 
-El título cuenta con múltiples modos de juego diseñados tanto para partidas rápidas como para una experiencia de campaña profunda con diálogos originales, decisiones tácticas, simulaciones de vuelo y pruebas de conocimientos trekkies.
+Star Trek: Expulsando el Núcleo combina combates arcade, aventuras narrativas, simulaciones y minijuegos inspirados en el universo de Star Trek. Desde duelos entre personajes clásicos hasta misiones de exploración planetaria, cada modo ofrece una forma diferente de poner a prueba tus habilidades como cadete de la Flota Estelar.
 
 ### ✨ Características Principales
-* **Modo Historia / Campaña:** Supera 19 misiones consecutivas al mejor de tres combates, toma decisiones tácticas y enfréntate al juicio final de Q (¡o desbloquea el final secreto en el Nexus con Picard!).
-* **Combate 1v1:** Modos VS Local y VS Máquina (con 3 niveles de dificultad: Fácil, Normal y Difícil).
-* **Modo Entrenamiento / Academia:** Incluye el Puente de Mando, galería de tiro láser, circuitos de plataformas en el Holodeck, trivias de Star Trek y la simulación del Kobayashi Maru.
-* **Minigames Arcade:** Destruye la lanzadera enemiga en el hangar o compite en carreras espaciales de naves.
-* **Personajes Únicos:** Cada oficial cuenta con habilidades y ataques especiales exclusivos (como la mítica silla de Riker o las patadas tácticas de LaForge).
+* Modo Historia / Campaña: supera 19 misiones consecutivas al mejor de tres combates, toma decisiones tácticas y enfréntate al juicio final de Q. ¡Incluso podrás desbloquear el final secreto en el Nexus con Picard!
+* Combate 1v1: juega en los modos VS Local y VS Máquina, con tres niveles de dificultad: Fácil, Normal y Difícil.
+* Modo Entrenamiento / Academia: explora el Puente de Mando, practica en la galería de tiro láser, supera circuitos de plataformas en el Holodeck, demuestra tus conocimientos sobre Star Trek con las trivias y afronta la simulación del Kobayashi Maru.
+* Minijuegos Arcade: disfruta de desafíos independientes que amplían la experiencia con diferentes mecánicas:
+  - ComeCocos: recorre laberintos, recoge los elementos del escenario y evita a los Romulanos.
+  - Asteroides: enfréntate a los peligros del espacio en un desafío arcade evitando ser destruido por los Borg.
+  - Reparar el Núcleo: participa en una misión para reparar el núcleo de la nave.
+  - Misión de exploración con Spock: explora un planeta desconocido, utiliza el tricorder para analizar anomalías, esquiva zonas peligrosas y a los Gorn, y alcanza el punto de extracción antes de que se agote el tiempo.
+* Personajes únicos: cada oficial cuenta con habilidades y ataques especiales exclusivos, como la mítica silla de Riker o las patadas tácticas de LaForge.
+* Universo en expansión: nuevos personajes, escenarios y modos de juego que amplían las posibilidades de esta aventura fan inspirada en Star Trek.
 
 ---
 
@@ -34,17 +39,26 @@ El título cuenta con múltiples modos de juego diseñados tanto para partidas r
 * **Habilidad Especial:** Mantener presionada la flecha abajo (`↓`) junto con el ataque.
 
 ### ⌨️ Navegación por Menús y Minijuegos
-* **Selección y Opciones:** Usa las flechas de dirección o WASD y confirma con `Espacio` o `Enter`.
+* **Selección y Opciones:** Usa las `flechas` de dirección o `WASD` y confirma con `Espacio` o `Enter`.
 * **Volver / Salir:** Tecla `X` o `Escape`.
-* **Modo Entrenamiento (Holodeck / Naves):** Usa las flechas para pilotar o moverte, y `Espacio` para disparar o interactuar.
+* **Modo Entrenamiento (Holodeck / Naves):** Usa las `flechas` para pilotar o moverte, y `Espacio` para disparar o interactuar.
 
 ---
 ## 🛠️ Cómo Ejecutar el Proyecto
 Al tratarse de un juego web desarrollado en JavaScript nativo con HTML5 Canvas:
-1. Descarga el ZIP en tu equipo.
+1. Descarga el `ZIP` en tu equipo.
 2. Descomprímelo en la carpeta que quieras para tener el juego.
 3. Asegúrate de mantener la estructura de carpetas (con sus respectivos scripts y assets de imágenes/música).
 4. Abre el archivo **`index.html`** en cualquier navegador web moderno (Chrome, Firefox, Edge, etc.) para empezar a jugar.
+
+---
+
+### 🖖 Una aventura hecha con cariño
+Este proyecto está hecho por dos fans de *Star Trek*, con mucha ilusión, cariño y unas muchas horas de diversión programando.
+Seguro que todavía quedan errores por descubrir, detalles por pulir y cosas que mejorar. No es un juego perfecto, pero está hecho con ganas de pasarlo bien y compartir un pequeño homenaje a este universo que tanto nos gusta.
+Si encuentras algún fallo, ¡no te sorprendas demasiado! 😅 Y, sobre todo, gracias por jugar y formar parte de esta aventura.
+
+**¡Larga vida y prosperidad!** 🖖
 
 ---
 
