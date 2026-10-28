@@ -521,7 +521,7 @@ const holodeckCourseName3 = 'SECTOR VOLCÁNICO';
 const holodeckCourseName4 = 'LABORATORIO DE CRIOGÉNESIS';
 
 // HUD
-// Starshio mode
+// Starship mode
 const hudStarshipModeText1 = 'STARFLEET: PILOTAJE';
 const hudStarshipModeText2 = 'PUNTOS ';
 const hudStarshipModeText3 = 'VIDAS ';
@@ -862,6 +862,7 @@ const qTrialResultLose2 = 'El núcleo ha colapsado. Q dicta sentencia.';
 const qTrialResultWin3 = '«Admito que los humanos aún pueden sorprenderme.» — Q';
 const qTrialResultLose3 = '«Qué decepción. Volved a intentarlo, si os atrevéis.» — Q';
 const qTrialKeyToMenu = 'ESPACIO / INTRO: VOLVER AL MENÚ';
+const qTrialHiddenEasterEgg = 'Q';
 
 // Shuttle Minigame
 const shuttleMinigameErrorAsset = 'FALTAN LOS PNG DE GALILEO EN assets/';
@@ -911,11 +912,15 @@ const menuKeys1 = 'PRESIONA [ ESPACIO ] PARA JUGAR';
 const menuKeys2 = '[ C ] CRÉDITOS';
 // Mode Select
 const menuSelectModeTitle = 'SELECCIONA MODO DE JUEGO';
-const menuSelectModeKeys1 = '[ 1 ] COMBATE LIBRE (2 JUGADORES)';
+const menuSelectModeKeys1 = '[ 1 ] COMBATE LIBRE (🧍‍♂️🧍‍♂️)';
 const menuSelectModeKeys2 = '[ 2 ] COMBATE LIBRE CONTRA LA MÁQUINA';
 const menuSelectModeKeys3 = '[ 3 ] MODO HISTORIA CONTRA LA MÁQUINA';
 const menuSelectModeKeys4 = '[ 4 ] ENTRENAMIENTO ESTELAR: PUENTE + PHASERS + HOLODECK';
-const menuSelectModeKeys5 = 'X / ESC: VOLVER';
+const menuSelectModeKeys5 = '[ 5 ] COMECOCOS: EL LABERINTO';
+const menuSelectModeKeys6 = '[ 6 ] ASTEROIDES: ZONA DE PELIGRO';
+const menuSelectModeKeys7 = '[ 7 ] REPARA EL NÚCLEO O MUERE';
+const menuSelectModeKeys8 = '[ 8 ] Nuevos mundos extraños';
+const menuSelectModeKeysExit = 'X / ESC: VOLVER';
 // Character Card
 const menuSelectPlayer1 = 'TÚ';
 const menuSelectPlayer2 = 'MÁQUINA';
@@ -936,7 +941,7 @@ const creditsTitle = 'CRÉDITOS';
 const creditsSubtitle = 'Star Trek: Expulsando el núcleo';
 const creditsText1 = 'Creado con JavaScript y Canvas y mucho cariño';
 const creditsText2 = 'Un regalo sin ánimo de lucro para vosotros';
-const creditsText3 = 'Con cariño, el hermano de Ramón y Emilio.';
+const creditsText3 = 'Con cariño, Emilio y el hermano de Ramón.';
 const creditsKeys = 'X / ESC: VOLVER';
 
 // Intro
@@ -1038,6 +1043,25 @@ const retryRemain2 = 'INTENTO(S)`';
 const retryRetryIt = 'Puedes volver a intentarlo, cadete.';
 const retryKeys = 'ESPACIO: REINTENTAR | X: MENÚ';
 
+// Comecocos
+const cocoGanado = '¡LABERINTO COMPLETADO!';
+const cocoPerdido = '¡TE HAN ATRAPADO!';
+const cocoPuntos = 'PUNTOS:';
+const cocoVidas = 'VIDAS:';
+const cocoKeys = 'FLECHAS / W A S D · X / ESC: SALIR';
+const cocoPuntuacionFinal = 'PUNTUACIÓN:';
+const cocoEndKeys = 'ESPACIO: JUGAR OTRA VEZ · X / ESC: SALIR';
+
+
+// Asteroides
+const asteroides = '';
+const asteroidesEnd = 'NAVE DESTRUIDA';
+const asteroidesPuntos = 'PUNTOS';
+const asteroidesVidas = 'VIDAS';
+const asteroidesTiempo1 = 'TIEMPO';
+const asteroidesTiempo2 = 's';
+const asteroidesPuntuacionFinal = 'PUNTUACIÓN FINAL:';
+const asteroidesEndKeys = 'ENTER: VOLVER A JUGAR    X / ESC: SALIR';
 
 
 // -- FIN DE FICHERO
