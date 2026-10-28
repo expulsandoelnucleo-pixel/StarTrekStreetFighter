@@ -44,6 +44,7 @@ Star Trek: Expulsando el Núcleo combina combates arcade, aventuras narrativas, 
 * **Modo Entrenamiento (Holodeck / Naves):** Usa las `flechas` para pilotar o moverte, y `Espacio` para disparar o interactuar.
 
 ---
+
 ## 🛠️ Cómo Ejecutar el Proyecto
 Al tratarse de un juego web desarrollado en JavaScript nativo con HTML5 Canvas:
 1. Descarga el `ZIP` en tu equipo.
@@ -52,7 +53,8 @@ Al tratarse de un juego web desarrollado en JavaScript nativo con HTML5 Canvas:
 4. Abre el archivo **`index.html`** en cualquier navegador web moderno (Chrome, Firefox, Edge, etc.) para empezar a jugar.
 
 ---
-### 🔎 ¡Ojo, explorador!
+
+## 🔎 ¡Ojo, explorador!
 
 Por toda la aventura hay algún que otro Easter Egg escondido para los jugadores más observadores. 👀  
 Explora, prueba cosas, presta atención a los detalles y no des nada por sentado.  
@@ -61,7 +63,8 @@ Puede que encuentres alguna sorpresa que no esperabas…
 ¿Serás capaz de descubrirlos todos? 🖖
 
 ---
-### 🖖 Una aventura hecha con cariño
+
+## 🖖 Una aventura hecha con cariño
 Este proyecto está hecho por dos fans de *Star Trek*, con mucha ilusión, cariño y unas muchas horas de diversión programando.  
 Seguro que todavía quedan errores por descubrir, detalles por pulir y cosas que mejorar.  
 No es un juego perfecto, pero está hecho con ganas de pasarlo bien y compartir un pequeño homenaje a este universo que tanto nos gusta.  
@@ -108,6 +111,7 @@ El proyecto se proporciona *«tal cual»*, sin garantías de funcionamiento, dis
 Si deseas vender, monetizar, integrar en un producto comercial o utilizar el proyecto de una forma que no esté permitida por esta licencia, deberás obtener autorización previa y expresa del titular de los derechos correspondientes.  
 
 ---
+
 ## 📬 Contacto y permisos especiales
 
 ¿Tienes alguna duda, sugerencia, has encontrado algún error o quieres contribuir al proyecto? ¡Estaré encantado de escucharte!  
@@ -116,8 +120,8 @@ Si deseas vender, monetizar, integrar en un producto comercial o utilizar el pro
 Si estás interesado en monetizar el juego, utilizarlo en un proyecto comercial o proponer alguna colaboración, ponte en contacto conmigo para comentar la propuesta y solicitar autorización previa.  
 La autorización estará sujeta a los derechos que correspondan sobre el código, los recursos originales y los materiales de terceros incluidos en el juego.  
 
-¡Gracias por jugar, colaborar y ayudar a que este proyecto siga creciendo!
+### ¡Gracias por jugar, colaborar y ayudar a que este proyecto siga creciendo!
 ---
 
-*¡Que la fuerza del núcleo os acompañe, cadetes!* 🖖
+# *¡Que la fuerza del núcleo os acompañe, cadetes!* 🖖
 ---
