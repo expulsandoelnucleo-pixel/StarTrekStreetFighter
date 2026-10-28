@@ -52,11 +52,21 @@ Al tratarse de un juego web desarrollado en JavaScript nativo con HTML5 Canvas:
 4. Abre el archivo **`index.html`** en cualquier navegador web moderno (Chrome, Firefox, Edge, etc.) para empezar a jugar.
 
 ---
+### 🔎 ¡Ojo, explorador!
 
+Por toda la aventura hay algún que otro Easter Egg escondido para los jugadores más observadores. 👀  
+Explora, prueba cosas, presta atención a los detalles y no des nada por sentado.  
+Puede que encuentres alguna sorpresa que no esperabas…
+
+¿Serás capaz de descubrirlos todos? 🖖
+
+---
 ### 🖖 Una aventura hecha con cariño
-Este proyecto está hecho por dos fans de *Star Trek*, con mucha ilusión, cariño y unas muchas horas de diversión programando.
-Seguro que todavía quedan errores por descubrir, detalles por pulir y cosas que mejorar. No es un juego perfecto, pero está hecho con ganas de pasarlo bien y compartir un pequeño homenaje a este universo que tanto nos gusta.
-Si encuentras algún fallo, ¡no te sorprendas demasiado! 😅 Y, sobre todo, gracias por jugar y formar parte de esta aventura.
+Este proyecto está hecho por dos fans de *Star Trek*, con mucha ilusión, cariño y unas muchas horas de diversión programando.  
+Seguro que todavía quedan errores por descubrir, detalles por pulir y cosas que mejorar.  
+No es un juego perfecto, pero está hecho con ganas de pasarlo bien y compartir un pequeño homenaje a este universo que tanto nos gusta.  
+Si encuentras algún fallo, ¡no te sorprendas demasiado! 😅  
+Y, sobre todo, gracias por jugar y formar parte de esta aventura.
 
 **¡Larga vida y prosperidad!** 🖖
 
