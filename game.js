@@ -167,6 +167,7 @@ let shuttleBonus = 0;
 let shuttleResumeStoryPhase = null;
 
 // Modo entrenamiento: puente, combate espacial, holodeck, razonamiento y Preguntas Trekkies.
+let trainingBridgeSoundPlayed = false;
 let starshipGame = null;
 let trainingRangeGame = null;
 let starshipRaceGame = null;
@@ -199,13 +200,13 @@ const intelligenceQuestionBank = [{
         answer: 1,
         explanation: intelligenceQuestQuestion2Explanation
     }, {
-      id: 3,
+        id: 3,
         question: intelligenceQuestQuestion3,
         options: [intelligenceQuestQuestion3Option1, intelligenceQuestQuestion3Option2, intelligenceQuestQuestion3Option3, intelligenceQuestQuestion3Option4],
         answer: 2,
         explanation: intelligenceQuestQuestion3Explanation
     }, {
-      id: 4,
+        id: 4,
         question: intelligenceQuestQuestion4,
         options: [intelligenceQuestQuestion4Option1, intelligenceQuestQuestion4Option2, intelligenceQuestQuestion4Option3, intelligenceQuestQuestion4Option4],
         answer: 1,
@@ -700,6 +701,7 @@ function beginTrainingMode() {
     kobayashiMaruStage = 0;
     kobayashiMaruChoice = -1;
     kobayashiMaruOutcome = '';
+    trainingBridgeSoundPlayed = false;
     // Parte del personaje que ya tenía seleccionado el jugador 1. Se puede
     // cambiar desde el puente con A/D o las flechas.
     trainingCharacterIndex = clamp(player1.charIndex, 0, availableCharacters.length - 1);
@@ -1143,7 +1145,8 @@ function drawStarshipMode() {
         ctx.fillStyle = 'rgba(0, 4, 14, 0.80)';
         ctx.fillRect(0, 0, w, h);
 
-        if (!g.overFrame) g.overFrame = frameCount;
+        if (!g.overFrame)
+            g.overFrame = frameCount;
         const elapsed = frameCount - g.overFrame;
 
         if (g.missionComplete) {
@@ -1240,7 +1243,8 @@ function beginStarshipRace() {
                 lane: (Math.random() * 1.35) - 0.675,
                 hit: false,
                 spin: Math.random() * Math.PI * 2
-            })),
+        })),
+        nextHazardProgress: 690 + 8 * 910,
         stars: Array.from({
             length: 100
         }, () => ({
@@ -1305,6 +1309,20 @@ function updateStarshipRace() {
         rival.progress += rival.speed + Math.sin(g.frame / 85 + rival.phase) * 0.035;
         // Cambios suaves de carril; todos permanecen dentro de los límites.
         rival.lane = clamp(rival.lane + Math.sin(g.frame / 90 + rival.phase) * 0.0009, -0.31, 0.31);
+    }
+
+    // Generar nuevas boyas a lo largo de toda la carrera.
+    while (g.nextHazardProgress < g.progress + 1200 &&
+        g.nextHazardProgress < g.finishDistance) {
+
+        g.hazards.push({
+            progress: g.nextHazardProgress + Math.random() * 210,
+            lane: (Math.random() * 1.35) - 0.675,
+            hit: false,
+            spin: Math.random() * Math.PI * 2
+        });
+
+        g.nextHazardProgress += 910;
     }
 
     // Boyas energéticas que el cadete debe esquivar.
@@ -1549,7 +1567,8 @@ function drawStarshipRace() {
         ctx.fillStyle = 'rgba(1,6,17,0.82)';
         ctx.fillRect(0, 0, w, h);
 
-        if (!g.overFrame) g.overFrame = frameCount;
+        if (!g.overFrame)
+            g.overFrame = frameCount;
         const elapsed = frameCount - g.overFrame;
 
         //text(g.won ? starshipRaceEndWin1 : starshipRaceEndLoose1, w / 2, h / 2 - 35, 26, g.won ? '#ffdc72' : '#ff716d', true);
@@ -1577,7 +1596,7 @@ function drawStarshipRace() {
 
 function drawTrainingBridgeBackdrop() {
     const w = canvas.width,
-        h = canvas.height;
+    h = canvas.height;
     const bg = ctx.createLinearGradient(0, 0, 0, h);
     bg.addColorStop(0, '#09182a');
     bg.addColorStop(0.58, '#152d44');
@@ -1719,6 +1738,10 @@ function drawTrainingBridge() {
     ctx.fillRect(38, 24, canvas.width - 76, 80);
     text(trainingBridgeAcademy, canvas.width / 2, 52, 37, '#79edff', false);
     text(trainingBridgeModus, canvas.width / 2, 78, 22, '#ffd66b', false);
+    if (!trainingBridgeSoundPlayed) {
+        playSound(sound4Bienvenida);
+        trainingBridgeSoundPlayed = true;
+    }
     const d = trainingDialogue[trainingDialogueIndex];
     ctx.fillStyle = 'rgba(3, 12, 25, 0.91)';
     ctx.fillRect(52, canvas.height * 0.64, canvas.width - 104, 126);
@@ -2020,8 +2043,8 @@ function beginHolodeckLevel(circuitIndex = trainingCircuitIndex) {
             w: 25,
             h: 37,
             vy: 0,
-            speed: 3.6,
-            jump: -10.6,
+            speed: 8,// TODO - RESTORE VALUE 3.6,
+            jump: -20,// TODO - RESTORE VALUE -10.6,
             onGround: true,
             invulnerable: 0,
             jumpRequested: false,
@@ -2084,7 +2107,7 @@ function updateHolodeckLevel() {
         }
     }
     if (p.y > h + 90) {
-        g.lives--;
+        //g.lives--;  // TODO - DESCOMENTAR
         p.x = 35;
         p.y = h - 43 - p.h;
         p.vy = 0;
@@ -2119,7 +2142,7 @@ function updateHolodeckLevel() {
                 p.vy = -6.2;
                 g.score += 100;
             } else {
-                g.lives--;
+                //g.lives--;  // TODO - DESCOMENTAR
                 p.invulnerable = 90;
                 p.vy = -5;
                 p.x = Math.max(0, p.x - 60);
@@ -2501,7 +2524,8 @@ function drawHolodeckLevel() {
         ctx.fillStyle = 'rgba(4,12,27,0.82)';
         ctx.fillRect(0, 0, w, h);
 
-        if (!g.overFrame) g.overFrame = frameCount;
+        if (!g.overFrame)
+            g.overFrame = frameCount;
         const elapsed = frameCount - g.overFrame;
         const isLastCircuit = g.circuitIndex >= holodeckCourses.length - 1;
         //text(g.complete ? `${holodeckLevelCompleted1}${g.circuitIndex + 1}${holodeckLevelCompleted2}` : holodeckLevelFail, w / 2, h / 2 - 42, 23, g.complete ? '#ffe071' : '#ff746d', false);
@@ -2692,11 +2716,11 @@ function drawKobayashiShip(cx, cy, scale, kind = 'civilian', damage = false) {
 
 function drawKobayashiViewscren(hostiles = false) {
     const w = canvas.width,
-        h = canvas.height;
+    h = canvas.height;
     const x = 50,
-        y = 85,
-        vw = w - 100,
-        vh = 205;
+    y = 85,
+    vw = w - 100,
+    vh = 205;
     ctx.fillStyle = '#020914';
     ctx.fillRect(x, y, vw, vh);
     ctx.save();
@@ -2784,7 +2808,7 @@ function drawKobayashiViewscren(hostiles = false) {
 function drawKobayashiMaru() {
     drawTrainingBridgeBackdrop();
     const w = canvas.width,
-        h = canvas.height;
+    h = canvas.height;
     overlay(0.58);
     const alarmOn = Math.floor(frameCount / 18) % 2 === 0;
     if (alarmOn && kobayashiMaruStage >= 1 && kobayashiMaruStage <= 2) {
@@ -2902,7 +2926,8 @@ function drawTrainingQuiz(type) {
                 line = test;
             }
         }
-        if (line) lines.push(line);
+        if (line)
+            lines.push(line);
         const lineHeight = 18;
         const totalTextHeight = lines.length * lineHeight;
         const startY = 357.5 - (totalTextHeight / 2) + (lineHeight / 2);
@@ -2918,7 +2943,7 @@ function drawTrainingQuiz(type) {
     } else {
         text(trainingQuizKeys2, canvas.width / 2, canvas.height - 15, 20, '#8ceeff', false);
     }
-} 
+}
 
 function drawTrainingComplete() {
     drawTrainingBridgeBackdrop();
@@ -2928,6 +2953,8 @@ function drawTrainingComplete() {
     text(`${trainingComplete3A}${intelligenceScore}/${intelligenceQuestions.length}${trainingComplete3B}${triviaScore}/${starTrekTriviaQuestions.length}`, canvas.width / 2, 235, 30, '#ffdc72', false);
     text(trainingComplete4, canvas.width / 2, 295, 30, '#7feeff');
     text(trainingComplete5, canvas.width / 2, 385, 26, '#ffdc72', false);
+    // Easter Egg
+    text(qTrialHiddenEasterEgg, 15, 15, 14, '#ffffff', false);
 
     // Easster Eggde Q
     if (qEasterEggActive) {
@@ -2952,7 +2979,7 @@ function drawTrainingComplete() {
         if (qTalkImage.complete && qTalkImage.naturalWidth > 0) {
             const ratio = Math.min((qBoxW - 8) / qTalkImage.naturalWidth, (qBoxH - 8) / qTalkImage.naturalHeight);
             const drawW = qTalkImage.naturalWidth * ratio,
-                drawH = qTalkImage.naturalHeight * ratio;
+            drawH = qTalkImage.naturalHeight * ratio;
             ctx.drawImage(qTalkImage, canvas.width / 2 - drawW / 2, qBoxY + (qBoxH - drawH) / 2, drawW, drawH);
         }
 
@@ -3139,7 +3166,7 @@ function setArenaCombatants(arenaNumber) {
 
     const [character1, character2] = arenaCombatants[arenaIndex];
 
-    if (isVsMachine) {
+    if (isVsMachine && isStoryMode) {
         // En los modos contra la máquina, se conserva el personaje
         // elegido por el jugador humano y se adapta el rival a la arena.
         const human = getHumanPlayer();
@@ -3339,11 +3366,32 @@ function isLaForgeExtraGuardHeld(p) {
     return false;
 }
 
+function isWorfExtraGuardHeld(p) {
+    if (getCharacter(p).name !== 'WORF')
+        return false;
+    if (p === player1)
+        return !!(keys.s || keys.S);
+    if (p === player2)
+        return !!keys.ArrowDown;
+    return false;
+}
+
+function isEmilioExtraGuardHeld(p) {
+    if (getCharacter(p).name !== 'EMILIO')
+        return false;
+    if (p === player1)
+        return !!(keys.s || keys.S);
+    if (p === player2)
+        return !!keys.ArrowDown;
+    return false;
+}
+
 function startAttack(p) {
     if (p.isAttacking || gameOver || p.stunTimer > 0 || p.attackCooldown > 0)
         return;
     const c = getCharacter(p);
-    const useExtra = (c.name === 'RIKER' && isRikerExtraGuardHeld(p)) || (c.name === 'LAFORGE' && isLaForgeExtraGuardHeld(p));
+    const useExtra = (c.name === 'RIKER' && isRikerExtraGuardHeld(p)) || (c.name === 'LAFORGE' && isLaForgeExtraGuardHeld(p)) ||
+        (c.name === 'WORF' && isWorfExtraGuardHeld(p)) || (c.name === 'EMILIO' && isEmilioExtraGuardHeld(p));
     p.attackStyle = useExtra ? 'extra' : 'normal';
     p.activeAttackDuration = useExtra
         ? (c.extraAttackDuration || c.attackDuration)
@@ -3436,7 +3484,9 @@ function updateAttack(attacker, defender) {
     const distance = Math.abs(attacker.x - defender.x);
     const vertical = Math.abs(attacker.y - defender.y);
     const activeDuration = attacker.activeAttackDuration || c.attackDuration;
-    const extraAttack = (c.name === 'RIKER' || c.name === 'LAFORGE') && attacker.attackStyle === 'extra';
+    const extraAttack =
+        ['RIKER', 'LAFORGE', 'WORF', 'EMILIO'].includes(c.name) &&
+        attacker.attackStyle === 'extra';
     const specialAttack = extraAttack;
     const attackRange = extraAttack ? (c.extraAttackRange || c.attackRange) : c.attackRange;
     const attackDamage = extraAttack ? (c.extraDamage || c.damage) : c.damage;
@@ -4125,7 +4175,7 @@ function chooseQTrialAction(action) {
     } else if (qTrialStep === 2 && action === 3) {
         qTrialOutcome = 'WIN';
         qTrialMessage = qTrialMessageAction3;
-        campaignCompleted = true
+        campaignCompleted = true;
         qTrialResultFrame = frameCount;
         gameState = 'Q_TRIAL_RESULT';
         return;
@@ -4222,7 +4272,7 @@ function drawQTrial() {
         ctx.fillRect(w * 0.14, y - 20, w * 0.72, 38);
         ctx.strokeStyle = i < qTrialStep ? '#55f0b0' : '#527b99';
         ctx.strokeRect(w * 0.14, y - 20, w * 0.72, 38);
-        text((i < qTrialStep ? '✓ ' : '') + tasks[i], w / 2, y+6, 18, i < qTrialStep ? '#79ffc7' : '#e4f6ff', false);
+        text((i < qTrialStep ? '✓ ' : '') + tasks[i], w / 2, y + 6, 18, i < qTrialStep ? '#79ffc7' : '#e4f6ff', false);
     }
     const boxBottomY = h - 135;
     ctx.fillStyle = 'rgba(1,5,15,0.92)';
@@ -4470,7 +4520,7 @@ window.addEventListener('keydown', (e) => {
         if (easterEggKeySequence.length === TRIBBLES_SECRET_SEQUENCE.length &&
             easterEggKeySequence.every((key, index) => key === TRIBBLES_SECRET_SEQUENCE[index])) {
             gameState = 'TRIBBLES_EASTER_EGG';
-            playSound(soundTribbles);
+            //playSound(soundTribbles);
             easterEggKeySequence = [];
             easterEggLetterBuffer = '';
             tribbleEasterEggCache = null;
@@ -4480,21 +4530,21 @@ window.addEventListener('keydown', (e) => {
             easterEggLetterBuffer = (easterEggLetterBuffer + e.key.toUpperCase()).slice(-4);
             if (easterEggLetterBuffer === 'LLAP') {
                 gameState = 'SPOCK_EASTER_EGG';
-                playSound(soundSpock);
+                //playSound(soundSpock);
                 easterEggKeySequence = [];
                 easterEggLetterBuffer = '';
                 return;
             }
             if (easterEggLetterBuffer.endsWith('EEN')) {
                 gameState = 'EEN_EASTER_EGG';
-                playSound(soundEen); 
+                //playSound(soundEen);
                 easterEggKeySequence = [];
                 easterEggLetterBuffer = '';
                 return;
             }
             if (easterEggLetterBuffer.endsWith('DS9')) {
                 gameState = 'DS9_EASTER_EGG';
-                playSound(soundDs9);
+                //playSound(soundDs9);
                 easterEggKeySequence = [];
                 easterEggLetterBuffer = '';
                 return;
@@ -4506,6 +4556,39 @@ window.addEventListener('keydown', (e) => {
         } else if (e.key.toLowerCase() === 'c') {
             gameState = 'CREDITS';
         }
+        return;
+    }
+
+
+    if (gameState === 'EXPLORACION_GAME') {
+        exploracionHandleKey(e.key);
+        return;
+    }
+
+    if (gameState === 'NUCLEO_GAME') {
+        handleNucleoKey(e.key);
+        return;
+    }
+
+    if (gameState === 'ASTEROIDES_GAME') {
+        asteroidesHandleKey(e.key);
+        return;
+        //if (
+        //    (e.key === ' ' || e.key === 'Enter') &&
+        //    asteroidesGame &&
+        //    asteroidesGame.over
+        //) {
+        //    beginAsteroidesGame();
+        //    return;
+        //}
+    }
+
+    if (gameState === 'COCO_GAME') {
+        if ((e.key === ' ' || e.key === 'Enter') && cocoGame && cocoGame.over) {
+            beginCocoGame();
+            return;
+        }
+        handleCocoKey(e.key);
         return;
     }
 
@@ -4529,6 +4612,18 @@ window.addEventListener('keydown', (e) => {
             gameState = 'CHARACTER_SELECT';
         } else if (e.key === '4') {
             beginTrainingMode();
+            //gameState = 'TRAINING';
+        } else if (e.key === '5') {
+            beginCocoGame();
+            //gameState = 'COCO_GAME';
+        } else if (e.key === '6') {
+            beginAsteroidesGame();
+            //console.log('Estado después de iniciar asteroides:', gameState);
+            //gameState = 'ASTEROIDES_GAME';
+        } else if (e.key === '7') {
+            beginNucleoGame();
+        } else if (e.key === '8') {
+            beginExploracionGame();
         } else if (
             e.key.toLowerCase() === 'x' ||
             e.key === 'Escape') {
@@ -4960,11 +5055,26 @@ window.addEventListener('keydown', (e) => {
 
 window.addEventListener('keyup', (e) => {
     keys[e.key] = false;
+
+    // Liberar las teclas de los asteroides.
+    asteroidesHandleKeyUp(e.key);
+
+    // Liberar las teclas de ComeCocos.
+    handleCocoKeyUp(e.key);
+
+    // Liberar las teclas de Exploracion
+    exploracionHandleKeyUp(e.key);
 });
 
 window.addEventListener('blur', () => {
     for (const k in keys)
         keys[k] = false;
+
+    asteroidesClearKeys();
+
+    for (const k in cocoPressedKeys) {
+        delete cocoPressedKeys[k];
+    }
 });
 
 // ------------------------------------------------------------
@@ -5201,12 +5311,16 @@ function drawModeSelect() {
     drawTitleBackground();
     overlay(0.84);
 
-    text(menuSelectModeTitle, 500, 210, 35, '#00ffff', true);
-    text(menuSelectModeKeys1, 500, 285, 28, '#ffcc00');
-    text(menuSelectModeKeys2, 500, 340, 27, '#ffcc00');
-    text(menuSelectModeKeys3, 500, 395, 27, '#00ffcc');
-    text(menuSelectModeKeys4, 500, 450, 23, '#8df4ff');
-    text(menuSelectModeKeys5, 500, 525, 23);
+    text(menuSelectModeTitle, 500, 90, 45, '#00ffff', false, GAME_FONTKLINGON);
+    text(menuSelectModeKeys1, 500, 160, 28, '#ffcc00', false, GAME_FONTDS9);
+    text(menuSelectModeKeys2, 500, 205, 27, '#ffcc00', false, GAME_FONTDS9);
+    text(menuSelectModeKeys3, 500, 250, 27, '#00ffcc', false, GAME_FONTDS9);
+    text(menuSelectModeKeys4, 500, 295, 27, '#8df4ff', false, GAME_FONTDS9);
+    text(menuSelectModeKeys5, 500, 340, 27, '#ffdc72', false, GAME_FONTDS9);
+    text(menuSelectModeKeys6, 500, 385, 27, '#ffdc72', false, GAME_FONTDS9);
+    text(menuSelectModeKeys7, 500, 430, 27, '#ffdc72', false, GAME_FONTDS9);
+    text(menuSelectModeKeys8, 500, 475, 27, '#ffdc72', false, GAME_FONTDS9);
+    text(menuSelectModeKeysExit, 500, 540, 23, '#ffffff', false, GAME_FONTKLINGON);
 }
 
 // ------------------------------------------------------------
@@ -5322,7 +5436,7 @@ function drawVsMachineRoster() {
             ctx.drawImage(ch.guardImg, x + (cardW - iw) / 2, y + 4, iw, ih);
         }
         // Texto del nombre más grande y legible (13px en lugar de 10px)
-        text(ch.name, x + cardW / 2, y + cardH - 8, 13, isHuman ? '#7df7ff' : (isMachine ? '#ffc078' : '#ffffff'), true);
+        text(ch.name, x + cardW / 2, y + cardH - 8, 20, isHuman ? '#7df7ff' : (isMachine ? '#ffc078' : '#ffffff'), false, GAME_FONTKLINGON);
         if (isHuman || isMachine) {
             ctx.fillStyle = color;
             ctx.beginPath();
@@ -5568,18 +5682,31 @@ function imageIsReady(img) {
     return !!(img && img.complete && img.naturalWidth > 0 && img.naturalHeight > 0);
 }
 
-function drawCharacterImage(p, img, y) {
+function drawCharacterImage(p, img, y, scale = 1) {
     if (!imageIsReady(img))
         return false;
+
+    const drawWidth = p.width * scale;
+    const drawHeight = p.height * scale;
+    // Mantener la imagen centrada en su posición original.
+    const drawX = p.x + (p.width - drawWidth) / 2;
+    const drawY = y + (p.height - drawHeight) / 2;
+
     ctx.save();
     if (p.hitFlashTimer > 0)
         ctx.filter = 'brightness(2.1) saturate(0.18)';
     if (p.facing === -1) {
         ctx.translate(p.x + p.width / 2, y + p.height / 2);
         ctx.scale(-1, 1);
-        ctx.drawImage(img, -p.width / 2, -p.height / 2, p.width, p.height);
+        ctx.drawImage(
+            img,
+            -drawWidth / 2,
+            -drawHeight / 2,
+            drawWidth,
+            drawHeight
+        );
     } else {
-        ctx.drawImage(img, p.x, y, p.width, p.height);
+        ctx.drawImage(img, drawX, drawY, drawWidth, drawHeight);
     }
     ctx.restore();
     return true;
@@ -5632,16 +5759,30 @@ function drawSprite(p) {
         const winner = getRoundWinner();
         const playerNumber = p === player1 ? 1 : 2;
         const isDefeated = winner === 0 || winner !== playerNumber;
-        if (isDefeated && drawDefeatedCharacterImage(p, c.guardImg, y))
-            return;
+        if (isDefeated) {
+            // Si el personaje tiene una imagen propia de derrota,
+            // ya está tumbado: se dibuja sin girarla.
+            if (imageIsReady(c.deadImg)) {
+                if (drawCharacterImage(p, c.deadImg, y, 0.60))
+                    return;
+            } else {
+                // Si no tiene imagen de derrota, utiliza su imagen
+                // normal y la gira 90 grados como hasta ahora.
+                if (drawDefeatedCharacterImage(p, c.guardImg, y))
+                    return;
+            }
+        }
         // El vencedor termina de pie, en pose neutral, no congelado a mitad de golpe.
         if (drawCharacterImage(p, c.guardImg, y))
             return;
-    } else if (c.name === 'RIKER' || c.name === 'LAFORGE') {
+    } else if (c.name === 'RIKER' || c.name === 'LAFORGE' ||
+        c.name === 'WORF' || c.name === 'EMILIO') {
         // Alterna entre las dos poses normales y las dos poses con silla.
         // Si alguna imagen adicional falta o tarda en cargar, vuelve a la pose normal.
         const useExtra = (c.name === 'RIKER' && isRikerExtraGuardHeld(p)) ||
-                        (c.name === 'LAFORGE' && isLaForgeExtraGuardHeld(p));
+            (c.name === 'LAFORGE' && isLaForgeExtraGuardHeld(p)) ||
+            (c.name === 'WORF' && isWorfExtraGuardHeld(p)) ||
+            (c.name === 'EMILIO' && isEmilioExtraGuardHeld(p));
         if (p.isAttacking) {
             // Usa el ataque extra (especial) si attackStyle es 'extra', o el normal si no
             const attackImg = p.attackStyle === 'extra' ? c.extraPunchImg : c.punchImg;
@@ -5898,13 +6039,7 @@ function drawCampaignEnd(completed) {
             text(campaignEndCompletedNoPicardLine1, 400, 235, 14);
             text(`${campaignEndCompletedNoPicardLine2A} ${getHumanPlayer().name}${campaignEndCompletedNoPicardLine2B}`, 400, 265, 17, '#ffcc00', true);
         }
-        text(
-            campaignEndCompletedLine1,
-            400,
-            300,
-            13,
-            '#00ffcc',
-            true);
+        text(campaignEndCompletedLine1, 400, 300, 13, '#00ffcc', true);
     } else {
         text(campaignEndNotCompletedLine1, 400, 220, 15);
         text(campaignEndNotCompletedLine2, 400, 255, 14);
@@ -6032,6 +6167,22 @@ function gameLoop() {
                 break;
             case 'MODE_SELECT':
                 drawModeSelect();
+                break;
+            case 'COCO_GAME':
+                updateCocoGame();
+                drawCocoGame();
+                break;
+            case 'ASTEROIDES_GAME':
+                updateAsteroidesGame();
+                drawAsteroidesGame();
+                break;
+            case 'NUCLEO_GAME':
+                updateNucleoGame();
+                drawNucleoGame();
+                break;
+            case 'EXPLORACION_GAME':
+                updateExploracionGame();
+                drawExploracionGame();
                 break;
             case 'CHARACTER_SELECT':
                 drawCharacterSelect();
