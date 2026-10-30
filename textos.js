@@ -558,7 +558,6 @@ const trainingBridgeAcademy = 'ACADEMIA DE LA FLOTA ESTELAR';
 const trainingBridgeModus = 'MODO ENTRENAMIENTO · PUENTE DEL ENTERPRISE';
 const trainingBridgeInstructions1 = 'A/D · ←/→ CAMBIAR';
 const trainingBridgeInstructions2 = 'ESPACIO / INTRO: CONTINUAR     A/D O FLECHAS: ELEGIR CADETE     X / ESC: SALIR';
-const trainingBridgeInstructions3 = '';
 
 // Training Mission Briefing
 const trainingMissionBriefing1 = 'ORDEN DE LA FLOTA ESTELAR';
@@ -903,7 +902,14 @@ const ds9EasterEgg1 = 'Star Trek DS9 Replay';
 const ds9EasterEgg2 = '¡Si no conoces el podcast, ya tardas en oirlo!';
 const ds9EasterEgg3 = 'Busca "Star Trek Replay" en tu gestor de podcasts';
 const ds9EasterEgg4 = 'ESPACIO / INTRO / X: VOLVER AL MENÚ';
-
+// Homenaje
+const homenajeTitle = 'EN MEMORIA DE DOS GRANDES';
+const homenajeWalter = 'Walter Koenig - Pavel Chekov';
+const homenajePatrick = 'Patrick Stewart - Jean-Luc Picard';
+const homenajeText1 = 'Dos generaciones, dos capitanes de nuestra imaginación';
+const homenajeText2 = 'y un legado que permanecerá entre las estrellas.';
+const homenajeText3 = 'Gracias por tantos viajes.';
+const homenajeText4 = 'LARGA VIDA Y PROSPERIDAD';
 
 // MENÚS
 const menuTitle = 'STAR TREK';

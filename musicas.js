@@ -24,6 +24,32 @@ soundStart2.volume = 0.6;
 const soundStart3 = new Audio('assets/audios/3.mp3');
 soundStart3.volume = 0.6;
 
+// ============================================================
+// SONIDOS DE VICTORIA
+// ============================================================
+// Picard
+const soundVictoryPicard = new Audio('assets/audios/picard_flauta.mp3');
+soundVictoryPicard.volume = 0.9;
+// Worf
+const soundVictoryWorf = new Audio('assets/audios/klingon_success_qapla.mp3');
+soundVictoryWorf.volume = 0.9;
+// Spock
+const soundVictorySpock = new Audio('assets/audios/spock_victory.mp3');
+soundVictorySpock.volume = 0.9;
+// Data
+const soundVictoryData = new Audio('assets/audios/data_victory.mp3');
+soundVictoryData.volume = 0.9;
+// Locutus
+const soundVictoryLocutus = new Audio('assets/audios/locutus_victory.mp3');
+soundVictoryLocutus.volume = 0.9;
+// Scotty
+const soundVictoryScotty = new Audio('assets/audios/scotty_victory.mp3');
+soundVictoryScotty.volume = 0.9;
+// Sulu
+const soundVictorySulu = new Audio('assets/audios/sulu_victory.mp3');
+soundVictorySulu.volume = 0.9;
+
+
 // ------------------------------------------------------------
 // EASTER EGGS
 // ------------------------------------------------------------
@@ -44,13 +70,17 @@ soundEen.volume = 0.6;
 // Easter egg DS9
 const soundDs9 = new Audio('assets/audios/ds9.mp3');
 soundDs9.volume = 0.6;
+// Easter egg Homenaje
+const soundHomenaje = new Audio('assets/audios/homenaje.mp3');
+soundHomenaje.volume = 0.6;
 
 
 const easterEggSounds = {
     TRIBBLES_EASTER_EGG: soundTribbles,
     SPOCK_EASTER_EGG: soundSpock,
     EEN_EASTER_EGG: soundEen,
-    DS9_EASTER_EGG: soundDs9
+    DS9_EASTER_EGG: soundDs9,
+    HOMENAJE_EASTER_EGG: soundHomenaje
 };
 // Los sonidos se repiten mientras permanezca activo el Easter egg.
 for (const sound of Object.values(easterEggSounds)) {
@@ -465,7 +495,8 @@ function syncMenuMusic() {
                 TRIBBLES_EASTER_EGG: '🔊 Easter egg: Tribbles',
                 SPOCK_EASTER_EGG: '🔊 Easter egg: Spock',
                 EEN_EASTER_EGG: '🔊 Easter egg: EEN',
-                DS9_EASTER_EGG: '🔊 Easter egg: DS9'
+                DS9_EASTER_EGG: '🔊 Easter egg: DS9',
+                HOMENAJE_EASTER_EGG: '🔊 Easter egg: Capitanes'
             };
 
             musicButton.textContent = labels[desiredState];

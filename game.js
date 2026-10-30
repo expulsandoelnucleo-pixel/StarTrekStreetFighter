@@ -1738,10 +1738,6 @@ function drawTrainingBridge() {
     ctx.fillRect(38, 24, canvas.width - 76, 80);
     text(trainingBridgeAcademy, canvas.width / 2, 52, 37, '#79edff', false);
     text(trainingBridgeModus, canvas.width / 2, 78, 22, '#ffd66b', false);
-    if (!trainingBridgeSoundPlayed) {
-        playSound(sound4Bienvenida);
-        trainingBridgeSoundPlayed = true;
-    }
     const d = trainingDialogue[trainingDialogueIndex];
     ctx.fillStyle = 'rgba(3, 12, 25, 0.91)';
     ctx.fillRect(52, canvas.height * 0.64, canvas.width - 104, 126);
@@ -1753,17 +1749,27 @@ function drawTrainingBridge() {
     // Muestra un personaje real del elenco en el puente y permite escoger
     // quién hará el circuito del holodeck. El selector es exclusivo del entrenamiento.
     const selected = availableCharacters[trainingCharacterIndex] || availableCharacters[0];
-    const previewX = canvas.width * 0.74;
-    const previewY = canvas.height * 0.31;
+    const previewX = canvas.width * 0.82;
+    const previewY = canvas.height * 0.38;
+
+    // Recuadro ampliado del selector
+    const previewBoxW = 260;
+    const previewBoxH = 290;
+
     ctx.fillStyle = 'rgba(2, 10, 22, 0.68)';
-    ctx.fillRect(previewX - 75, previewY - 65, 150, 130);
+    ctx.fillRect(previewX - previewBoxW / 2, previewY - previewBoxH / 2, previewBoxW, previewBoxH);
+
     ctx.strokeStyle = '#69dff1';
     ctx.lineWidth = 1.5;
-    ctx.strokeRect(previewX - 75, previewY - 65, 150, 130);
+    ctx.strokeRect(previewX - previewBoxW / 2, previewY - previewBoxH / 2, previewBoxW, previewBoxH);
+
+    // Imagen del personaje
     if (imageIsReady(selected.guardImg)) {
-        const previewW = 130;
+        const previewW = 300;
         const previewH = previewW * selected.guardImg.naturalHeight / selected.guardImg.naturalWidth;
-        ctx.drawImage(selected.guardImg, previewX - previewW / 2, previewY - previewH / 2 - 4, previewW, previewH);
+
+        ctx.drawImage(selected.guardImg, previewX - previewW / 2, previewY - previewH / 2 - 8, previewW, previewH
+        );
     } else {
         ctx.fillStyle = '#d9b77d';
         ctx.fillRect(previewX - 9, previewY - 25, 18, 18);
@@ -1773,10 +1779,11 @@ function drawTrainingBridge() {
         ctx.fillRect(previewX - 10, previewY + 22, 8, 14);
         ctx.fillRect(previewX + 2, previewY + 22, 8, 14);
     }
-    text(selected.name, previewX, previewY + 48, 22, '#ffdc72', false);
-    text(trainingBridgeInstructions1, previewX, previewY + 86, 22, '#8ff5ff', false);
+
+    // Nombre e instrucciones
+    text(selected.name, previewX, previewY + 100, 24, '#ffdc72', false);
+    text(trainingBridgeInstructions1, previewX, previewY + 130, 22, '#FAF09F', false);
     text(trainingBridgeInstructions2, canvas.width / 2, canvas.height - 16, 20, '#8ff5ff', false);
-    text(`${trainingDialogueIndex + 1} / ${trainingDialogue.length}`, canvas.width - 70, 125, 28, '#c6d8e6');
 }
 
 function drawTrainingMissionBriefing() {
@@ -2043,8 +2050,8 @@ function beginHolodeckLevel(circuitIndex = trainingCircuitIndex) {
             w: 25,
             h: 37,
             vy: 0,
-            speed: 8,// TODO - RESTORE VALUE 3.6,
-            jump: -20,// TODO - RESTORE VALUE -10.6,
+            speed: 3.6,     // TODO -- SUBIR EL VALOR PARA PROBAR SIENDO MAS RAPIDO
+            jump: -10.6,    // TODO -- BAJAR EL VALOR PARA PROBAR Y VOLAR MAS
             onGround: true,
             invulnerable: 0,
             jumpRequested: false,
@@ -2107,7 +2114,7 @@ function updateHolodeckLevel() {
         }
     }
     if (p.y > h + 90) {
-        //g.lives--;  // TODO - DESCOMENTAR
+        g.lives--;  // TODO -- COMENTAR PARA HACER PRUEBAS SIN MORIR
         p.x = 35;
         p.y = h - 43 - p.h;
         p.vy = 0;
@@ -2142,7 +2149,7 @@ function updateHolodeckLevel() {
                 p.vy = -6.2;
                 g.score += 100;
             } else {
-                //g.lives--;  // TODO - DESCOMENTAR
+                g.lives--;  // TODO -- COMENTAR PARA HACER PRUEBAS SIN MORIR
                 p.invulnerable = 90;
                 p.vy = -5;
                 p.x = Math.max(0, p.x - 60);
@@ -3320,7 +3327,11 @@ function setWinnerMessageByHealth() {
 
         // Sonido Win/Lose 
         if (humanWon) {
-            playSound(soundWin);
+            // Si el jugador tiene un sonido definido, que suene su sonido, sino, el de "ganar"
+            const winner = getHumanPlayer();
+            const winnerCharacter = getCharacter(winner);
+
+            playSound(winnerCharacter.victorySound || soundWin);
         } else {
             playSound(soundLose);
         }
@@ -3332,6 +3343,15 @@ function setWinnerMessageByHealth() {
                 : winnerMessageLose;
         roundWinnerHasTwoLines = false;
     } else {
+        const winner = w === 1 ? player1 : player2;
+        const winnerCharacter = getCharacter(winner);
+
+        if (w !== 0) {
+            playSound(winnerCharacter.victorySound || soundWin);
+        } else {
+            playSound(soundLose);
+        }
+
         roundWinnerMessage = w === 1
             ? `¡${player1.name} ${winnerMessageWhoWins}`
             : `¡${player2.name} ${winnerMessageWhoWins}`;
@@ -4503,7 +4523,9 @@ window.addEventListener('keydown', (e) => {
         e.preventDefault();
     }
 
-    if (gameState === 'TRIBBLES_EASTER_EGG' || gameState === 'SPOCK_EASTER_EGG' || gameState === 'EEN_EASTER_EGG' || gameState === 'DS9_EASTER_EGG') {
+    if (gameState === 'TRIBBLES_EASTER_EGG' || gameState === 'SPOCK_EASTER_EGG' ||
+        gameState === 'EEN_EASTER_EGG' || gameState === 'DS9_EASTER_EGG' ||
+        gameState === 'HOMENAJE_EASTER_EGG') {
         if (e.key === ' ' || e.key === 'Enter' || e.key.toLowerCase() === 'x' || e.key === 'Escape') {
             gameState = 'MENU';
             easterEggKeySequence = [];
@@ -4520,31 +4542,33 @@ window.addEventListener('keydown', (e) => {
         if (easterEggKeySequence.length === TRIBBLES_SECRET_SEQUENCE.length &&
             easterEggKeySequence.every((key, index) => key === TRIBBLES_SECRET_SEQUENCE[index])) {
             gameState = 'TRIBBLES_EASTER_EGG';
-            //playSound(soundTribbles);
             easterEggKeySequence = [];
             easterEggLetterBuffer = '';
             tribbleEasterEggCache = null;
             return;
         }
         if (e.key.length === 1 && /^[a-z0-9]$/i.test(e.key)) {
-            easterEggLetterBuffer = (easterEggLetterBuffer + e.key.toUpperCase()).slice(-4);
-            if (easterEggLetterBuffer === 'LLAP') {
+            easterEggLetterBuffer = (easterEggLetterBuffer + e.key.toUpperCase()).slice(-7);
+            if (easterEggLetterBuffer.endsWith('LLAP')) {
                 gameState = 'SPOCK_EASTER_EGG';
-                //playSound(soundSpock);
                 easterEggKeySequence = [];
                 easterEggLetterBuffer = '';
                 return;
             }
             if (easterEggLetterBuffer.endsWith('EEN')) {
                 gameState = 'EEN_EASTER_EGG';
-                //playSound(soundEen);
                 easterEggKeySequence = [];
                 easterEggLetterBuffer = '';
                 return;
             }
             if (easterEggLetterBuffer.endsWith('DS9')) {
                 gameState = 'DS9_EASTER_EGG';
-                //playSound(soundDs9);
+                easterEggKeySequence = [];
+                easterEggLetterBuffer = '';
+                return;
+            }
+            if (easterEggLetterBuffer.endsWith('LEGENDS')) {
+                gameState = 'HOMENAJE_EASTER_EGG';
                 easterEggKeySequence = [];
                 easterEggLetterBuffer = '';
                 return;
@@ -5291,8 +5315,93 @@ function drawDs9EasterEgg() {
     text(ds9EasterEgg2, canvas.width / 2, 430, 28, '#ffffff', false);
     text(ds9EasterEgg3, canvas.width / 2, 470, 22, '#7feeff', false);
     text(ds9EasterEgg4, canvas.width / 2, canvas.height - 30, 20, '#8df4ff', false);
- }
+}
 
+function drawHomenajeEasterEgg() {
+    drawTitleBackground();
+    overlay(0.78);
+
+    const centerX = canvas.width / 2;
+
+    // Fotografía conjunta en el centro
+    const mainImageBox = {
+        x: centerX - 230,
+        y: 65,
+        width: 460,
+        height: 390
+    };
+
+    if (homenajeJuntosImage.complete && homenajeJuntosImage.naturalWidth > 0) {
+        const ratio = Math.min(
+            mainImageBox.width / homenajeJuntosImage.naturalWidth,
+            mainImageBox.height / homenajeJuntosImage.naturalHeight
+        );
+
+        const drawW = homenajeJuntosImage.naturalWidth * ratio;
+        const drawH = homenajeJuntosImage.naturalHeight * ratio;
+
+        ctx.drawImage(
+            homenajeJuntosImage,
+            centerX - drawW / 2,
+            mainImageBox.y + (mainImageBox.height - drawH) / 2,
+            drawW,
+            drawH
+        );
+    }
+
+    // Retratos individuales a los laterales
+    const portraitY = 65;
+    const portraitW = 460;
+    const portraitH = 390;
+    const portraitGap = 330;
+
+    const portraits = [
+        {
+            image: homenajeWalterImagen,
+            name: 'WALTER KOENIG',
+            x: centerX - portraitGap
+        },
+        {
+            image: homenajePatrickImagen,
+            name: 'PATRICK STEWART',
+            x: centerX + portraitGap
+        }
+    ];
+
+    for (const portrait of portraits) {
+        const img = portrait.image;
+
+        if (img.complete && img.naturalWidth > 0) {
+            const ratio = Math.min(
+                portraitW / img.naturalWidth,
+                portraitH / img.naturalHeight
+            );
+
+            const drawW = img.naturalWidth * ratio;
+            const drawH = img.naturalHeight * ratio;
+
+            ctx.drawImage(
+                img,
+                portrait.x - drawW / 2,
+                portraitY + (portraitH - drawH) / 2,
+                drawW,
+                drawH
+            );
+        }
+
+        text(portrait.name, portrait.x, 455, 20, '#ffcf72', false, GAME_FONTDS9);
+    }
+
+    // Título y mensaje
+    text(homenajeTitle, centerX, 40, 30, '#ffcf72', false, GAME_FONTTNG);
+    text(homenajeWalter, centerX - 330, 505, 24, '#ffffff', false);
+    text(homenajePatrick, centerX + 330, 505, 24, '#ffffff', false);
+    text(homenajeText1, centerX, 480, 24, '#DCAF1E', false);
+    text(homenajeText2, centerX, 500, 24, '#DCAF1E', false);
+
+    text(homenajeText3, centerX, canvas.height - 50, 24, '#ffffff', false);
+    text(homenajeText4, centerX, canvas.height - 8, 28, '#8df4ff', false, GAME_FONTTNG);
+}
 
 
 // MENÚS
@@ -6161,6 +6270,9 @@ function gameLoop() {
                 break;
             case 'DS9_EASTER_EGG':
                 drawDs9EasterEgg();
+                break;
+            case 'HOMENAJE_EASTER_EGG':
+                drawHomenajeEasterEgg();
                 break;
             case 'MENU':
                 drawMainMenu();

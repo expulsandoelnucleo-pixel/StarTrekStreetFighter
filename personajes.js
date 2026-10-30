@@ -15,6 +15,7 @@ class Character {
         height = 600,
         // Propiedades especiales opcionales (con valores por defecto si no las tienen)
         victoryImg = null,
+        victorySound = null,
         deadImg = null,
         extraGuardImg = null,
         extraPunchImg = null,
@@ -30,7 +31,7 @@ class Character {
         kickAttackCooldown = 0,
         kickKnockback = 0
     }) {
-        this.id = id,
+        this.id = id;
         this.name = name;
         this.guardImg = guardImg;
         this.punchImg = punchImg;
@@ -42,8 +43,9 @@ class Character {
         this.width = width;
         this.height = height;
         // Habilidades especiales
-        this.victoryImg = victoryImg,
-        this.deadImg = deadImg,
+        this.victoryImg = victoryImg;
+        this.victorySound = victorySound;
+        this.deadImg = deadImg;
         this.extraGuardImg = extraGuardImg || guardImg;
         this.extraPunchImg = extraPunchImg || kickImg || punchImg;
         this.extraDamage = extraDamage || kickDamage || damage;
@@ -208,6 +210,7 @@ const availableCharacters = [
             name: 'SPOCK',
             guardImg: spockGuard,
             punchImg: spockPunch,
+            victorySound: soundVictorySpock,
             role: 'Oficial científico'
         }
     ),
@@ -226,6 +229,7 @@ const availableCharacters = [
             name: 'SULU',
             guardImg: suluGuard,
             punchImg: suluThrust,
+            victorySound: soundVictorySulu,
             role: 'Experto en esgrima'
         }
     ),
@@ -244,6 +248,7 @@ const availableCharacters = [
             name: 'SCOTTY',
             guardImg: scottyGuard,
             punchImg: scottyPunch,
+            victorySound: soundVictoryScotty,
             role: 'Ingeniero jefe'
         }
     ),
@@ -288,6 +293,7 @@ const availableCharacters = [
             guardImg: picardGuard,
             punchImg: picardKick,
             victoryImg: picardVictoryImg,
+            victorySound: soundVictoryPicard,
             role: 'Capitán de la Flota Estelar'
         }
     ),
@@ -313,6 +319,7 @@ const availableCharacters = [
             name: 'DATA',
             guardImg: dataGuard,
             punchImg: dataPunch,
+            victorySound: soundVictoryData,
             role: 'Oficial de operaciones androide',
             damage: 8,
             attackRange: 115
@@ -327,6 +334,7 @@ const availableCharacters = [
             extraGuardImg: worfExtraGuard,
             extraPunchImg: worfExtraPunch,
             victoryImg: worfVictory,
+            victorySound: soundVictoryWorf,
             role: 'Oficial de seguridad klingon',
             damage: 9,
             attackRange: 115,
@@ -407,6 +415,7 @@ const availableCharacters = [
             name: 'LOCUTUS',
             guardImg: locutusGuard,
             punchImg: locutusPunch,
+            victorySound: soundVictoryLocutus,
             role: 'Voz del Colectivo Borg',
             damage: 13,
             attackRange: 120,
