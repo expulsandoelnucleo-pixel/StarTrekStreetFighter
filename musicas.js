@@ -24,6 +24,32 @@ soundStart2.volume = 0.6;
 const soundStart3 = new Audio('assets/audios/3.mp3');
 soundStart3.volume = 0.6;
 
+// ============================================================
+// SONIDOS DE VICTORIA
+// ============================================================
+// Picard
+const soundVictoryPicard = new Audio('assets/audios/picard_flauta.mp3');
+soundVictoryPicard.volume = 0.9;
+// Worf
+const soundVictoryWorf = new Audio('assets/audios/klingon_success_qapla.mp3');
+soundVictoryWorf.volume = 0.9;
+// Spock
+const soundVictorySpock = new Audio('assets/audios/spock_victory.mp3');
+soundVictorySpock.volume = 0.9;
+// Data
+const soundVictoryData = new Audio('assets/audios/data_victory.mp3');
+soundVictoryData.volume = 0.9;
+// Locutus
+const soundVictoryLocutus = new Audio('assets/audios/locutus_victory.mp3');
+soundVictoryLocutus.volume = 0.9;
+// Scotty
+const soundVictoryScotty = new Audio('assets/audios/scotty_victory.mp3');
+soundVictoryScotty.volume = 0.9;
+// Sulu
+const soundVictorySulu = new Audio('assets/audios/sulu_victory.mp3');
+soundVictorySulu.volume = 0.9;
+
+
 // ------------------------------------------------------------
 // EASTER EGGS
 // ------------------------------------------------------------

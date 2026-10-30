@@ -3327,7 +3327,11 @@ function setWinnerMessageByHealth() {
 
         // Sonido Win/Lose 
         if (humanWon) {
-            playSound(soundWin);
+            // Si el jugador tiene un sonido definido, que suene su sonido, sino, el de "ganar"
+            const winner = getHumanPlayer();
+            const winnerCharacter = getCharacter(winner);
+
+            playSound(winnerCharacter.victorySound || soundWin);
         } else {
             playSound(soundLose);
         }
@@ -3339,6 +3343,15 @@ function setWinnerMessageByHealth() {
                 : winnerMessageLose;
         roundWinnerHasTwoLines = false;
     } else {
+        const winner = w === 1 ? player1 : player2;
+        const winnerCharacter = getCharacter(winner);
+
+        if (w !== 0) {
+            playSound(winnerCharacter.victorySound || soundWin);
+        } else {
+            playSound(soundLose);
+        }
+
         roundWinnerMessage = w === 1
             ? `¡${player1.name} ${winnerMessageWhoWins}`
             : `¡${player2.name} ${winnerMessageWhoWins}`;
