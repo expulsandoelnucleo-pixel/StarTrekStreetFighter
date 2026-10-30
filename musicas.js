@@ -44,13 +44,17 @@ soundEen.volume = 0.6;
 // Easter egg DS9
 const soundDs9 = new Audio('assets/audios/ds9.mp3');
 soundDs9.volume = 0.6;
+// Easter egg Homenaje
+const soundHomenaje = new Audio('assets/audios/homenaje.mp3');
+soundHomenaje.volume = 0.6;
 
 
 const easterEggSounds = {
     TRIBBLES_EASTER_EGG: soundTribbles,
     SPOCK_EASTER_EGG: soundSpock,
     EEN_EASTER_EGG: soundEen,
-    DS9_EASTER_EGG: soundDs9
+    DS9_EASTER_EGG: soundDs9,
+    HOMENAJE_EASTER_EGG: soundHomenaje
 };
 // Los sonidos se repiten mientras permanezca activo el Easter egg.
 for (const sound of Object.values(easterEggSounds)) {

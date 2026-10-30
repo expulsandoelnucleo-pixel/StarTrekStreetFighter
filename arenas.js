@@ -43,6 +43,10 @@ const eenImage = loadImage('assets/een_logo.jpg');
 
 const ds9Image = loadImage('assets/ds9_logo.jpg');
 
+const homenajeJuntosImage = loadImage('assets/easteregg_muertos.jpg');
+const homenajePatrickImagen = loadImage('assets/easteregg_muertos_patrick.jpg');
+const homenajeWalterImagen = loadImage('assets/easteregg_muertos_walter.jpg');
+
 // Assets del minijuego Galileo. Coloca los tres PNG en la carpeta assets.
 const galileoIntacta = loadImage('assets/galileo_intacta.png');
 const galileoDanada = loadImage('assets/galileo_danada.png');

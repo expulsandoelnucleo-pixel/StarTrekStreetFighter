@@ -4503,7 +4503,9 @@ window.addEventListener('keydown', (e) => {
         e.preventDefault();
     }
 
-    if (gameState === 'TRIBBLES_EASTER_EGG' || gameState === 'SPOCK_EASTER_EGG' || gameState === 'EEN_EASTER_EGG' || gameState === 'DS9_EASTER_EGG') {
+    if (gameState === 'TRIBBLES_EASTER_EGG' || gameState === 'SPOCK_EASTER_EGG' ||
+        gameState === 'EEN_EASTER_EGG' || gameState === 'DS9_EASTER_EGG' ||
+        gameState === 'HOMENAJE_EASTER_EGG') {
         if (e.key === ' ' || e.key === 'Enter' || e.key.toLowerCase() === 'x' || e.key === 'Escape') {
             gameState = 'MENU';
             easterEggKeySequence = [];
@@ -4520,31 +4522,33 @@ window.addEventListener('keydown', (e) => {
         if (easterEggKeySequence.length === TRIBBLES_SECRET_SEQUENCE.length &&
             easterEggKeySequence.every((key, index) => key === TRIBBLES_SECRET_SEQUENCE[index])) {
             gameState = 'TRIBBLES_EASTER_EGG';
-            //playSound(soundTribbles);
             easterEggKeySequence = [];
             easterEggLetterBuffer = '';
             tribbleEasterEggCache = null;
             return;
         }
         if (e.key.length === 1 && /^[a-z0-9]$/i.test(e.key)) {
-            easterEggLetterBuffer = (easterEggLetterBuffer + e.key.toUpperCase()).slice(-4);
-            if (easterEggLetterBuffer === 'LLAP') {
+            easterEggLetterBuffer = (easterEggLetterBuffer + e.key.toUpperCase()).slice(-7);
+            if (easterEggLetterBuffer.endsWith('LLAP')) {
                 gameState = 'SPOCK_EASTER_EGG';
-                //playSound(soundSpock);
                 easterEggKeySequence = [];
                 easterEggLetterBuffer = '';
                 return;
             }
             if (easterEggLetterBuffer.endsWith('EEN')) {
                 gameState = 'EEN_EASTER_EGG';
-                //playSound(soundEen);
                 easterEggKeySequence = [];
                 easterEggLetterBuffer = '';
                 return;
             }
             if (easterEggLetterBuffer.endsWith('DS9')) {
                 gameState = 'DS9_EASTER_EGG';
-                //playSound(soundDs9);
+                easterEggKeySequence = [];
+                easterEggLetterBuffer = '';
+                return;
+            }
+            if (easterEggLetterBuffer.endsWith('LEGENDS')) {
+                gameState = 'HOMENAJE_EASTER_EGG';
                 easterEggKeySequence = [];
                 easterEggLetterBuffer = '';
                 return;
@@ -5291,8 +5295,93 @@ function drawDs9EasterEgg() {
     text(ds9EasterEgg2, canvas.width / 2, 430, 28, '#ffffff', false);
     text(ds9EasterEgg3, canvas.width / 2, 470, 22, '#7feeff', false);
     text(ds9EasterEgg4, canvas.width / 2, canvas.height - 30, 20, '#8df4ff', false);
- }
+}
 
+function drawHomenajeEasterEgg() {
+    drawTitleBackground();
+    overlay(0.78);
+
+    const centerX = canvas.width / 2;
+
+    // Fotografía conjunta en el centro
+    const mainImageBox = {
+        x: centerX - 230,
+        y: 65,
+        width: 460,
+        height: 390
+    };
+
+    if (homenajeJuntosImage.complete && homenajeJuntosImage.naturalWidth > 0) {
+        const ratio = Math.min(
+            mainImageBox.width / homenajeJuntosImage.naturalWidth,
+            mainImageBox.height / homenajeJuntosImage.naturalHeight
+        );
+
+        const drawW = homenajeJuntosImage.naturalWidth * ratio;
+        const drawH = homenajeJuntosImage.naturalHeight * ratio;
+
+        ctx.drawImage(
+            homenajeJuntosImage,
+            centerX - drawW / 2,
+            mainImageBox.y + (mainImageBox.height - drawH) / 2,
+            drawW,
+            drawH
+        );
+    }
+
+    // Retratos individuales a los laterales
+    const portraitY = 65;
+    const portraitW = 460;
+    const portraitH = 390;
+    const portraitGap = 330;
+
+    const portraits = [
+        {
+            image: homenajeWalterImagen,
+            name: 'WALTER KOENIG',
+            x: centerX - portraitGap
+        },
+        {
+            image: homenajePatrickImagen,
+            name: 'PATRICK STEWART',
+            x: centerX + portraitGap
+        }
+    ];
+
+    for (const portrait of portraits) {
+        const img = portrait.image;
+
+        if (img.complete && img.naturalWidth > 0) {
+            const ratio = Math.min(
+                portraitW / img.naturalWidth,
+                portraitH / img.naturalHeight
+            );
+
+            const drawW = img.naturalWidth * ratio;
+            const drawH = img.naturalHeight * ratio;
+
+            ctx.drawImage(
+                img,
+                portrait.x - drawW / 2,
+                portraitY + (portraitH - drawH) / 2,
+                drawW,
+                drawH
+            );
+        }
+
+        text(portrait.name, portrait.x, 455, 20, '#ffcf72', false, GAME_FONTDS9);
+    }
+
+    // Título y mensaje
+    text(homenajeTitle, centerX, 40, 30, '#ffcf72', false, GAME_FONTTNG);
+    text(homenajeWalter, centerX - 330, 505, 24, '#ffffff', false);
+    text(homenajePatrick, centerX + 330, 505, 24, '#ffffff', false);
+    text(homenajeText1, centerX, 480, 24, '#DCAF1E', false);
+    text(homenajeText2, centerX, 500, 24, '#DCAF1E', false);
+
+    text(homenajeText3, centerX, canvas.height - 50, 24, '#ffffff', false);
+    text(homenajeText4, centerX, canvas.height - 8, 28, '#8df4ff', false, GAME_FONTTNG);
+}
 
 
 // MENÚS
@@ -6161,6 +6250,9 @@ function gameLoop() {
                 break;
             case 'DS9_EASTER_EGG':
                 drawDs9EasterEgg();
+                break;
+            case 'HOMENAJE_EASTER_EGG':
+                drawHomenajeEasterEgg();
                 break;
             case 'MENU':
                 drawMainMenu();
