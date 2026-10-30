@@ -558,7 +558,6 @@ const trainingBridgeAcademy = 'ACADEMIA DE LA FLOTA ESTELAR';
 const trainingBridgeModus = 'MODO ENTRENAMIENTO · PUENTE DEL ENTERPRISE';
 const trainingBridgeInstructions1 = 'A/D · ←/→ CAMBIAR';
 const trainingBridgeInstructions2 = 'ESPACIO / INTRO: CONTINUAR     A/D O FLECHAS: ELEGIR CADETE     X / ESC: SALIR';
-const trainingBridgeInstructions3 = '';
 
 // Training Mission Briefing
 const trainingMissionBriefing1 = 'ORDEN DE LA FLOTA ESTELAR';
