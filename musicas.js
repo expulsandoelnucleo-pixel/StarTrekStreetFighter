@@ -469,7 +469,8 @@ function syncMenuMusic() {
                 TRIBBLES_EASTER_EGG: '🔊 Easter egg: Tribbles',
                 SPOCK_EASTER_EGG: '🔊 Easter egg: Spock',
                 EEN_EASTER_EGG: '🔊 Easter egg: EEN',
-                DS9_EASTER_EGG: '🔊 Easter egg: DS9'
+                DS9_EASTER_EGG: '🔊 Easter egg: DS9',
+                HOMENAJE_EASTER_EGG: '🔊 Easter egg: Capitanes'
             };
 
             musicButton.textContent = labels[desiredState];
