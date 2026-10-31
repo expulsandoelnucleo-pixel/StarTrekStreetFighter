@@ -173,446 +173,448 @@ let trainingRangeGame = null;
 let starshipRaceGame = null;
 let trainingDialogueIndex = 0;
 const trainingDialogue = [{
-        speaker: trainingSpeaker1,
-        text: trainingSpeakerText1
-    }, {
-        speaker: trainingSpeaker2,
-        text: trainingSpeakerText2
-    }, {
-        speaker: trainingSpeaker3,
-        text: trainingSpeakerText3
-    }
+    speaker: trainingSpeaker1,
+    text: trainingSpeakerText1
+}, {
+    speaker: trainingSpeaker2,
+    text: trainingSpeakerText2
+}, {
+    speaker: trainingSpeaker3,
+    text: trainingSpeakerText3
+}
 ];
 let holodeckGame = null;
+
+const maniacKeysPressed = new Set();
 
 // Bancos de preguntas: cada sesión mantiene el formato original de cinco preguntas,
 // pero selecciona una muestra aleatoria sin repetir dentro de esa sesión.
 const intelligenceQuestionBank = [{
-        id: 1,
-        question: intelligenceQuestQuestion1,
-        options: [intelligenceQuestQuestion1Option1, intelligenceQuestQuestion1Option2, intelligenceQuestQuestion1Option3, intelligenceQuestQuestion1Option4],
-        answer: 2,
-        explanation: intelligenceQuestQuestion1Explanation
-    }, {
-        id: 2,
-        question: intelligenceQuestQuestion2,
-        options: [intelligenceQuestQuestion2Option1, intelligenceQuestQuestion2Option2, intelligenceQuestQuestion2Option3, intelligenceQuestQuestion2Option4],
-        answer: 1,
-        explanation: intelligenceQuestQuestion2Explanation
-    }, {
-        id: 3,
-        question: intelligenceQuestQuestion3,
-        options: [intelligenceQuestQuestion3Option1, intelligenceQuestQuestion3Option2, intelligenceQuestQuestion3Option3, intelligenceQuestQuestion3Option4],
-        answer: 2,
-        explanation: intelligenceQuestQuestion3Explanation
-    }, {
-        id: 4,
-        question: intelligenceQuestQuestion4,
-        options: [intelligenceQuestQuestion4Option1, intelligenceQuestQuestion4Option2, intelligenceQuestQuestion4Option3, intelligenceQuestQuestion4Option4],
-        answer: 1,
-        explanation: intelligenceQuestQuestion4Explanation
-    }, {
-        id: 5,
-        question: intelligenceQuestQuestion5,
-        options: [intelligenceQuestQuestion5Option1, intelligenceQuestQuestion5Option2, intelligenceQuestQuestion5Option3, intelligenceQuestQuestion5Option4],
-        answer: 2,
-        explanation: intelligenceQuestQuestion5Explanation
-    }, {
-        id: 6,
-        question: intelligenceQuestQuestion6,
-        options: [intelligenceQuestQuestion6Option1, intelligenceQuestQuestion6Option2, intelligenceQuestQuestion6Option3, intelligenceQuestQuestion6Option4],
-        answer: 2,
-        explanation: intelligenceQuestQuestion6Explanation
-    }, {
-        id: 7,
-        question: intelligenceQuestQuestion7,
-        options: [intelligenceQuestQuestion7Option1, intelligenceQuestQuestion7Option2, intelligenceQuestQuestion7Option3, intelligenceQuestQuestion7Option4],
-        answer: 0,
-        explanation: intelligenceQuestQuestion7Explanation
-    }, {
-        id: 8,
-        question: intelligenceQuestQuestion8,
-        options: [intelligenceQuestQuestion8Option1, intelligenceQuestQuestion8Option2, intelligenceQuestQuestion8Option3, intelligenceQuestQuestion8Option4],
-        answer: 1,
-        explanation: intelligenceQuestQuestion8Explanation
-    }, {
-        id: 9,
-        question: intelligenceQuestQuestion9,
-        options: [intelligenceQuestQuestion9Option1, intelligenceQuestQuestion9Option2, intelligenceQuestQuestion9Option3, intelligenceQuestQuestion9Option4],
-        answer: 1,
-        explanation: intelligenceQuestQuestion9Explanation
-    }, {
-        id: 10,
-        question: intelligenceQuestQuestion10,
-        options: [intelligenceQuestQuestion10Option1, intelligenceQuestQuestion10Option2, intelligenceQuestQuestion10Option3, intelligenceQuestQuestion10Option4],
-        answer: 1,
-        explanation: intelligenceQuestQuestion10Explanation
-    }, {
-        id: 11,
-        question: intelligenceQuestQuestion11,
-        options: [intelligenceQuestQuestion11Option1, intelligenceQuestQuestion11Option2, intelligenceQuestQuestion11Option3, intelligenceQuestQuestion11Option4],
-        answer: 3,
-        explanation: intelligenceQuestQuestion11Explanation
-    }, {
-        id: 12,
-        question: intelligenceQuestQuestion12,
-        options: [intelligenceQuestQuestion12Option1, intelligenceQuestQuestion12Option2, intelligenceQuestQuestion12Option3, intelligenceQuestQuestion12Option4],
-        answer: 2,
-        explanation: intelligenceQuestQuestion12Explanation
-    }, {
-        id: 13,
-        question: intelligenceQuestQuestion13,
-        options: [intelligenceQuestQuestion13Option1, intelligenceQuestQuestion13Option2, intelligenceQuestQuestion13Option3, intelligenceQuestQuestion13Option4],
-        answer: 1,
-        explanation: intelligenceQuestQuestion13Explanation
-    }, {
-        id: 14,
-        question: intelligenceQuestQuestion14,
-        options: [intelligenceQuestQuestion14Option1, intelligenceQuestQuestion14Option2, intelligenceQuestQuestion14Option3, intelligenceQuestQuestion14Option4],
-        answer: 2,
-        explanation: intelligenceQuestQuestion14Explanation
-    }, {
-        id: 15,
-        question: intelligenceQuestQuestion15,
-        options: [intelligenceQuestQuestion15Option1, intelligenceQuestQuestion15Option2, intelligenceQuestQuestion15Option3, intelligenceQuestQuestion15Option4],
-        answer: 2,
-        explanation: intelligenceQuestQuestion15Explanation
-    }, {
-        id: 16,
-        question: intelligenceQuestQuestion16,
-        options: [intelligenceQuestQuestion16Option1, intelligenceQuestQuestion16Option2, intelligenceQuestQuestion16Option3, intelligenceQuestQuestion16Option4],
-        answer: 2,
-        explanation: intelligenceQuestQuestion16Explanation
-    }, {
-        id: 17,
-        question: intelligenceQuestQuestion17,
-        options: [intelligenceQuestQuestion17Option1, intelligenceQuestQuestion17Option2, intelligenceQuestQuestion17Option3, intelligenceQuestQuestion17Option4],
-        answer: 2,
-        explanation: intelligenceQuestQuestion17Explanation
-    }, {
-        id: 18,
-        question: intelligenceQuestQuestion18,
-        options: [intelligenceQuestQuestion18Option1, intelligenceQuestQuestion18Option2, intelligenceQuestQuestion18Option3, intelligenceQuestQuestion18Option4],
-        answer: 2,
-        explanation: intelligenceQuestQuestion18Explanation
-    }, {
-        id: 19,
-        question: intelligenceQuestQuestion19,
-        options: [intelligenceQuestQuestion19Option1, intelligenceQuestQuestion19Option2, intelligenceQuestQuestion19Option3, intelligenceQuestQuestion19Option4],
-        answer: 1,
-        explanation: intelligenceQuestQuestion19Explanation
-    }, {
-        id: 20,
-        question: intelligenceQuestQuestion20,
-        options: [intelligenceQuestQuestion20Option1, intelligenceQuestQuestion20Option2, intelligenceQuestQuestion20Option3, intelligenceQuestQuestion20Option4],
-        answer: 3,
-        explanation: intelligenceQuestQuestion20Explanation
-    }
+    id: 1,
+    question: intelligenceQuestQuestion1,
+    options: [intelligenceQuestQuestion1Option1, intelligenceQuestQuestion1Option2, intelligenceQuestQuestion1Option3, intelligenceQuestQuestion1Option4],
+    answer: 2,
+    explanation: intelligenceQuestQuestion1Explanation
+}, {
+    id: 2,
+    question: intelligenceQuestQuestion2,
+    options: [intelligenceQuestQuestion2Option1, intelligenceQuestQuestion2Option2, intelligenceQuestQuestion2Option3, intelligenceQuestQuestion2Option4],
+    answer: 1,
+    explanation: intelligenceQuestQuestion2Explanation
+}, {
+    id: 3,
+    question: intelligenceQuestQuestion3,
+    options: [intelligenceQuestQuestion3Option1, intelligenceQuestQuestion3Option2, intelligenceQuestQuestion3Option3, intelligenceQuestQuestion3Option4],
+    answer: 2,
+    explanation: intelligenceQuestQuestion3Explanation
+}, {
+    id: 4,
+    question: intelligenceQuestQuestion4,
+    options: [intelligenceQuestQuestion4Option1, intelligenceQuestQuestion4Option2, intelligenceQuestQuestion4Option3, intelligenceQuestQuestion4Option4],
+    answer: 1,
+    explanation: intelligenceQuestQuestion4Explanation
+}, {
+    id: 5,
+    question: intelligenceQuestQuestion5,
+    options: [intelligenceQuestQuestion5Option1, intelligenceQuestQuestion5Option2, intelligenceQuestQuestion5Option3, intelligenceQuestQuestion5Option4],
+    answer: 2,
+    explanation: intelligenceQuestQuestion5Explanation
+}, {
+    id: 6,
+    question: intelligenceQuestQuestion6,
+    options: [intelligenceQuestQuestion6Option1, intelligenceQuestQuestion6Option2, intelligenceQuestQuestion6Option3, intelligenceQuestQuestion6Option4],
+    answer: 2,
+    explanation: intelligenceQuestQuestion6Explanation
+}, {
+    id: 7,
+    question: intelligenceQuestQuestion7,
+    options: [intelligenceQuestQuestion7Option1, intelligenceQuestQuestion7Option2, intelligenceQuestQuestion7Option3, intelligenceQuestQuestion7Option4],
+    answer: 0,
+    explanation: intelligenceQuestQuestion7Explanation
+}, {
+    id: 8,
+    question: intelligenceQuestQuestion8,
+    options: [intelligenceQuestQuestion8Option1, intelligenceQuestQuestion8Option2, intelligenceQuestQuestion8Option3, intelligenceQuestQuestion8Option4],
+    answer: 1,
+    explanation: intelligenceQuestQuestion8Explanation
+}, {
+    id: 9,
+    question: intelligenceQuestQuestion9,
+    options: [intelligenceQuestQuestion9Option1, intelligenceQuestQuestion9Option2, intelligenceQuestQuestion9Option3, intelligenceQuestQuestion9Option4],
+    answer: 1,
+    explanation: intelligenceQuestQuestion9Explanation
+}, {
+    id: 10,
+    question: intelligenceQuestQuestion10,
+    options: [intelligenceQuestQuestion10Option1, intelligenceQuestQuestion10Option2, intelligenceQuestQuestion10Option3, intelligenceQuestQuestion10Option4],
+    answer: 1,
+    explanation: intelligenceQuestQuestion10Explanation
+}, {
+    id: 11,
+    question: intelligenceQuestQuestion11,
+    options: [intelligenceQuestQuestion11Option1, intelligenceQuestQuestion11Option2, intelligenceQuestQuestion11Option3, intelligenceQuestQuestion11Option4],
+    answer: 3,
+    explanation: intelligenceQuestQuestion11Explanation
+}, {
+    id: 12,
+    question: intelligenceQuestQuestion12,
+    options: [intelligenceQuestQuestion12Option1, intelligenceQuestQuestion12Option2, intelligenceQuestQuestion12Option3, intelligenceQuestQuestion12Option4],
+    answer: 2,
+    explanation: intelligenceQuestQuestion12Explanation
+}, {
+    id: 13,
+    question: intelligenceQuestQuestion13,
+    options: [intelligenceQuestQuestion13Option1, intelligenceQuestQuestion13Option2, intelligenceQuestQuestion13Option3, intelligenceQuestQuestion13Option4],
+    answer: 1,
+    explanation: intelligenceQuestQuestion13Explanation
+}, {
+    id: 14,
+    question: intelligenceQuestQuestion14,
+    options: [intelligenceQuestQuestion14Option1, intelligenceQuestQuestion14Option2, intelligenceQuestQuestion14Option3, intelligenceQuestQuestion14Option4],
+    answer: 2,
+    explanation: intelligenceQuestQuestion14Explanation
+}, {
+    id: 15,
+    question: intelligenceQuestQuestion15,
+    options: [intelligenceQuestQuestion15Option1, intelligenceQuestQuestion15Option2, intelligenceQuestQuestion15Option3, intelligenceQuestQuestion15Option4],
+    answer: 2,
+    explanation: intelligenceQuestQuestion15Explanation
+}, {
+    id: 16,
+    question: intelligenceQuestQuestion16,
+    options: [intelligenceQuestQuestion16Option1, intelligenceQuestQuestion16Option2, intelligenceQuestQuestion16Option3, intelligenceQuestQuestion16Option4],
+    answer: 2,
+    explanation: intelligenceQuestQuestion16Explanation
+}, {
+    id: 17,
+    question: intelligenceQuestQuestion17,
+    options: [intelligenceQuestQuestion17Option1, intelligenceQuestQuestion17Option2, intelligenceQuestQuestion17Option3, intelligenceQuestQuestion17Option4],
+    answer: 2,
+    explanation: intelligenceQuestQuestion17Explanation
+}, {
+    id: 18,
+    question: intelligenceQuestQuestion18,
+    options: [intelligenceQuestQuestion18Option1, intelligenceQuestQuestion18Option2, intelligenceQuestQuestion18Option3, intelligenceQuestQuestion18Option4],
+    answer: 2,
+    explanation: intelligenceQuestQuestion18Explanation
+}, {
+    id: 19,
+    question: intelligenceQuestQuestion19,
+    options: [intelligenceQuestQuestion19Option1, intelligenceQuestQuestion19Option2, intelligenceQuestQuestion19Option3, intelligenceQuestQuestion19Option4],
+    answer: 1,
+    explanation: intelligenceQuestQuestion19Explanation
+}, {
+    id: 20,
+    question: intelligenceQuestQuestion20,
+    options: [intelligenceQuestQuestion20Option1, intelligenceQuestQuestion20Option2, intelligenceQuestQuestion20Option3, intelligenceQuestQuestion20Option4],
+    answer: 3,
+    explanation: intelligenceQuestQuestion20Explanation
+}
 ];
 let intelligenceQuestions = [];
 
 // Banco de 50 preguntas de Star Trek, con una única respuesta correcta por pregunta.
 const starTrekTriviaQuestionBank = [{
-        id: 1,
-        question: triviaQuestion1,
-        options: [triviaQuestion1Option1, triviaQuestion1Option2, triviaQuestion1Option3, triviaQuestion1Option4],
-        answer: 2,
-        explanation: triviaQuestion1Explanation
-    }, {
-        id: 2,
-        question: triviaQuestion2,
-        options: [triviaQuestion2Option1, triviaQuestion2Option2, triviaQuestion2Option3, triviaQuestion2Option4],
-        answer: 1,
-        explanation: triviaQuestion2Explanation
-    }, {
-        id: 3,
-        question: triviaQuestion3,
-        options: [triviaQuestion3Option1, triviaQuestion3Option2, triviaQuestion3Option3, triviaQuestion3Option4],
-        answer: 3,
-        explanation: triviaQuestion3Explanation
-    }, {
-        id: 4,
-        question: triviaQuestion4,
-        options: [triviaQuestion4Option1, triviaQuestion4Option2, triviaQuestion4Option3, triviaQuestion4Option4],
-        answer: 0,
-        explanation: triviaQuestion4Explanation
-    }, {
-        id: 5,
-        question: triviaQuestion5,
-        options: [triviaQuestion5Option1, triviaQuestion5Option2, triviaQuestion5Option3, triviaQuestion5Option4],
-        answer: 2,
-        explanation: triviaQuestion5Explanation
-    }, {
-        id: 6,
-        question: triviaQuestion6,
-        options: [triviaQuestion6Option1, triviaQuestion6Option2, triviaQuestion6Option3, triviaQuestion6Option4],
-        answer: 1,
-        explanation: triviaQuestion6Explanation
-    }, {
-        id: 7,
-        question: triviaQuestion7,
-        options: [triviaQuestion7Option1, triviaQuestion7Option2, triviaQuestion7Option3, triviaQuestion7Option4],
-        answer: 0,
-        explanation: triviaQuestion7Explanation
-    }, {
-        id: 8,
-        question: triviaQuestion8,
-        options: [triviaQuestion8Option1, triviaQuestion8Option2, triviaQuestion8Option3, triviaQuestion8Option4],
-        answer: 3,
-        explanation: triviaQuestion8Explanation
-    }, {
-        id: 9,
-        question: triviaQuestion9,
-        options: [triviaQuestion9Option1, triviaQuestion9Option2, triviaQuestion9Option3, triviaQuestion9Option4],
-        answer: 1,
-        explanation: triviaQuestion9Explanation
-    }, {
-        id: 10,
-        question: triviaQuestion10,
-        options: [triviaQuestion10Option1, triviaQuestion10Option2, triviaQuestion10Option3, triviaQuestion10Option4],
-        answer: 2,
-        explanation: triviaQuestion10Explanation
-    }, {
-        id: 11,
-        question: triviaQuestion11,
-        options: [triviaQuestion11Option1, triviaQuestion11Option2, triviaQuestion11Option3, triviaQuestion11Option4],
-        answer: 0,
-        explanation: triviaQuestion11Explanation
-    }, {
-        id: 12,
-        question: triviaQuestion12,
-        options: [triviaQuestion12Option1, triviaQuestion12Option2, triviaQuestion12Option3, triviaQuestion12Option4],
-        answer: 3,
-        explanation: triviaQuestion12Explanation
-    }, {
-        id: 13,
-        question: triviaQuestion13,
-        options: [triviaQuestion13Option1, triviaQuestion13Option2, triviaQuestion13Option3, triviaQuestion13Option4],
-        answer: 1,
-        explanation: triviaQuestion13Explanation
-    }, {
-        id: 14,
-        question: triviaQuestion14,
-        options: [triviaQuestion14Option1, triviaQuestion14Option2, triviaQuestion14Option3, triviaQuestion14Option4],
-        answer: 2,
-        explanation: triviaQuestion14Explanation
-    }, {
-        id: 15,
-        question: triviaQuestion15,
-        options: [triviaQuestion15Option1, triviaQuestion15Option2, triviaQuestion15Option3, triviaQuestion15Option4],
-        answer: 0,
-        explanation: triviaQuestion15Explanation
-    }, {
-        id: 16,
-        question: triviaQuestion16,
-        options: [triviaQuestion16Option1, triviaQuestion16Option2, triviaQuestion16Option3, triviaQuestion16Option4],
-        answer: 3,
-        explanation: triviaQuestion16Explanation
-    }, {
-        id: 17,
-        question: triviaQuestion17,
-        options: [triviaQuestion17Option1, triviaQuestion17Option2, triviaQuestion17Option3, triviaQuestion17Option4],
-        answer: 1,
-        explanation: triviaQuestion17Explanation
-    }, {
-        id: 18,
-        question: triviaQuestion18,
-        options: [triviaQuestion18Option1, triviaQuestion18Option2, triviaQuestion18Option3, triviaQuestion18Option4],
-        answer: 2,
-        explanation: triviaQuestion18Explanation
-    }, {
-        id: 19,
-        question: triviaQuestion19,
-        options: [triviaQuestion19Option1, triviaQuestion19Option2, triviaQuestion19Option3, triviaQuestion19Option4],
-        answer: 0,
-        explanation: triviaQuestion19Explanation
-    }, {
-        id: 20,
-        question: triviaQuestion20,
-        options: [triviaQuestion20Option1, triviaQuestion20Option2, triviaQuestion20Option3, triviaQuestion20Option4],
-        answer: 0,
-        explanation: triviaQuestion20Explanation
-    }, {
-        id: 21,
-        question: triviaQuestion21,
-        options: [triviaQuestion21Option1, triviaQuestion21Option2, triviaQuestion21Option3, triviaQuestion21Option4],
-        answer: 1,
-        explanation: triviaQuestion21Explanation
-    }, {
-        id: 22,
-        question: triviaQuestion22,
-        options: [triviaQuestion22Option1, triviaQuestion22Option2, triviaQuestion22Option3, triviaQuestion22Option4],
-        answer: 2,
-        explanation: triviaQuestion22Explanation
-    }, {
-        id: 23,
-        question: triviaQuestion23,
-        options: [triviaQuestion23Option1, triviaQuestion23Option2, triviaQuestion23Option3, triviaQuestion23Option4],
-        answer: 0,
-        explanation: triviaQuestion23Explanation
-    }, {
-        id: 24,
-        question: triviaQuestion24,
-        options: [triviaQuestion24Option1, triviaQuestion24Option2, triviaQuestion24Option3, triviaQuestion24Option4],
-        answer: 2,
-        explanation: triviaQuestion24Explanation
-    }, {
-        id: 25,
-        question: triviaQuestion25,
-        options: [triviaQuestion25Option1, triviaQuestion25Option2, triviaQuestion25Option3, triviaQuestion25Option4],
-        answer: 1,
-        explanation: triviaQuestion25Explanation
-    }, {
-        id: 26,
-        question: triviaQuestion26,
-        options: [triviaQuestion26Option1, triviaQuestion26Option2, triviaQuestion26Option3, triviaQuestion26Option4],
-        answer: 3,
-        explanation: triviaQuestion26Explanation
-    }, {
-        id: 27,
-        question: triviaQuestion27,
-        options: [triviaQuestion27Option1, triviaQuestion27Option2, triviaQuestion27Option3, triviaQuestion27Option4],
-        answer: 0,
-        explanation: triviaQuestion27Explanation
-    }, {
-        id: 28,
-        question: triviaQuestion28,
-        options: [triviaQuestion28Option1, triviaQuestion28Option2, triviaQuestion28Option3, triviaQuestion28Option4],
-        answer: 2,
-        explanation: triviaQuestion28Explanation
-    }, {
-        id: 29,
-        question: triviaQuestion29,
-        options: [triviaQuestion29Option1, triviaQuestion29Option2, triviaQuestion29Option3, triviaQuestion29Option4],
-        answer: 1,
-        explanation: triviaQuestion29Explanation
-    }, {
-        id: 30,
-        question: triviaQuestion30,
-        options: [triviaQuestion30Option1, triviaQuestion30Option2, triviaQuestion30Option3, triviaQuestion30Option4],
-        answer: 0,
-        explanation: triviaQuestion30Explanation
-    }, {
-        id: 31,
-        question: triviaQuestion31,
-        options: [triviaQuestion31Option1, triviaQuestion31Option2, triviaQuestion31Option3, triviaQuestion31Option4],
-        answer: 3,
-        explanation: triviaQuestion31Explanation
-    }, {
-        id: 32,
-        question: triviaQuestion32,
-        options: [triviaQuestion32Option1, triviaQuestion32Option2, triviaQuestion32Option3, triviaQuestion32Option4],
-        answer: 1,
-        explanation: triviaQuestion32Explanation
-    }, {
-        id: 33,
-        question: triviaQuestion33,
-        options: [triviaQuestion33Option1, triviaQuestion33Option2, triviaQuestion33Option3, triviaQuestion33Option4],
-        answer: 2,
-        explanation: triviaQuestion33Explanation
-    }, {
-        id: 34,
-        question: triviaQuestion34,
-        options: [triviaQuestion34Option1, triviaQuestion34Option2, triviaQuestion34Option3, triviaQuestion34Option4],
-        answer: 0,
-        explanation: triviaQuestion34Explanation
-    }, {
-        id: 35,
-        question: triviaQuestion35,
-        options: [triviaQuestion35Option1, triviaQuestion35Option2, triviaQuestion35Option3, triviaQuestion35Option4],
-        answer: 2,
-        explanation: triviaQuestion35Explanation
-    }, {
-        id: 36,
-        question: triviaQuestion36,
-        options: [triviaQuestion36Option1, triviaQuestion36Option2, triviaQuestion36Option3, triviaQuestion36Option4],
-        answer: 1,
-        explanation: triviaQuestion36Explanation
-    }, {
-        id: 37,
-        question: triviaQuestion37,
-        options: [triviaQuestion37Option1, triviaQuestion37Option2, triviaQuestion37Option3, triviaQuestion37Option4],
-        answer: 3,
-        explanation: triviaQuestion37Explanation
-    }, {
-        id: 38,
-        question: triviaQuestion38,
-        options: [triviaQuestion38Option1, triviaQuestion38Option2, triviaQuestion38Option3, triviaQuestion38Option4],
-        answer: 0,
-        explanation: triviaQuestion38Explanation
-    }, {
-        id: 39,
-        question: triviaQuestion39,
-        options: [triviaQuestion39Option1, triviaQuestion39Option2, triviaQuestion39Option3, triviaQuestion39Option4],
-        answer: 2,
-        explanation: triviaQuestion39Explanation
-    }, {
-        id: 40,
-        question: triviaQuestion40,
-        options: [triviaQuestion40Option1, triviaQuestion40Option2, triviaQuestion40Option3, triviaQuestion40Option4],
-        answer: 1,
-        explanation: triviaQuestion40Explanation
-    }, {
-        id: 41,
-        question: triviaQuestion41,
-        options: [triviaQuestion41Option1, triviaQuestion41Option2, triviaQuestion41Option3, triviaQuestion41Option4],
-        answer: 1,
-        explanation: triviaQuestion41Explanation
-    }, {
-        id: 42,
-        question: triviaQuestion42,
-        options: [triviaQuestion42Option1, triviaQuestion42Option2, triviaQuestion42Option3, triviaQuestion42Option4],
-        answer: 3,
-        explanation: triviaQuestion42Explanation
-    }, {
-        id: 43,
-        question: triviaQuestion43,
-        options: [triviaQuestion43Option1, triviaQuestion43Option2, triviaQuestion43Option3, triviaQuestion43Option4],
-        answer: 0,
-        explanation: triviaQuestion43Explanation
-    }, {
-        id: 44,
-        question: triviaQuestion44,
-        options: [triviaQuestion44Option1, triviaQuestion44Option2, triviaQuestion44Option3, triviaQuestion44Option4],
-        answer: 1,
-        explanation: triviaQuestion44Explanation
-    }, {
-        id: 45,
-        question: triviaQuestion45,
-        options: [triviaQuestion45Option1, triviaQuestion45Option2, triviaQuestion45Option3, triviaQuestion45Option4],
-        answer: 2,
-        explanation: triviaQuestion45Explanation
-    }, {
-        id: 46,
-        question: triviaQuestion46,
-        options: [triviaQuestion46Option1, triviaQuestion46Option2, triviaQuestion46Option3, triviaQuestion46Option4],
-        answer: 0,
-        explanation: triviaQuestion46Explanation
-    }, {
-        id: 47,
-        question: triviaQuestion47,
-        options: [triviaQuestion47Option1, triviaQuestion47Option2, triviaQuestion47Option3, triviaQuestion47Option4],
-        answer: 3,
-        explanation: triviaQuestion47Explanation
-    }, {
-        id: 48,
-        question: triviaQuestion48,
-        options: [triviaQuestion48Option1, triviaQuestion48Option2, triviaQuestion48Option3, triviaQuestion48Option4],
-        answer: 1,
-        explanation: triviaQuestion48Explanation
-    }, {
-        id: 49,
-        question: triviaQuestion49,
-        options: [triviaQuestion49Option1, triviaQuestion49Option2, triviaQuestion49Option3, triviaQuestion49Option4],
-        answer: 0,
-        explanation: triviaQuestion49Explanation
-    }, {
-        id: 50,
-        question: triviaQuestion50,
-        options: [triviaQuestion50Option1, triviaQuestion50Option2, triviaQuestion50Option3, triviaQuestion50Option4],
-        answer: 2,
-        explanation: triviaQuestion50Explanation
-    },
+    id: 1,
+    question: triviaQuestion1,
+    options: [triviaQuestion1Option1, triviaQuestion1Option2, triviaQuestion1Option3, triviaQuestion1Option4],
+    answer: 2,
+    explanation: triviaQuestion1Explanation
+}, {
+    id: 2,
+    question: triviaQuestion2,
+    options: [triviaQuestion2Option1, triviaQuestion2Option2, triviaQuestion2Option3, triviaQuestion2Option4],
+    answer: 1,
+    explanation: triviaQuestion2Explanation
+}, {
+    id: 3,
+    question: triviaQuestion3,
+    options: [triviaQuestion3Option1, triviaQuestion3Option2, triviaQuestion3Option3, triviaQuestion3Option4],
+    answer: 3,
+    explanation: triviaQuestion3Explanation
+}, {
+    id: 4,
+    question: triviaQuestion4,
+    options: [triviaQuestion4Option1, triviaQuestion4Option2, triviaQuestion4Option3, triviaQuestion4Option4],
+    answer: 0,
+    explanation: triviaQuestion4Explanation
+}, {
+    id: 5,
+    question: triviaQuestion5,
+    options: [triviaQuestion5Option1, triviaQuestion5Option2, triviaQuestion5Option3, triviaQuestion5Option4],
+    answer: 2,
+    explanation: triviaQuestion5Explanation
+}, {
+    id: 6,
+    question: triviaQuestion6,
+    options: [triviaQuestion6Option1, triviaQuestion6Option2, triviaQuestion6Option3, triviaQuestion6Option4],
+    answer: 1,
+    explanation: triviaQuestion6Explanation
+}, {
+    id: 7,
+    question: triviaQuestion7,
+    options: [triviaQuestion7Option1, triviaQuestion7Option2, triviaQuestion7Option3, triviaQuestion7Option4],
+    answer: 0,
+    explanation: triviaQuestion7Explanation
+}, {
+    id: 8,
+    question: triviaQuestion8,
+    options: [triviaQuestion8Option1, triviaQuestion8Option2, triviaQuestion8Option3, triviaQuestion8Option4],
+    answer: 3,
+    explanation: triviaQuestion8Explanation
+}, {
+    id: 9,
+    question: triviaQuestion9,
+    options: [triviaQuestion9Option1, triviaQuestion9Option2, triviaQuestion9Option3, triviaQuestion9Option4],
+    answer: 1,
+    explanation: triviaQuestion9Explanation
+}, {
+    id: 10,
+    question: triviaQuestion10,
+    options: [triviaQuestion10Option1, triviaQuestion10Option2, triviaQuestion10Option3, triviaQuestion10Option4],
+    answer: 2,
+    explanation: triviaQuestion10Explanation
+}, {
+    id: 11,
+    question: triviaQuestion11,
+    options: [triviaQuestion11Option1, triviaQuestion11Option2, triviaQuestion11Option3, triviaQuestion11Option4],
+    answer: 0,
+    explanation: triviaQuestion11Explanation
+}, {
+    id: 12,
+    question: triviaQuestion12,
+    options: [triviaQuestion12Option1, triviaQuestion12Option2, triviaQuestion12Option3, triviaQuestion12Option4],
+    answer: 3,
+    explanation: triviaQuestion12Explanation
+}, {
+    id: 13,
+    question: triviaQuestion13,
+    options: [triviaQuestion13Option1, triviaQuestion13Option2, triviaQuestion13Option3, triviaQuestion13Option4],
+    answer: 1,
+    explanation: triviaQuestion13Explanation
+}, {
+    id: 14,
+    question: triviaQuestion14,
+    options: [triviaQuestion14Option1, triviaQuestion14Option2, triviaQuestion14Option3, triviaQuestion14Option4],
+    answer: 2,
+    explanation: triviaQuestion14Explanation
+}, {
+    id: 15,
+    question: triviaQuestion15,
+    options: [triviaQuestion15Option1, triviaQuestion15Option2, triviaQuestion15Option3, triviaQuestion15Option4],
+    answer: 0,
+    explanation: triviaQuestion15Explanation
+}, {
+    id: 16,
+    question: triviaQuestion16,
+    options: [triviaQuestion16Option1, triviaQuestion16Option2, triviaQuestion16Option3, triviaQuestion16Option4],
+    answer: 3,
+    explanation: triviaQuestion16Explanation
+}, {
+    id: 17,
+    question: triviaQuestion17,
+    options: [triviaQuestion17Option1, triviaQuestion17Option2, triviaQuestion17Option3, triviaQuestion17Option4],
+    answer: 1,
+    explanation: triviaQuestion17Explanation
+}, {
+    id: 18,
+    question: triviaQuestion18,
+    options: [triviaQuestion18Option1, triviaQuestion18Option2, triviaQuestion18Option3, triviaQuestion18Option4],
+    answer: 2,
+    explanation: triviaQuestion18Explanation
+}, {
+    id: 19,
+    question: triviaQuestion19,
+    options: [triviaQuestion19Option1, triviaQuestion19Option2, triviaQuestion19Option3, triviaQuestion19Option4],
+    answer: 0,
+    explanation: triviaQuestion19Explanation
+}, {
+    id: 20,
+    question: triviaQuestion20,
+    options: [triviaQuestion20Option1, triviaQuestion20Option2, triviaQuestion20Option3, triviaQuestion20Option4],
+    answer: 0,
+    explanation: triviaQuestion20Explanation
+}, {
+    id: 21,
+    question: triviaQuestion21,
+    options: [triviaQuestion21Option1, triviaQuestion21Option2, triviaQuestion21Option3, triviaQuestion21Option4],
+    answer: 1,
+    explanation: triviaQuestion21Explanation
+}, {
+    id: 22,
+    question: triviaQuestion22,
+    options: [triviaQuestion22Option1, triviaQuestion22Option2, triviaQuestion22Option3, triviaQuestion22Option4],
+    answer: 2,
+    explanation: triviaQuestion22Explanation
+}, {
+    id: 23,
+    question: triviaQuestion23,
+    options: [triviaQuestion23Option1, triviaQuestion23Option2, triviaQuestion23Option3, triviaQuestion23Option4],
+    answer: 0,
+    explanation: triviaQuestion23Explanation
+}, {
+    id: 24,
+    question: triviaQuestion24,
+    options: [triviaQuestion24Option1, triviaQuestion24Option2, triviaQuestion24Option3, triviaQuestion24Option4],
+    answer: 2,
+    explanation: triviaQuestion24Explanation
+}, {
+    id: 25,
+    question: triviaQuestion25,
+    options: [triviaQuestion25Option1, triviaQuestion25Option2, triviaQuestion25Option3, triviaQuestion25Option4],
+    answer: 1,
+    explanation: triviaQuestion25Explanation
+}, {
+    id: 26,
+    question: triviaQuestion26,
+    options: [triviaQuestion26Option1, triviaQuestion26Option2, triviaQuestion26Option3, triviaQuestion26Option4],
+    answer: 3,
+    explanation: triviaQuestion26Explanation
+}, {
+    id: 27,
+    question: triviaQuestion27,
+    options: [triviaQuestion27Option1, triviaQuestion27Option2, triviaQuestion27Option3, triviaQuestion27Option4],
+    answer: 0,
+    explanation: triviaQuestion27Explanation
+}, {
+    id: 28,
+    question: triviaQuestion28,
+    options: [triviaQuestion28Option1, triviaQuestion28Option2, triviaQuestion28Option3, triviaQuestion28Option4],
+    answer: 2,
+    explanation: triviaQuestion28Explanation
+}, {
+    id: 29,
+    question: triviaQuestion29,
+    options: [triviaQuestion29Option1, triviaQuestion29Option2, triviaQuestion29Option3, triviaQuestion29Option4],
+    answer: 1,
+    explanation: triviaQuestion29Explanation
+}, {
+    id: 30,
+    question: triviaQuestion30,
+    options: [triviaQuestion30Option1, triviaQuestion30Option2, triviaQuestion30Option3, triviaQuestion30Option4],
+    answer: 0,
+    explanation: triviaQuestion30Explanation
+}, {
+    id: 31,
+    question: triviaQuestion31,
+    options: [triviaQuestion31Option1, triviaQuestion31Option2, triviaQuestion31Option3, triviaQuestion31Option4],
+    answer: 3,
+    explanation: triviaQuestion31Explanation
+}, {
+    id: 32,
+    question: triviaQuestion32,
+    options: [triviaQuestion32Option1, triviaQuestion32Option2, triviaQuestion32Option3, triviaQuestion32Option4],
+    answer: 1,
+    explanation: triviaQuestion32Explanation
+}, {
+    id: 33,
+    question: triviaQuestion33,
+    options: [triviaQuestion33Option1, triviaQuestion33Option2, triviaQuestion33Option3, triviaQuestion33Option4],
+    answer: 2,
+    explanation: triviaQuestion33Explanation
+}, {
+    id: 34,
+    question: triviaQuestion34,
+    options: [triviaQuestion34Option1, triviaQuestion34Option2, triviaQuestion34Option3, triviaQuestion34Option4],
+    answer: 0,
+    explanation: triviaQuestion34Explanation
+}, {
+    id: 35,
+    question: triviaQuestion35,
+    options: [triviaQuestion35Option1, triviaQuestion35Option2, triviaQuestion35Option3, triviaQuestion35Option4],
+    answer: 2,
+    explanation: triviaQuestion35Explanation
+}, {
+    id: 36,
+    question: triviaQuestion36,
+    options: [triviaQuestion36Option1, triviaQuestion36Option2, triviaQuestion36Option3, triviaQuestion36Option4],
+    answer: 1,
+    explanation: triviaQuestion36Explanation
+}, {
+    id: 37,
+    question: triviaQuestion37,
+    options: [triviaQuestion37Option1, triviaQuestion37Option2, triviaQuestion37Option3, triviaQuestion37Option4],
+    answer: 3,
+    explanation: triviaQuestion37Explanation
+}, {
+    id: 38,
+    question: triviaQuestion38,
+    options: [triviaQuestion38Option1, triviaQuestion38Option2, triviaQuestion38Option3, triviaQuestion38Option4],
+    answer: 0,
+    explanation: triviaQuestion38Explanation
+}, {
+    id: 39,
+    question: triviaQuestion39,
+    options: [triviaQuestion39Option1, triviaQuestion39Option2, triviaQuestion39Option3, triviaQuestion39Option4],
+    answer: 2,
+    explanation: triviaQuestion39Explanation
+}, {
+    id: 40,
+    question: triviaQuestion40,
+    options: [triviaQuestion40Option1, triviaQuestion40Option2, triviaQuestion40Option3, triviaQuestion40Option4],
+    answer: 1,
+    explanation: triviaQuestion40Explanation
+}, {
+    id: 41,
+    question: triviaQuestion41,
+    options: [triviaQuestion41Option1, triviaQuestion41Option2, triviaQuestion41Option3, triviaQuestion41Option4],
+    answer: 1,
+    explanation: triviaQuestion41Explanation
+}, {
+    id: 42,
+    question: triviaQuestion42,
+    options: [triviaQuestion42Option1, triviaQuestion42Option2, triviaQuestion42Option3, triviaQuestion42Option4],
+    answer: 3,
+    explanation: triviaQuestion42Explanation
+}, {
+    id: 43,
+    question: triviaQuestion43,
+    options: [triviaQuestion43Option1, triviaQuestion43Option2, triviaQuestion43Option3, triviaQuestion43Option4],
+    answer: 0,
+    explanation: triviaQuestion43Explanation
+}, {
+    id: 44,
+    question: triviaQuestion44,
+    options: [triviaQuestion44Option1, triviaQuestion44Option2, triviaQuestion44Option3, triviaQuestion44Option4],
+    answer: 1,
+    explanation: triviaQuestion44Explanation
+}, {
+    id: 45,
+    question: triviaQuestion45,
+    options: [triviaQuestion45Option1, triviaQuestion45Option2, triviaQuestion45Option3, triviaQuestion45Option4],
+    answer: 2,
+    explanation: triviaQuestion45Explanation
+}, {
+    id: 46,
+    question: triviaQuestion46,
+    options: [triviaQuestion46Option1, triviaQuestion46Option2, triviaQuestion46Option3, triviaQuestion46Option4],
+    answer: 0,
+    explanation: triviaQuestion46Explanation
+}, {
+    id: 47,
+    question: triviaQuestion47,
+    options: [triviaQuestion47Option1, triviaQuestion47Option2, triviaQuestion47Option3, triviaQuestion47Option4],
+    answer: 3,
+    explanation: triviaQuestion47Explanation
+}, {
+    id: 48,
+    question: triviaQuestion48,
+    options: [triviaQuestion48Option1, triviaQuestion48Option2, triviaQuestion48Option3, triviaQuestion48Option4],
+    answer: 1,
+    explanation: triviaQuestion48Explanation
+}, {
+    id: 49,
+    question: triviaQuestion49,
+    options: [triviaQuestion49Option1, triviaQuestion49Option2, triviaQuestion49Option3, triviaQuestion49Option4],
+    answer: 0,
+    explanation: triviaQuestion49Explanation
+}, {
+    id: 50,
+    question: triviaQuestion50,
+    options: [triviaQuestion50Option1, triviaQuestion50Option2, triviaQuestion50Option3, triviaQuestion50Option4],
+    answer: 2,
+    explanation: triviaQuestion50Explanation
+},
 ];
 let starTrekTriviaQuestions = [];
 
@@ -638,15 +640,15 @@ let kobayashiMaruStage = 0; // 0: alerta, 1: decisión, 2: crisis, 3: análisis
 let kobayashiMaruChoice = -1;
 let kobayashiMaruOutcome = '';
 const kobayashiMaruChoices = [{
-        title: kobayashiMaruSpeaker1,
-        detail: kobayashiMaruSpeakerText1
-    }, {
-        title: kobayashiMaruSpeaker2,
-        detail: kobayashiMaruSpeakerText2
-    }, {
-        title: kobayashiMaruSpeaker3,
-        detail: kobayashiMaruSpeakerText3
-    }
+    title: kobayashiMaruSpeaker1,
+    detail: kobayashiMaruSpeakerText1
+}, {
+    title: kobayashiMaruSpeaker2,
+    detail: kobayashiMaruSpeakerText2
+}, {
+    title: kobayashiMaruSpeaker3,
+    detail: kobayashiMaruSpeakerText3
+}
 ];
 
 // Personaje elegido solo para el circuito del holodeck; no cambia la selección
@@ -655,38 +657,38 @@ let trainingCharacterIndex = 0;
 const trainingScoreTarget = 3000;
 let trainingCircuitIndex = 0;
 const holodeckCourses = [{
-        name: holodeckCourseName1,
-        theme: 'classic',
-        worldWidth: 2650,
-        ground: [[0, 350], [415, 330], [810, 370], [1245, 405], [1715, 365], [2145, 505]],
-        upper: [[175, 105, 100], [495, 140, 100], [660, 86, 110], [885, 122, 112], [1065, 172, 115], [1325, 115, 106], [1515, 155, 120], [1775, 105, 100], [1935, 172, 110], [2225, 125, 112]],
-        coins: [[215, 139], [535, 176], [703, 122], [929, 159], [1118, 209], [1377, 151], [1576, 193], [1826, 142], [1989, 211], [2278, 161]],
-        enemies: [[275, 245, 325, 1.1], [555, 510, 700, 1.2], [940, 860, 1120, 1.35], [1455, 1280, 1600, 1.25], [1870, 1740, 2020, 1.35], [2320, 2210, 2500, 1.5]]
-    }, {
-        name: holodeckCourseName2,
-        theme: 'space',
-        worldWidth: 2850,
-        ground: [[0, 310], [385, 300], [760, 315], [1135, 310], [1510, 330], [1905, 300], [2280, 310], [2660, 190]],
-        upper: [[130, 92, 90], [470, 138, 95], [650, 85, 95], [860, 124, 105], [1100, 160, 100], [1285, 108, 110], [1555, 145, 100], [1770, 90, 100], [1980, 158, 105], [2215, 118, 105], [2480, 147, 105]],
-        coins: [[170, 130], [510, 176], [695, 123], [910, 161], [1145, 198], [1335, 146], [1595, 183], [1815, 128], [2020, 196], [2255, 156], [2520, 185]],
-        enemies: [[245, 210, 290, 1.3], [540, 430, 640, 1.45], [900, 820, 1060, 1.5], [1360, 1190, 1480, 1.55], [1690, 1570, 1830, 1.6], [2075, 1950, 2200, 1.65], [2430, 2340, 2600, 1.8], [2760, 2700, 2815, 1.7]]
-    }, {
-        name: holodeckCourseName3,
-        theme: 'volcano',
-        worldWidth: 3020,
-        ground: [[0, 280], [350, 300], [715, 290], [1070, 300], [1435, 300], [1800, 300], [2165, 300], [2530, 490]],
-        upper: [[90, 82, 85], [405, 132, 95], [590, 92, 90], [785, 155, 100], [990, 105, 95], [1160, 170, 105], [1370, 118, 95], [1580, 145, 105], [1770, 95, 100], [1980, 160, 95], [2195, 110, 105], [2420, 148, 100], [2730, 105, 95]],
-        coins: [[125, 121], [445, 169], [630, 128], [825, 191], [1030, 141], [1200, 206], [1410, 154], [1620, 181], [1810, 131], [2020, 196], [2235, 146], [2460, 184], [2765, 141]],
-        enemies: [[215, 190, 250, 1.45], [490, 420, 600, 1.55], [855, 790, 1000, 1.65], [1230, 1150, 1360, 1.65], [1515, 1460, 1720, 1.7], [1900, 1840, 2070, 1.8], [2290, 2220, 2470, 1.9], [2780, 2650, 2925, 1.95]]
-    }, {
-        name: holodeckCourseName4,
-        theme: 'ice',
-        worldWidth: 3200,
-        ground: [[0, 330], [405, 290], [760, 285], [1110, 285], [1460, 285], [1810, 290], [2170, 300], [2540, 290], [2900, 300]],
-        upper: [[140, 98, 95], [445, 145, 90], [635, 88, 100], [820, 132, 95], [1015, 174, 95], [1180, 105, 105], [1395, 146, 100], [1590, 95, 100], [1795, 164, 95], [1985, 120, 105], [2215, 153, 100], [2425, 96, 95], [2630, 145, 100], [2960, 112, 95]],
-        coins: [[180, 136], [480, 182], [675, 126], [860, 169], [1055, 212], [1220, 143], [1435, 184], [1630, 133], [1835, 202], [2025, 158], [2255, 191], [2465, 134], [2670, 183], [3000, 150]],
-        enemies: [[245, 215, 295, 1.5], [525, 455, 640, 1.6], [870, 800, 1020, 1.65], [1220, 1150, 1355, 1.75], [1535, 1480, 1715, 1.8], [1870, 1840, 2070, 1.9], [2260, 2200, 2450, 1.95], [2640, 2580, 2820, 2.0], [3040, 2940, 3160, 2.1]]
-    }
+    name: holodeckCourseName1,
+    theme: 'classic',
+    worldWidth: 2650,
+    ground: [[0, 350], [415, 330], [810, 370], [1245, 405], [1715, 365], [2145, 505]],
+    upper: [[175, 105, 100], [495, 140, 100], [660, 86, 110], [885, 122, 112], [1065, 172, 115], [1325, 115, 106], [1515, 155, 120], [1775, 105, 100], [1935, 172, 110], [2225, 125, 112]],
+    coins: [[215, 139], [535, 176], [703, 122], [929, 159], [1118, 209], [1377, 151], [1576, 193], [1826, 142], [1989, 211], [2278, 161]],
+    enemies: [[275, 245, 325, 1.1], [555, 510, 700, 1.2], [940, 860, 1120, 1.35], [1455, 1280, 1600, 1.25], [1870, 1740, 2020, 1.35], [2320, 2210, 2500, 1.5]]
+}, {
+    name: holodeckCourseName2,
+    theme: 'space',
+    worldWidth: 2850,
+    ground: [[0, 310], [385, 300], [760, 315], [1135, 310], [1510, 330], [1905, 300], [2280, 310], [2660, 190]],
+    upper: [[130, 92, 90], [470, 138, 95], [650, 85, 95], [860, 124, 105], [1100, 160, 100], [1285, 108, 110], [1555, 145, 100], [1770, 90, 100], [1980, 158, 105], [2215, 118, 105], [2480, 147, 105]],
+    coins: [[170, 130], [510, 176], [695, 123], [910, 161], [1145, 198], [1335, 146], [1595, 183], [1815, 128], [2020, 196], [2255, 156], [2520, 185]],
+    enemies: [[245, 210, 290, 1.3], [540, 430, 640, 1.45], [900, 820, 1060, 1.5], [1360, 1190, 1480, 1.55], [1690, 1570, 1830, 1.6], [2075, 1950, 2200, 1.65], [2430, 2340, 2600, 1.8], [2760, 2700, 2815, 1.7]]
+}, {
+    name: holodeckCourseName3,
+    theme: 'volcano',
+    worldWidth: 3020,
+    ground: [[0, 280], [350, 300], [715, 290], [1070, 300], [1435, 300], [1800, 300], [2165, 300], [2530, 490]],
+    upper: [[90, 82, 85], [405, 132, 95], [590, 92, 90], [785, 155, 100], [990, 105, 95], [1160, 170, 105], [1370, 118, 95], [1580, 145, 105], [1770, 95, 100], [1980, 160, 95], [2195, 110, 105], [2420, 148, 100], [2730, 105, 95]],
+    coins: [[125, 121], [445, 169], [630, 128], [825, 191], [1030, 141], [1200, 206], [1410, 154], [1620, 181], [1810, 131], [2020, 196], [2235, 146], [2460, 184], [2765, 141]],
+    enemies: [[215, 190, 250, 1.45], [490, 420, 600, 1.55], [855, 790, 1000, 1.65], [1230, 1150, 1360, 1.65], [1515, 1460, 1720, 1.7], [1900, 1840, 2070, 1.8], [2290, 2220, 2470, 1.9], [2780, 2650, 2925, 1.95]]
+}, {
+    name: holodeckCourseName4,
+    theme: 'ice',
+    worldWidth: 3200,
+    ground: [[0, 330], [405, 290], [760, 285], [1110, 285], [1460, 285], [1810, 290], [2170, 300], [2540, 290], [2900, 300]],
+    upper: [[140, 98, 95], [445, 145, 90], [635, 88, 100], [820, 132, 95], [1015, 174, 95], [1180, 105, 105], [1395, 146, 100], [1590, 95, 100], [1795, 164, 95], [1985, 120, 105], [2215, 153, 100], [2425, 96, 95], [2630, 145, 100], [2960, 112, 95]],
+    coins: [[180, 136], [480, 182], [675, 126], [860, 169], [1055, 212], [1220, 143], [1435, 184], [1630, 133], [1835, 202], [2025, 158], [2255, 191], [2465, 134], [2670, 183], [3000, 150]],
+    enemies: [[245, 215, 295, 1.5], [525, 455, 640, 1.6], [870, 800, 1020, 1.65], [1220, 1150, 1355, 1.75], [1535, 1480, 1715, 1.8], [1870, 1840, 2070, 1.9], [2260, 2200, 2450, 1.95], [2640, 2580, 2820, 2.0], [3040, 2940, 3160, 2.1]]
+}
 ];
 
 function beginTrainingMode() {
@@ -720,7 +722,7 @@ function changeTrainingCharacter(direction) {
 
 function beginStarshipMode() {
     const w = canvas.width,
-    h = canvas.height;
+        h = canvas.height;
     starshipGame = {
         frame: 0,
         score: 0,
@@ -740,11 +742,11 @@ function beginStarshipMode() {
         stars: Array.from({
             length: 90
         }, () => ({
-                x: Math.random() * w,
-                y: Math.random() * h,
-                speed: 0.5 + Math.random() * 2.4,
-                size: Math.random() < 0.82 ? 1 : 2
-            })),
+            x: Math.random() * w,
+            y: Math.random() * h,
+            speed: 0.5 + Math.random() * 2.4,
+            size: Math.random() < 0.82 ? 1 : 2
+        })),
         spawnTimer: 24,
         fireCooldown: 0
     };
@@ -816,8 +818,8 @@ function updateStarshipMode() {
     if (gameState !== 'STARSHIP' || !g || g.over)
         return;
     const w = canvas.width,
-    h = canvas.height,
-    p = g.player;
+        h = canvas.height,
+        p = g.player;
     g.frame++;
     if (p.invulnerable > 0)
         p.invulnerable--;
@@ -825,7 +827,7 @@ function updateStarshipMode() {
         g.fireCooldown--;
 
     let dx = 0,
-    dy = 0;
+        dy = 0;
     if (keys.ArrowLeft || keys.a || keys.A)
         dx--;
     if (keys.ArrowRight || keys.d || keys.D)
@@ -888,7 +890,7 @@ function updateStarshipMode() {
         enemy.shootTimer--;
         if (enemy.shootTimer <= 0 && enemy.y > 0 && enemy.y < h * 0.78) {
             const vx = p.x - enemy.x,
-            vy = p.y - enemy.y;
+                vy = p.y - enemy.y;
             const len = Math.max(1, Math.hypot(vx, vy));
             const speed = enemy.tough ? 3.2 : 2.7;
             g.enemyShots.push({
@@ -964,7 +966,7 @@ function drawEnterpriseArcadeShip(x, y, invulnerable = 0) {
     if (enterprisePilotImage.complete && enterprisePilotImage.naturalWidth > 0) {
         const aspect = enterprisePilotImage.naturalWidth / enterprisePilotImage.naturalHeight;
         const maxW = 78,
-        maxH = 58;
+            maxH = 58;
         const dw = Math.min(maxW, maxH * aspect);
         const dh = dw / aspect;
         ctx.shadowColor = '#67eaff';
@@ -1080,7 +1082,7 @@ function drawArcadeEnemyShip(enemy) {
 function drawStarshipMode() {
     const g = starshipGame;
     const w = canvas.width,
-    h = canvas.height;
+        h = canvas.height;
     const bg = ctx.createLinearGradient(0, 0, 0, h);
     bg.addColorStop(0, '#030716');
     bg.addColorStop(1, '#0b2645');
@@ -1200,7 +1202,7 @@ function raceTrackCenterAt(distance) {
 
 function beginStarshipRace() {
     const w = canvas.width,
-    h = canvas.height;
+        h = canvas.height;
     starshipRaceGame = {
         frame: 0,
         progress: 0,
@@ -1214,45 +1216,45 @@ function beginStarshipRace() {
             hitTimer: 0
         },
         rivals: [{
-                name: 'PHOENIX',
-                progress: 185,
-                lane: -0.27,
-                speed: 4.88,
-                variant: 0,
-                phase: 0
-            }, {
-                name: 'DEFIANT',
-                progress: 55,
-                lane: 0.27,
-                speed: 4.69,
-                variant: 1,
-                phase: 2.1
-            }, {
-                name: 'VOYAGER',
-                progress: -125,
-                lane: -0.03,
-                speed: 4.57,
-                variant: 2,
-                phase: 4.2
-            }
+            name: 'PHOENIX',
+            progress: 185,
+            lane: -0.27,
+            speed: 4.88,
+            variant: 0,
+            phase: 0
+        }, {
+            name: 'DEFIANT',
+            progress: 55,
+            lane: 0.27,
+            speed: 4.69,
+            variant: 1,
+            phase: 2.1
+        }, {
+            name: 'VOYAGER',
+            progress: -125,
+            lane: -0.03,
+            speed: 4.57,
+            variant: 2,
+            phase: 4.2
+        }
         ],
         hazards: Array.from({
             length: 8
         }, (_, i) => ({
-                progress: 690 + i * 910 + Math.random() * 210,
-                lane: (Math.random() * 1.35) - 0.675,
-                hit: false,
-                spin: Math.random() * Math.PI * 2
+            progress: 690 + i * 910 + Math.random() * 210,
+            lane: (Math.random() * 1.35) - 0.675,
+            hit: false,
+            spin: Math.random() * Math.PI * 2
         })),
         nextHazardProgress: 690 + 8 * 910,
         stars: Array.from({
             length: 100
         }, () => ({
-                x: Math.random() * w,
-                y: Math.random() * h,
-                speed: 0.5 + Math.random() * 2.5,
-                size: Math.random() < 0.85 ? 1 : 2
-            })),
+            x: Math.random() * w,
+            y: Math.random() * h,
+            speed: 0.5 + Math.random() * 2.5,
+            size: Math.random() < 0.85 ? 1 : 2
+        })),
         sparks: [],
         offTrack: false,
         lastImpact: ''
@@ -1275,8 +1277,8 @@ function updateStarshipRace() {
     if (gameState !== 'STARSHIP_RACE' || !g || g.over)
         return;
     const w = canvas.width,
-    h = canvas.height,
-    p = g.player;
+        h = canvas.height,
+        p = g.player;
     g.frame++;
     if (p.hitTimer > 0)
         p.hitTimer--;
@@ -1339,7 +1341,7 @@ function updateStarshipRace() {
             g.lastImpact = starshipRaceImpactBoya;
             for (let i = 0; i < 14; i++) {
                 const a = Math.random() * Math.PI * 2,
-                v = 1 + Math.random() * 3;
+                    v = 1 + Math.random() * 3;
                 g.sparks.push({
                     x,
                     y,
@@ -1356,7 +1358,7 @@ function updateStarshipRace() {
     if (p.hitTimer === 0) {
         for (const rival of g.rivals) {
             const ry = raceRivalScreenY(rival, g),
-            rx = raceRivalX(rival);
+                rx = raceRivalX(rival);
             if (Math.abs(ry - p.y) < 28 && Math.abs(rx - p.x) < 32) {
                 g.progress = Math.max(0, g.progress - 75);
                 p.x += p.x < rx ? -25 : 25;
@@ -1399,7 +1401,7 @@ function drawRaceRival(rival, x, y) {
             const index = rival.variant % columns;
             const aspect = cellW / image.naturalHeight;
             const dw = Math.min(47, 42 * aspect),
-            dh = dw / aspect;
+                dh = dw / aspect;
             ctx.shadowColor = '#ff624f';
             ctx.shadowBlur = 7;
             // El sprite original apunta hacia arriba, la misma dirección que la carrera.
@@ -1407,7 +1409,7 @@ function drawRaceRival(rival, x, y) {
         } else {
             const aspect = image.naturalWidth / image.naturalHeight;
             const dw = Math.min(47, 42 * aspect),
-            dh = dw / aspect;
+                dh = dw / aspect;
             ctx.shadowColor = '#ff624f';
             ctx.shadowBlur = 7;
             ctx.drawImage(image, -dw / 2, -dh / 2, dw, dh);
@@ -1436,8 +1438,8 @@ function drawRaceRival(rival, x, y) {
 
 function drawStarshipRace() {
     const g = starshipRaceGame,
-    w = canvas.width,
-    h = canvas.height;
+        w = canvas.width,
+        h = canvas.height;
     const bg = ctx.createLinearGradient(0, 0, 0, h);
     bg.addColorStop(0, '#030716');
     bg.addColorStop(1, '#071b31');
@@ -1458,7 +1460,7 @@ function drawStarshipRace() {
         const d1 = g.progress + (playerY - y) / RACE_SCREEN_SCALE;
         const d2 = g.progress + (playerY - (y + 8)) / RACE_SCREEN_SCALE;
         const c1 = raceTrackCenterAt(d1),
-        c2 = raceTrackCenterAt(d2);
+            c2 = raceTrackCenterAt(d2);
         ctx.fillStyle = '#122e43';
         ctx.beginPath();
         ctx.moveTo(c1 - trackWidth / 2, y);
@@ -1517,7 +1519,7 @@ function drawStarshipRace() {
             const a = i * Math.PI / 4;
             const r = i % 2 === 0 ? 14 : 9;
             const px = Math.cos(a) * r,
-            py = Math.sin(a) * r;
+                py = Math.sin(a) * r;
             if (i === 0)
                 ctx.moveTo(px, py);
             else
@@ -1596,7 +1598,7 @@ function drawStarshipRace() {
 
 function drawTrainingBridgeBackdrop() {
     const w = canvas.width,
-    h = canvas.height;
+        h = canvas.height;
     const bg = ctx.createLinearGradient(0, 0, 0, h);
     bg.addColorStop(0, '#09182a');
     bg.addColorStop(0.58, '#152d44');
@@ -1802,7 +1804,7 @@ function drawTrainingMissionBriefing() {
 // con Espacio/Intro. Hay 16 disparos y hacen falta 8 aciertos para aprobar.
 function spawnTrainingRangeTarget(g) {
     const w = canvas.width,
-    h = canvas.height;
+        h = canvas.height;
     const amp = Math.min(90, w * 0.12);
     g.target = {
         baseX: w * 0.22 + Math.random() * w * 0.56,
@@ -1816,7 +1818,7 @@ function spawnTrainingRangeTarget(g) {
 
 function beginTrainingShootingRange() {
     const w = canvas.width,
-    h = canvas.height;
+        h = canvas.height;
     trainingRangeGame = {
         frame: 0,
         aimX: w / 2,
@@ -1912,8 +1914,8 @@ function updateTrainingShootingRange() {
 
 function drawTrainingShootingRange() {
     const w = canvas.width,
-    h = canvas.height,
-    g = trainingRangeGame;
+        h = canvas.height,
+        g = trainingRangeGame;
     drawTrainingBridgeBackdrop();
     // Overlay que transforma el puente en una galería táctica de la Flota.
     ctx.fillStyle = 'rgba(2,8,18,0.58)';
@@ -1939,7 +1941,7 @@ function drawTrainingShootingRange() {
     }
     if (g.target && !g.over) {
         const t = g.target,
-        tx = t.baseX + Math.sin(g.frame * t.speed + t.phase) * t.amplitude;
+            tx = t.baseX + Math.sin(g.frame * t.speed + t.phase) * t.amplitude;
         const ty = t.y + Math.sin(g.frame * 0.045 + t.phase) * 7;
         ctx.save();
         ctx.shadowColor = '#ff5c68';
@@ -2013,16 +2015,16 @@ function drawTrainingShootingRange() {
 function beginHolodeckLevel(circuitIndex = trainingCircuitIndex) {
     trainingCircuitIndex = clamp(circuitIndex, 0, holodeckCourses.length - 1);
     const w = canvas.width,
-    h = canvas.height,
-    floor = h - 43;
+        h = canvas.height,
+        floor = h - 43;
     const course = holodeckCourses[trainingCircuitIndex];
     const platforms = course.ground.map(([x, width]) => ({
-                x,
-                y: floor,
-                w: width,
-                h: 43,
-                ground: true
-            }));
+        x,
+        y: floor,
+        w: width,
+        h: 43,
+        ground: true
+    }));
     for (const [x, heightAboveFloor, width] of course.upper) {
         platforms.push({
             x,
@@ -2060,18 +2062,18 @@ function beginHolodeckLevel(circuitIndex = trainingCircuitIndex) {
         characterIndex: trainingCharacterIndex,
         platforms,
         coins: course.coins.map(([x, heightAboveFloor]) => ({
-                x,
-                y: floor - heightAboveFloor,
-                got: false
-            })),
+            x,
+            y: floor - heightAboveFloor,
+            got: false
+        })),
         enemies: course.enemies.map(([x, min, max, speed], i) => ({
-                x,
-                min,
-                max,
-                dir: i % 2 ? -1 : 1,
-                speed,
-                alive: true
-            }))
+            x,
+            min,
+            max,
+            dir: i % 2 ? -1 : 1,
+            speed,
+            alive: true
+        }))
     };
     for (const k in keys)
         keys[k] = false;
@@ -2083,7 +2085,7 @@ function updateHolodeckLevel() {
     if (gameState !== 'HOLODECK' || !g || g.over || g.complete)
         return;
     const p = g.player,
-    h = canvas.height;
+        h = canvas.height;
     g.frame++;
     if (p.invulnerable > 0)
         p.invulnerable--;
@@ -2173,9 +2175,9 @@ function drawPixelStar(cx, cy, outer, inner, color) {
     ctx.beginPath();
     for (let i = 0; i < 10; i++) {
         const a = -Math.PI / 2 + i * Math.PI / 5,
-        r = i % 2 ? inner : outer;
+            r = i % 2 ? inner : outer;
         const x = cx + Math.cos(a) * r,
-        y = cy + Math.sin(a) * r;
+            y = cy + Math.sin(a) * r;
         if (!i)
             ctx.moveTo(x, y);
         else
@@ -2292,7 +2294,7 @@ function drawBorgHolodeckEnemy(x, y, facing = 1, frame = 0) {
 function drawHolodeckLevel() {
     const g = holodeckGame;
     const w = canvas.width,
-    h = canvas.height;
+        h = canvas.height;
     if (!g)
         return;
     const camera = g.cameraX;
@@ -2371,7 +2373,7 @@ function drawHolodeckLevel() {
         }
         for (let i = 0; i < 5; i++) {
             const x = ((i * 245 - camera * 0.30) % (w + 180) + w + 180) % (w + 180) - 90,
-            y = 105 + (i % 3) * 75;
+                y = 105 + (i % 3) * 75;
             ctx.fillStyle = '#33466f';
             ctx.beginPath();
             ctx.arc(x, y, 30 + (i % 2) * 12, 0, Math.PI * 2);
@@ -2384,7 +2386,7 @@ function drawHolodeckLevel() {
         // Nubes/ceniza y colinas con desplazamiento parallax según el circuito.
         for (let i = 0; i < 9; i++) {
             const x = ((i * 167 - camera * 0.22) % (w + 170) + w + 170) % (w + 170) - 70,
-            y = 52 + (i % 3) * 38;
+                y = 52 + (i % 3) * 38;
             ctx.fillStyle = g.theme === 'volcano' ? 'rgba(255,190,126,0.30)' : g.theme === 'ice' ? 'rgba(255,255,255,0.90)' : 'rgba(255,255,255,0.90)';
             ctx.fillRect(x, y, 58, 15);
             ctx.fillRect(x + 12, y - 10, 22, 14);
@@ -2430,7 +2432,7 @@ function drawHolodeckLevel() {
         }
     }
     // Elementos decorativos del holodeck, con siluetas distintas por sector.
-    for (const xw of[365, 770, 1195, 1668, 2087, 2500, 2850]) {
+    for (const xw of [365, 770, 1195, 1668, 2087, 2500, 2850]) {
         const x = xw - camera;
         if (x < -80 || x > w + 30)
             continue;
@@ -2468,8 +2470,8 @@ function drawHolodeckLevel() {
     // La caja de colisión se conserva pequeña, pero el arte se dibuja a escala
     // proporcional y con los pies alineados al suelo/plataforma.
     const p = g.player,
-    sx = p.x - camera,
-    sy = p.y;
+        sx = p.x - camera,
+        sy = p.y;
     const character = availableCharacters[g.characterIndex] || availableCharacters[0];
     const avatar = character && character.guardImg;
     if (!(p.invulnerable > 0 && Math.floor(p.invulnerable / 5) % 2 === 0)) {
@@ -2487,7 +2489,7 @@ function drawHolodeckLevel() {
             if (p.facing < 0) {
                 ctx.translate(sx + p.w / 2, 0);
                 ctx.scale(-1, 1);
-                ctx.translate( - (sx + p.w / 2), 0);
+                ctx.translate(- (sx + p.w / 2), 0);
             }
             ctx.drawImage(avatar, spriteX, spriteY, spriteW, spriteH);
             ctx.restore();
@@ -2723,11 +2725,11 @@ function drawKobayashiShip(cx, cy, scale, kind = 'civilian', damage = false) {
 
 function drawKobayashiViewscren(hostiles = false) {
     const w = canvas.width,
-    h = canvas.height;
+        h = canvas.height;
     const x = 50,
-    y = 85,
-    vw = w - 100,
-    vh = 205;
+        y = 85,
+        vw = w - 100,
+        vh = 205;
     ctx.fillStyle = '#020914';
     ctx.fillRect(x, y, vw, vh);
     ctx.save();
@@ -2815,7 +2817,7 @@ function drawKobayashiViewscren(hostiles = false) {
 function drawKobayashiMaru() {
     drawTrainingBridgeBackdrop();
     const w = canvas.width,
-    h = canvas.height;
+        h = canvas.height;
     overlay(0.58);
     const alarmOn = Math.floor(frameCount / 18) % 2 === 0;
     if (alarmOn && kobayashiMaruStage >= 1 && kobayashiMaruStage <= 2) {
@@ -2986,7 +2988,7 @@ function drawTrainingComplete() {
         if (qTalkImage.complete && qTalkImage.naturalWidth > 0) {
             const ratio = Math.min((qBoxW - 8) / qTalkImage.naturalWidth, (qBoxH - 8) / qTalkImage.naturalHeight);
             const drawW = qTalkImage.naturalWidth * ratio,
-            drawH = qTalkImage.naturalHeight * ratio;
+                drawH = qTalkImage.naturalHeight * ratio;
             ctx.drawImage(qTalkImage, canvas.width / 2 - drawW / 2, qBoxY + (qBoxH - drawH) / 2, drawW, drawH);
         }
 
@@ -3010,56 +3012,56 @@ let storyIntroSeen = false;
 const energyParticles = Array.from({
     length: 25
 }, () => ({
-        x: Math.random() * canvas.width,
-        y: Math.random() * canvas.height,
-        size: Math.random() * 2 + 1,
-        speedY: Math.random() * 1.5 + 0.5,
-        opacity: Math.random() * 0.7 + 0.3
-    }));
+    x: Math.random() * canvas.width,
+    y: Math.random() * canvas.height,
+    size: Math.random() * 2 + 1,
+    speedY: Math.random() * 1.5 + 0.5,
+    opacity: Math.random() * 0.7 + 0.3
+}));
 
 // 19 destinos de campaña, uno por misión.
 const galaxyNodesHorizontal = [
-    { id: 1,    name: 'Puente de la U.S.S. Enterprise',     x: 100, y: 65 },
-    { id: 2,    name: 'Estación Espacial 9',                x: 200, y: 95},
-    { id: 3,    name: 'Nave Klingon',                       x: 356, y: 95},
-    { id: 4,    name: 'Terraza Romulana',                   x: 504, y: 95 },
-    { id: 5,    name: 'Ingeniería de la Enterprise',        x: 652, y: 95 },
-    { id: 6,    name: 'Pasillo Borg',                       x: 800, y: 95 },
-    { id: 7,    name: 'Sala del Transportador',             x: 950, y: 95},
-    { id: 8,    name: 'Planeta Talos IV',                   x: 950, y: 207 },
-    { id: 9,    name: 'Desierto Remoto',                    x: 772, y: 207 },
-    { id: 10,   name: 'Ruinas Antiguas',                    x: 594, y: 207 },
-    { id: 11,   name: 'Academia de la Federación',          x: 416, y: 207 },
-    { id: 12,   name: 'Hangar de Lanzaderas',               x: 238, y: 207 },
-    { id: 13,   name: 'Cinturón de Asteroides',             x: 60, y: 207 },
-    { id: 14,   name: 'Selva Exótica',                      x: 60, y: 320 },
-    { id: 15,   name: 'Observatorio Estelar',               x: 238, y: 320 },
-    { id: 16,   name: 'Puente Dañado',                      x: 416, y: 320 },
-    { id: 17,   name: 'Estación Orbital',                   x: 594, y: 320},
-    { id: 18,   name: 'Templo Borg',                        x: 772, y: 320 },
-    { id: 19,   name: 'Núcleo Borg',                        x: 930, y: 360 }
+    { id: 1, name: 'Puente de la U.S.S. Enterprise', x: 100, y: 65 },
+    { id: 2, name: 'Estación Espacial 9', x: 200, y: 95 },
+    { id: 3, name: 'Nave Klingon', x: 356, y: 95 },
+    { id: 4, name: 'Terraza Romulana', x: 504, y: 95 },
+    { id: 5, name: 'Ingeniería de la Enterprise', x: 652, y: 95 },
+    { id: 6, name: 'Pasillo Borg', x: 800, y: 95 },
+    { id: 7, name: 'Sala del Transportador', x: 950, y: 95 },
+    { id: 8, name: 'Planeta Talos IV', x: 950, y: 207 },
+    { id: 9, name: 'Desierto Remoto', x: 772, y: 207 },
+    { id: 10, name: 'Ruinas Antiguas', x: 594, y: 207 },
+    { id: 11, name: 'Academia de la Federación', x: 416, y: 207 },
+    { id: 12, name: 'Hangar de Lanzaderas', x: 238, y: 207 },
+    { id: 13, name: 'Cinturón de Asteroides', x: 60, y: 207 },
+    { id: 14, name: 'Selva Exótica', x: 60, y: 320 },
+    { id: 15, name: 'Observatorio Estelar', x: 238, y: 320 },
+    { id: 16, name: 'Puente Dañado', x: 416, y: 320 },
+    { id: 17, name: 'Estación Orbital', x: 594, y: 320 },
+    { id: 18, name: 'Templo Borg', x: 772, y: 320 },
+    { id: 19, name: 'Núcleo Borg', x: 930, y: 360 }
 ];
 // Ocho destinos de campaña, uno por misión (reorganizados en zigzag vertical)
 const galaxyNodesVertical = [
-    { id: 1,    name: 'Puente de la U.S.S. Enterprise',     x: 100, y: 80 },   // Arriba-Izquierda
-    { id: 2,    name: 'Estación Espacial 9',                x: 100, y: 220 },  // Baja 1
-    { id: 3,    name: 'Nave Klingon',                       x: 100, y: 360 },  // Baja 2 (Fondo)
-    { id: 4,    name: 'Terraza Romulana',                   x: 230, y: 360 },  // Salto a la derecha
-    { id: 5,    name: 'Ingeniería de la Enterprise',        x: 230, y: 220 },  // Sube 1
-    { id: 6,    name: 'Pasillo Borg',                       x: 230, y: 80 },   // Sube 2 (Arriba)
-    { id: 7,    name: 'Sala del Transportador',             x: 360, y: 80 },   // Salto a la derecha
-    { id: 8,    name: 'Planeta Talos IV',                   x: 360, y: 220 },  // Baja 1
-    { id: 9,    name: 'Desierto Remoto',                    x: 360, y: 360 },  // Baja 2 (Fondo)
-    { id: 10,   name: 'Ruinas Antiguas',                    x: 490, y: 360 },  // Salto a la derecha
-    { id: 11,   name: 'Academia de la Federación',          x: 490, y: 220 },  // Sube 1
-    { id: 12,   name: 'Hangar de Lanzaderas',               x: 490, y: 80 },   // Sube 2 (Arriba)
-    { id: 13,   name: 'Cinturón de Asteroides',             x: 620, y: 80 },   // Salto a la derecha
-    { id: 14,   name: 'Selva Exótica',                      x: 620, y: 220 },  // Baja 1
-    { id: 15,   name: 'Observatorio Estelar',               x: 620, y: 360 },  // Baja 2 (Fondo)
-    { id: 16,   name: 'Puente Dañado',                      x: 750, y: 360 },  // Salto a la derecha
-    { id: 17,   name: 'Estación Orbital',                   x: 750, y: 220 },  // Sube 1
-    { id: 18,   name: 'Templo Borg',                        x: 750, y: 80 },   // Sube 2 (Arriba)
-    { id: 19,   name: 'Núcleo Borg',                        x: 910, y: 220 }   // Meta final a la derecha
+    { id: 1, name: 'Puente de la U.S.S. Enterprise', x: 100, y: 80 },   // Arriba-Izquierda
+    { id: 2, name: 'Estación Espacial 9', x: 100, y: 220 },  // Baja 1
+    { id: 3, name: 'Nave Klingon', x: 100, y: 360 },  // Baja 2 (Fondo)
+    { id: 4, name: 'Terraza Romulana', x: 230, y: 360 },  // Salto a la derecha
+    { id: 5, name: 'Ingeniería de la Enterprise', x: 230, y: 220 },  // Sube 1
+    { id: 6, name: 'Pasillo Borg', x: 230, y: 80 },   // Sube 2 (Arriba)
+    { id: 7, name: 'Sala del Transportador', x: 360, y: 80 },   // Salto a la derecha
+    { id: 8, name: 'Planeta Talos IV', x: 360, y: 220 },  // Baja 1
+    { id: 9, name: 'Desierto Remoto', x: 360, y: 360 },  // Baja 2 (Fondo)
+    { id: 10, name: 'Ruinas Antiguas', x: 490, y: 360 },  // Salto a la derecha
+    { id: 11, name: 'Academia de la Federación', x: 490, y: 220 },  // Sube 1
+    { id: 12, name: 'Hangar de Lanzaderas', x: 490, y: 80 },   // Sube 2 (Arriba)
+    { id: 13, name: 'Cinturón de Asteroides', x: 620, y: 80 },   // Salto a la derecha
+    { id: 14, name: 'Selva Exótica', x: 620, y: 220 },  // Baja 1
+    { id: 15, name: 'Observatorio Estelar', x: 620, y: 360 },  // Baja 2 (Fondo)
+    { id: 16, name: 'Puente Dañado', x: 750, y: 360 },  // Salto a la derecha
+    { id: 17, name: 'Estación Orbital', x: 750, y: 220 },  // Sube 1
+    { id: 18, name: 'Templo Borg', x: 750, y: 80 },   // Sube 2 (Arriba)
+    { id: 19, name: 'Núcleo Borg', x: 910, y: 220 }   // Meta final a la derecha
 ];
 
 
@@ -3167,9 +3169,9 @@ function resetMachineAI() {
 
 function setArenaCombatants(arenaNumber) {
     const arenaIndex = clamp(
-            arenaNumber - 1,
-            0,
-            arenaCombatants.length - 1);
+        arenaNumber - 1,
+        0,
+        arenaCombatants.length - 1);
 
     const [character1, character2] = arenaCombatants[arenaIndex];
 
@@ -3197,7 +3199,7 @@ function setArenaCombatants(arenaNumber) {
     }
 
     // Limpiar estados de combate al cambiar de enfrentamiento.
-    for (const p of[player1, player2]) {
+    for (const p of [player1, player2]) {
         p.isAttacking = false;
         p.attackTimer = 0;
         p.attackCooldown = 0;
@@ -3225,7 +3227,7 @@ function setArenaCombatants(arenaNumber) {
 function resetMatch(shouldPlaySound = true) {
     impactEffects = [];
     screenShakeTimer = 0;
-    for (const p of[player1, player2]) {
+    for (const p of [player1, player2]) {
         p.maxHealth = 100;
         p.health = 100;
         p.maxEnergy = 100;
@@ -3320,7 +3322,7 @@ function setWinnerMessageByHealth() {
     } else if (isVsMachine) {
         const humanWon =
             (w === 1 && humanPlayerIndex === 1) ||
-        (w === 2 && humanPlayerIndex === 2);
+            (w === 2 && humanPlayerIndex === 2);
 
         const humanPerfect =
             humanWon && getHumanPlayer().health >= getHumanPlayer().startingHealth;
@@ -3552,7 +3554,7 @@ function updateAttack(attacker, defender) {
 }
 
 function updateCombatImpactEffects() {
-    for (const p of[player1, player2]) {
+    for (const p of [player1, player2]) {
         if (p.hitFlashTimer > 0)
             p.hitFlashTimer--;
         if (p.hitReactTimer > 0 && !gameOver) {
@@ -3611,9 +3613,9 @@ function movePlayer(p, amount) {
     if (p.stunTimer > 0)
         return;
     p.x = clamp(
-            p.x + amount * p.speed,
-            0,
-            Math.max(0, canvas.width - p.width));
+        p.x + amount * p.speed,
+        0,
+        Math.max(0, canvas.width - p.width));
 }
 
 function updatePlayerPhysics(p) {
@@ -3835,8 +3837,8 @@ function continueStoryDialogue() {
 }
 function drawStoryDialogue() {
     const w = canvas.width,
-    h = canvas.height,
-    d = STORY_DIALOGUES[storyPhase] || STORY_DIALOGUES[TOTAL_MISIONES];
+        h = canvas.height,
+        d = STORY_DIALOGUES[storyPhase] || STORY_DIALOGUES[TOTAL_MISIONES];
     ctx.fillStyle = '#020713';
     ctx.fillRect(0, 0, w, h);
     drawParticles(true);
@@ -3856,7 +3858,7 @@ function drawStoryDialogue() {
     text(line[0], w / 2, boxY + 50, 25, '#78efff', false);
     const words = line[1].split(' ');
     let rows = [],
-    row = '';
+        row = '';
     for (const word of words) {
         if ((row + ' ' + word).trim().length > 64) {
             rows.push(row);
@@ -4227,7 +4229,7 @@ function updateQTrial() {
 
 function drawQTrial() {
     const w = canvas.width,
-    h = canvas.height;
+        h = canvas.height;
     const bg = ctx.createLinearGradient(0, 0, w, h);
     bg.addColorStop(0, '#050817');
     bg.addColorStop(0.55, '#10243c');
@@ -4238,7 +4240,7 @@ function drawQTrial() {
     // Estrellas y marco táctico
     for (let i = 0; i < 70; i++) {
         const x = (i * 137 + 31) % w,
-        y = (i * 83 + 17) % h;
+            y = (i * 83 + 17) % h;
         ctx.fillStyle = i % 4 === 0 ? '#ffd36b' : '#8bdcff';
         ctx.globalAlpha = 0.35 + ((i % 5) * 0.12);
         ctx.fillRect(x, y, i % 6 === 0 ? 3 : 1.5, i % 6 === 0 ? 3 : 1.5);
@@ -4252,9 +4254,9 @@ function drawQTrial() {
     text(qTrialMessageExpulse, w / 2, 83, 23, '#82eaff', false);
     // Retrato de Q desde assets/q_talk.png
     const qBoxX = w / 2 - 105,
-    qBoxY = 98,
-    qBoxW = 210,
-    qBoxH = 78;
+        qBoxY = 98,
+        qBoxW = 210,
+        qBoxH = 78;
     ctx.fillStyle = 'rgba(5,10,25,0.88)';
     ctx.fillRect(qBoxX, qBoxY, qBoxW, qBoxH);
     ctx.strokeStyle = '#d5b6ff';
@@ -4262,7 +4264,7 @@ function drawQTrial() {
     if (qTalkImage.complete && qTalkImage.naturalWidth > 0) {
         const ratio = Math.min((qBoxW - 8) / qTalkImage.naturalWidth, (qBoxH - 8) / qTalkImage.naturalHeight);
         const drawW = qTalkImage.naturalWidth * ratio,
-        drawH = qTalkImage.naturalHeight * ratio;
+            drawH = qTalkImage.naturalHeight * ratio;
         ctx.drawImage(qTalkImage, w / 2 - drawW / 2, qBoxY + (qBoxH - drawH) / 2, drawW, drawH);
     } else {
         text(qTrialQ, w / 2, 137, 35, '#e7d1ff', false);
@@ -4306,7 +4308,7 @@ function drawQTrial() {
 
 function drawQTrialResult() {
     const w = canvas.width,
-    h = canvas.height;
+        h = canvas.height;
     ctx.fillStyle = '#030713';
     ctx.fillRect(0, 0, w, h);
     overlay(0.72);
@@ -4346,8 +4348,8 @@ function updateShuttleMinigame() {
     const shuttleCharacter = getCharacter(getHumanPlayer());
     const img = shuttlePlayerPunchTimer > 0 ? shuttleCharacter.punchImg : shuttleCharacter.guardImg;
     const drawHeight = img && img.naturalWidth > 0
-         ? drawWidth * img.naturalHeight / img.naturalWidth
-         : drawWidth * 1.7;
+        ? drawWidth * img.naturalHeight / img.naturalWidth
+        : drawWidth * 1.7;
     shuttlePlayerX = clamp(shuttlePlayerX, 0, Math.max(0, canvas.width - drawWidth));
     const minY = 85;
     const maxY = Math.max(minY, canvas.height - drawHeight - 45);
@@ -4397,7 +4399,7 @@ function hitShuttle() {
 
 function drawShuttleMinigame() {
     const w = canvas.width,
-    h = canvas.height;
+        h = canvas.height;
     // El hangar solo se dibuja en el minijuego; las 19 arenas de historia mantienen su orden.
     if (shuttleHangarBackground.complete && shuttleHangarBackground.naturalWidth > 0) {
         ctx.drawImage(shuttleHangarBackground, 0, 0, w, h);
@@ -4434,8 +4436,8 @@ function drawShuttleMinigame() {
         : shuttleHealth <= (shuttleMaxHealth / 2) ? galileoDanada : galileoIntacta;
     const shuttleDrawWidth = w * 0.66;
     const shuttleDrawHeight = galileoImage.naturalWidth > 0
-         ? shuttleDrawWidth * galileoImage.naturalHeight / galileoImage.naturalWidth
-         : shuttleDrawWidth * 0.42;
+        ? shuttleDrawWidth * galileoImage.naturalHeight / galileoImage.naturalWidth
+        : shuttleDrawWidth * 0.42;
     const shuttleDrawX = w * 0.34;
     const shuttleDrawY = h * 0.35;
     if (galileoImage.complete && galileoImage.naturalWidth > 0) {
@@ -4454,8 +4456,8 @@ function drawShuttleMinigame() {
     const playerImage = shuttlePlayerPunchTimer > 0 ? shuttleCharacter.punchImg : shuttleCharacter.guardImg;
     const playerDrawWidth = Math.min(w * 0.23, 190);
     const playerDrawHeight = playerImage && playerImage.naturalWidth > 0
-         ? playerDrawWidth * playerImage.naturalHeight / playerImage.naturalWidth
-         : playerDrawWidth * 1.7;
+        ? playerDrawWidth * playerImage.naturalHeight / playerImage.naturalWidth
+        : playerDrawWidth * 1.7;
     const playerDrawX = shuttlePlayerX;
     const playerDrawY = shuttlePlayerY === null
         ? h - playerDrawHeight - 70
@@ -4534,6 +4536,19 @@ window.addEventListener('keydown', (e) => {
         return;
     }
 
+    if (gameState === 'MANIAC_EASTER_EGG') {
+        maniacHandleKey(e.key);
+        return;
+    }
+    if (gameState === 'MANIAC_ROOM') {
+        if (['ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight'].includes(e.key)) {
+            maniacKeysPressed.add(e.key);
+        } else {
+            maniacRoomHandleKey(e.key);
+        }
+        return;
+    }
+
     if (gameState === 'MENU') {
         const secretKey = e.key.length === 1 ? e.key.toLowerCase() : e.key;
         easterEggKeySequence.push(secretKey);
@@ -4569,6 +4584,12 @@ window.addEventListener('keydown', (e) => {
             }
             if (easterEggLetterBuffer.endsWith('LEGENDS')) {
                 gameState = 'HOMENAJE_EASTER_EGG';
+                easterEggKeySequence = [];
+                easterEggLetterBuffer = '';
+                return;
+            }
+            if (easterEggLetterBuffer.endsWith('MANIAC')) {
+                gameState = 'MANIAC_EASTER_EGG';
                 easterEggKeySequence = [];
                 easterEggLetterBuffer = '';
                 return;
@@ -4793,7 +4814,7 @@ window.addEventListener('keydown', (e) => {
         if (e.key.toLowerCase() === 'a') {
             player1.charIndex =
                 (player1.charIndex - 1 + availableCharacters.length) %
-            availableCharacters.length;
+                availableCharacters.length;
             updatePlayerAttributes(player1);
         } else if (e.key.toLowerCase() === 'd') {
             player1.charIndex =
@@ -4804,7 +4825,7 @@ window.addEventListener('keydown', (e) => {
         if (e.key.toLowerCase() === 'w') {
             player2.charIndex =
                 (player2.charIndex - 1 + availableCharacters.length) %
-            availableCharacters.length;
+                availableCharacters.length;
             updatePlayerAttributes(player2);
         } else if (e.key.toLowerCase() === 's') {
             player2.charIndex =
@@ -5088,6 +5109,9 @@ window.addEventListener('keyup', (e) => {
 
     // Liberar las teclas de Exploracion
     exploracionHandleKeyUp(e.key);
+
+    // Liberar las teclas para el Maniac Mansion
+    maniacKeysPressed.delete(e.key);
 });
 
 window.addEventListener('blur', () => {
@@ -5099,6 +5123,8 @@ window.addEventListener('blur', () => {
     for (const k in cocoPressedKeys) {
         delete cocoPressedKeys[k];
     }
+
+    maniacKeysPressed.clear();
 });
 
 // ------------------------------------------------------------
@@ -5107,9 +5133,9 @@ window.addEventListener('blur', () => {
 
 function drawBackground() {
     const arenaIndex = clamp(
-            currentArena - 1,
-            0,
-            arenaImages.length - 1);
+        currentArena - 1,
+        0,
+        arenaImages.length - 1);
 
     const img = arenaImages[arenaIndex];
 
@@ -5705,10 +5731,10 @@ function drawStoryMap() {
 
         ctx.fillStyle =
             nodeNumber === storyPhase
-            ? '#ffcc00'
-            : nodeNumber < storyPhase
-            ? '#00ffcc'
-            : '#4b5563';
+                ? '#ffcc00'
+                : nodeNumber < storyPhase
+                    ? '#00ffcc'
+                    : '#4b5563';
         ctx.fill();
 
         text(String(nodeNumber), n.x, n.y + 4, 20, '#030712', true);
@@ -5774,7 +5800,7 @@ function drawHUD() {
         text(hudNoStoryModeTextLaforge, canvas.width / 2, 104, 10, '#8df4ff', true);
         text(hudNoStoryModeTextLaforgeCombo, canvas.width / 2, 120, 9, '#ffcf4a', true);
     }
-    for (const p of[player1, player2]) {
+    for (const p of [player1, player2]) {
         if (p.comboDisplayTimer > 0 && p.comboCount >= 2 && !gameOver) {
             const x = p === player1 ? 145 : canvas.width - 155;
             const damageBonus = Math.min(8, (p.comboCount - 1) * 2);
@@ -6025,7 +6051,7 @@ function drawGameOver() {
 
 function drawPicardNexusEnding() {
     const w = canvas.width,
-    h = canvas.height;
+        h = canvas.height;
     const bg = ctx.createLinearGradient(0, 0, w, h);
     bg.addColorStop(0, '#030711');
     bg.addColorStop(0.48, '#19142d');
@@ -6075,38 +6101,38 @@ function drawPicardNexusEnding() {
     }
 
     const pages = [{
-            title: picardNexusEndingPage1Title,
-            lines: [
-                picardNexusEndingPage1Line1,
-                picardNexusEndingPage1Line2,
-                picardNexusEndingPage1Line3
-            ],
-            accent: '#ffd875'
-        }, {
-            title: picardNexusEndingPage2Title,
-            lines: [
-                picardNexusEndingPage2Line1,
-                picardNexusEndingPage2Line2,
-                picardNexusEndingPage2Line3
-            ],
-            accent: '#8df4ff'
-        }, {
-            title: picardNexusEndingPage3Title,
-            lines: [
-                picardNexusEndingPage3Line1,
-                picardNexusEndingPage3Line2,
-                picardNexusEndingPage3Line3
-            ],
-            accent: '#ffd875'
-        }, {
-            title: picardNexusEndingPage4Title,
-            lines: [
-                picardNexusEndingPage4Line1,
-                picardNexusEndingPage4Line2,
-                picardNexusEndingPage4Line3
-            ],
-            accent: '#8dffb5'
-        }
+        title: picardNexusEndingPage1Title,
+        lines: [
+            picardNexusEndingPage1Line1,
+            picardNexusEndingPage1Line2,
+            picardNexusEndingPage1Line3
+        ],
+        accent: '#ffd875'
+    }, {
+        title: picardNexusEndingPage2Title,
+        lines: [
+            picardNexusEndingPage2Line1,
+            picardNexusEndingPage2Line2,
+            picardNexusEndingPage2Line3
+        ],
+        accent: '#8df4ff'
+    }, {
+        title: picardNexusEndingPage3Title,
+        lines: [
+            picardNexusEndingPage3Line1,
+            picardNexusEndingPage3Line2,
+            picardNexusEndingPage3Line3
+        ],
+        accent: '#ffd875'
+    }, {
+        title: picardNexusEndingPage4Title,
+        lines: [
+            picardNexusEndingPage4Line1,
+            picardNexusEndingPage4Line2,
+            picardNexusEndingPage4Line3
+        ],
+        accent: '#8dffb5'
+    }
     ];
     const page = pages[clamp(picardNexusStep, 0, pages.length - 1)];
     text(picardNexusEndingTitle, w / 2, 31, 13, '#b7c8e8', true);
@@ -6193,7 +6219,7 @@ function updateAndDrawCombat() {
             matchTimeLeft--;
 
             timeText = `${String(Math.floor(matchTimeLeft / 60)).padStart(2, '0')}:` +
-                      `${String(matchTimeLeft % 60).padStart(2, '0')}`;
+                `${String(matchTimeLeft % 60).padStart(2, '0')}`;
 
             if (matchTimeLeft <= 0) {
                 finishMatchByTime();
@@ -6273,6 +6299,12 @@ function gameLoop() {
                 break;
             case 'HOMENAJE_EASTER_EGG':
                 drawHomenajeEasterEgg();
+                break;
+            case 'MANIAC_EASTER_EGG':
+                drawManiacEasterEgg();
+                break;
+            case 'MANIAC_ROOM':
+                drawManiacRoom();
                 break;
             case 'MENU':
                 drawMainMenu();
@@ -6417,6 +6449,6 @@ Promise.all([
     requestAnimationFrame(gameLoop);
 }).catch((err) => {
     console.error('Error al cargar alguna de las fuentes:', err);
-// Iniciar de todos modos por si acaso
+    // Iniciar de todos modos por si acaso
     requestAnimationFrame(gameLoop);
 });
