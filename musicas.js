@@ -73,6 +73,9 @@ soundDs9.volume = 0.6;
 // Easter egg Homenaje
 const soundHomenaje = new Audio('assets/audios/homenaje.mp3');
 soundHomenaje.volume = 0.6;
+// Easter Egg Maniac Mansion
+const soundManiac = new Audio('assets/audios/maniac_mansion.m4a');
+soundManiac.volume = 0.6;
 
 
 const easterEggSounds = {
@@ -80,7 +83,9 @@ const easterEggSounds = {
     SPOCK_EASTER_EGG: soundSpock,
     EEN_EASTER_EGG: soundEen,
     DS9_EASTER_EGG: soundDs9,
-    HOMENAJE_EASTER_EGG: soundHomenaje
+    HOMENAJE_EASTER_EGG: soundHomenaje,
+    MANIAC_EASTER_EGG: soundManiac,
+    MANIAC_ROOM: soundManiac
 };
 // Los sonidos se repiten mientras permanezca activo el Easter egg.
 for (const sound of Object.values(easterEggSounds)) {
@@ -496,7 +501,9 @@ function syncMenuMusic() {
                 SPOCK_EASTER_EGG: '🔊 Easter egg: Spock',
                 EEN_EASTER_EGG: '🔊 Easter egg: EEN',
                 DS9_EASTER_EGG: '🔊 Easter egg: DS9',
-                HOMENAJE_EASTER_EGG: '🔊 Easter egg: Capitanes'
+                HOMENAJE_EASTER_EGG: '🔊 Easter egg: Capitanes',
+                MANIAC_EASTER_EGG: '🔊 Easter egg: Maniac Mansion',
+                MANIAC_ROOM: '🔊 Easter egg: Maniac Mansion'
             };
 
             musicButton.textContent = labels[desiredState];
