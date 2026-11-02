@@ -58,6 +58,16 @@ const maniacRoomDormitorioPuertaAbierta = loadImage('assets/maniac_room_dormitor
 const maniacRoomIngenieria = loadImage('assets/maniac_room_ingenieria.jpg');
 const maniacRoomIngenieriaPuertaAbierta = loadImage('assets/maniac_room_ingenieria_abierta_puerta.png');
 
+// Objetos
+const maniacLibroAbierto = loadImage('assets/libro_abierto.png');
+const maniacLibroCerrado = loadImage('assets/libro_cerrado.png');
+
+
+// ------------------------------------------------------------
+// SPRITES DE LOS PERSONAJES
+// ------------------------------------------------------------
+const maniacAndreuImage = loadImage('assets/maniac_andreu.png');
+const maniacJesusImage = loadImage('assets/maniac_jesus.png');
 
 // Los dos personajes utilizan provisionalmente el mismo retrato.
 const maniacCharacters = [
@@ -458,7 +468,23 @@ const maniacPlayerConversation = [
     '¡Date prisa! No nos queda demasiado tiempo.'
 ];
 
+let maniacEngineerConversationIndex = 0;
+const maniacEngineerConversation = [
+    '¡Ah, por fin! Necesitaba ayuda con una reparación importante.',
+    'La nave ha sufrido una avería en el sistema de energía.',
+    'Necesito que encuentres cuatro elementos: una célula de energía, un módulo de control,',
+    'un componente de plasma y un cristal de dilitio.',
+    'Uno estará dentro de un armario.',
+    'Cuando los tengas, podremos reparar el sistema y devolver la energía a la nave.',
+    '¡No perdamos más tiempo!'
+];
+
+
 const MANIAC_MOVEMENT_SPEED = 3;
+
+let maniacWalkAnimation = 0;
+let maniacLastCharacterX = null;
+let maniacLastAnimationTime = 0;
 
 const MANIAC_ROOM_LIMITS = {
     minX: 55,
@@ -488,18 +514,42 @@ function maniacStartPlayerConversation() {
             character => character.name !== maniacPlayer.name
         );
 
-        maniacMessage =
-            `${otherPlayer.name}: ${maniacPlayerConversation[maniacConversationIndex]}`;
-
+        maniacMessage = `${otherPlayer.name}: ${maniacPlayerConversation[maniacConversationIndex]}`;
         maniacActionMessage = true;
-
         maniacConversationIndex++;
-
         maniacConversationTimer = setTimeout(showNextMessage, 2000);
     }
 
     showNextMessage();
 }
+
+function maniacStartEngineerConversation() {
+
+    // Evitar iniciar otra conversación mientras esta continúa.
+    if (maniacConversationActive) {
+        return;
+    }
+
+    maniacConversationActive = true;
+    maniacEngineerConversationIndex = 0;
+
+    function showNextMessage() {
+        if (maniacEngineerConversationIndex >= maniacEngineerConversation.length) {
+            maniacConversationActive = false;
+            maniacConversationTimer = null;
+            maniacActionMessage = false;
+            return;
+        }
+
+        maniacMessage =`INGENIERO: ${maniacEngineerConversation[maniacEngineerConversationIndex]}`;
+        maniacActionMessage = true;
+        maniacEngineerConversationIndex++;
+        maniacConversationTimer = setTimeout(showNextMessage, 2000);
+    }
+
+    showNextMessage();
+}
+
 
 function maniacStartGame() {
     // Reiniciamos el estado de la aventura.
@@ -1664,7 +1714,7 @@ function drawManiacEngineer(object) {
 // ------------------------------------------------------------
 // PERSONAJE PROVISIONAL - AVENTURERO 8 BITS
 // ------------------------------------------------------------
-function drawManiacOtherPlayer(object) {
+/*function drawManiacOtherPlayer(object) {
 
     const C = MANIAC_COLORS;
 
@@ -1755,6 +1805,41 @@ function drawManiacOtherPlayer(object) {
     // Boca.
     ctx.fillStyle = '#713E37';
     ctx.fillRect(x - 4, y - 28, 8, 2);
+}*/
+
+function drawManiacOtherPlayer(object) {
+
+    // Seleccionar el personaje contrario al jugador.
+    const img = maniacPlayer.name === 'ANDREU'
+        ? maniacJesusImage
+        : maniacAndreuImage;
+
+    if (!img || !img.complete || !img.naturalWidth) return;
+
+    const columns = 4;
+    const rows = 4;
+
+    const frameWidth = img.naturalWidth / columns;
+    const frameHeight = img.naturalHeight / rows;
+
+    const destWidth = 122;
+    const destHeight = 168;
+
+    const x = object.x;
+    const y = object.y;
+
+    // Dibujar el primer fotograma (esquina superior izquierda).
+    ctx.drawImage(
+        img,
+        0,
+        0,
+        frameWidth,
+        frameHeight,
+        x - destWidth / 2,
+        y - destHeight / 2,
+        destWidth,
+        destHeight
+    );
 }
 
 
@@ -1807,6 +1892,21 @@ function drawManiacBook(room, object) {
         ctx.fillStyle = C.amarillo;
         ctx.fillRect(x + 8, y + 7, 48, 3);
     }
+
+    // Version with image - No consigo que la llave "se coja"
+/*    if (room.state.bookOpen) {
+        // Libro abierto: 61 x 25 píxeles.
+        if (!maniacLibroAbierto || !maniacLibroAbierto.complete ||
+            !maniacLibroAbierto.naturalWidth) return;
+
+        ctx.drawImage(maniacLibroAbierto, x, y, 65, 55);
+    } else {
+        // Libro cerrado: 65 x 27 píxeles.
+        if (!maniacLibroCerrado || !maniacLibroCerrado.complete ||
+            !maniacLibroCerrado.naturalWidth) return;
+
+        ctx.drawImage(maniacLibroCerrado, x,y, 65, 35);
+    }*/
 }
 
 
@@ -2059,117 +2159,114 @@ function drawManiacDoor(room, object) {
 // PERSONAJE PROVISIONAL - AVENTURERO 8 BITS
 // ------------------------------------------------------------
 function drawManiacRoomCharacter() {
-    const C = MANIAC_COLORS;
+    const img = maniacPlayer.name === 'ANDREU'
+        ? maniacAndreuImage
+        : maniacJesusImage;
 
-    const x = maniacCharacterX;
-    const y = 250;
+    if (!img || !img.complete || !img.naturalWidth) return;
 
-    /*// Cabeza.
-    ctx.fillStyle = C.granate;
-    ctx.fillRect(x - 12, y - 50, 24, 25);
+    const columns = 4;
+    const rows = 4;
 
-    ctx.fillStyle = C.grisClaro;
-    ctx.fillRect(x - 9, y - 47, 18, 19);
+    const frameWidth = img.naturalWidth / columns;
+    const frameHeight = img.naturalHeight / rows;
 
-    // Cuerpo.
-    ctx.fillStyle = C.azulOscuro;
-    ctx.fillRect(x - 17, y - 25, 34, 38);
+    const destWidth = 122;
+    const destHeight = 168;
+    const characterY = 220; // Siempre a esta altura vertical
 
-    // Brazos.
-    ctx.fillStyle = C.granate;
-    ctx.fillRect(x - 25, y - 20, 9, 28);
-    ctx.fillRect(x + 16, y - 20, 9, 28);
+/*    ctx.drawImage(
+        img,
+        0,
+        0,
+        frameWidth,
+        frameHeight,
+        maniacCharacterX - destWidth / 2,
+        characterY - destHeight / 2,
+        destWidth,
+        destHeight
+    );*/
 
-    // Piernas.
-    ctx.fillStyle = C.negro;
-    ctx.fillRect(x - 14, y + 13, 11, 22);
-    ctx.fillRect(x + 3, y + 13, 11, 22);*/
+    // Detectar si el personaje se está moviendo y en qué dirección.
+    //let direction = 0;
+    //let isWalking = false;
+    //
+    //if (maniacLastCharacterX !== null) {
+    //    const deltaX = maniacCharacterX - maniacLastCharacterX;
+    //
+    //    if (deltaX < 0) {
+    //        direction = 1;
+    //        isWalking = true;
+    //    } else if (deltaX > 0) {
+    //        direction = 2;
+    //        isWalking = true;
+    //    }
+    //}
+    //
+    //maniacLastCharacterX = maniacCharacterX;
+    //
+    //// Animación de los cuatro fotogramas.
+    //const now = performance.now();
+    //
+    //if (isWalking) {
+    //    if (now - maniacLastAnimationTime > 100) {
+    //        maniacWalkAnimation = (maniacWalkAnimation + 1) % columns;
+    //        maniacLastAnimationTime = now;
+    //    }
+    //} else {
+    //    maniacWalkAnimation = 0;
+    //}
+    //
+    //const frame = isWalking ? maniacWalkAnimation : 0;
 
-    // Sombra bajo los pies.
-    ctx.fillStyle = C.negro;
-    ctx.fillRect(x - 20, y + 34, 40, 5);
 
-    // Botas.
-    ctx.fillStyle = '#29202B';
-    ctx.fillRect(x - 17, y + 25, 14, 12);
-    ctx.fillRect(x + 3, y + 25, 14, 12);
+    // Detectar dirección y movimiento.
+    let direction = 0;
+    let isWalking = false;
 
-    ctx.fillStyle = '#777078';
-    ctx.fillRect(x - 17, y + 32, 14, 4);
-    ctx.fillRect(x + 3, y + 32, 14, 4);
+    if (maniacLastCharacterX !== null) {
+        const deltaX = maniacCharacterX - maniacLastCharacterX;
 
-    // Piernas: pantalones.
-    ctx.fillStyle = '#303D70';
-    ctx.fillRect(x - 14, y + 10, 11, 18);
-    ctx.fillRect(x + 3, y + 10, 11, 18);
-
-    // Cuerpo: chaqueta.
-    ctx.fillStyle = '#0B2039';
-    ctx.fillRect(x - 18, y - 24, 36, 38);
-
-    // Detalles de la chaqueta.
-    ctx.fillStyle = '#F48C1F';
-    ctx.fillRect(x - 13, y - 20, 5, 27);
-    ctx.fillRect(x + 8, y - 20, 5, 27);
-
-    // Cinturón.
-    ctx.fillStyle = '#29202B';
-    ctx.fillRect(x - 17, y + 8, 34, 5);
-
-    ctx.fillStyle = '#D6B45C';
-    ctx.fillRect(x - 3, y + 8, 7, 5);
-
-    // Brazos.
-    ctx.fillStyle = '#0B2039';
-    ctx.fillRect(x - 26, y - 20, 9, 27);
-    ctx.fillRect(x + 17, y - 20, 9, 27);
-
-    // Manos.
-    ctx.fillStyle = '#E5AD83';
-    ctx.fillRect(x - 26, y + 5, 9, 8);
-    ctx.fillRect(x + 17, y + 5, 9, 8);
-
-    // Cuello.
-    ctx.fillStyle = '#E5AD83';
-    ctx.fillRect(x - 5, y - 30, 10, 9);
-
-    // Cabeza.
-    ctx.fillStyle = '#E5AD83';
-    ctx.fillRect(x - 13, y - 51, 26, 24);
-
-    // Orejas.
-    ctx.fillRect(x - 16, y - 43, 4, 8);
-    ctx.fillRect(x + 12, y - 43, 4, 8);
-
-    // Pelo.
-    if (maniacPlayer.name === 'ANDREU') {
-        ctx.fillStyle = '#59351F';
-        ctx.fillRect(x - 14, y - 55, 28, 9);
-        ctx.fillRect(x - 14, y - 49, 5, 10);
-        ctx.fillRect(x + 9, y - 49, 5, 7);
+        if (deltaX < 0) {
+            direction = 1;
+            isWalking = true;
+        } else if (deltaX > 0) {
+            direction = 2;
+            isWalking = true;
+        }
     }
 
-    // Cejas.
-    ctx.fillStyle = '#59351F';
-    ctx.fillRect(x - 9, y - 42, 6, 2);
-    ctx.fillRect(x + 3, y - 42, 6, 2);
+    maniacLastCharacterX = maniacCharacterX;
 
-    // Ojos.
-    ctx.fillStyle = '#FFFFFF';
-    ctx.fillRect(x - 9, y - 38, 5, 5);
-    ctx.fillRect(x + 4, y - 38, 5, 5);
+    // Animación basada en el tiempo.
+    const now = performance.now();
 
-    ctx.fillStyle = '#20202A';
-    ctx.fillRect(x - 7, y - 37, 2, 4);
-    ctx.fillRect(x + 6, y - 37, 2, 4);
+    if (isWalking) {
+        if (maniacLastAnimationTime === 0) {
+            maniacLastAnimationTime = now;
+        }
 
-    // Nariz.
-    ctx.fillStyle = '#C88765';
-    ctx.fillRect(x - 2, y - 33, 5, 4);
+        const elapsed = now - maniacLastAnimationTime;
+        maniacWalkAnimation = (maniacWalkAnimation + elapsed / 100) % columns;
+        maniacLastAnimationTime = now;
+    } else {
+        maniacWalkAnimation = 0;
+        maniacLastAnimationTime = 0;
+    }
 
-    // Boca.
-    ctx.fillStyle = '#713E37';
-    ctx.fillRect(x - 4, y - 28, 8, 2);
+    const frame = isWalking ? Math.floor(maniacWalkAnimation) : 0;
+
+    ctx.drawImage(
+        img,
+        frame * frameWidth,
+        direction * frameHeight,
+        frameWidth,
+        frameHeight,
+        maniacCharacterX - destWidth / 2,
+        characterY - destHeight / 2,
+        destWidth,
+        destHeight
+    );
 }
 
 
@@ -2650,7 +2747,9 @@ const maniacActions = {
     },
 
     engineer_talk(room, object) {
-        return 'INGENIERO: Ahora mismo estoy ocupado. Si necesitas reparar algo, habla con el jefe de ingeniería.';
+        maniacStartEngineerConversation();
+        return maniacMessage;
+        //return 'INGENIERO: Ahora mismo estoy ocupado. Si necesitas reparar algo, habla con el jefe de ingeniería.';
     },
 
     // ------------------------
