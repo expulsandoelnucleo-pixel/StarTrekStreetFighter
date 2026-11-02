@@ -4548,6 +4548,10 @@ window.addEventListener('keydown', (e) => {
         }
         return;
     }
+    if (gameState === 'MANIAC_ENDING') {
+        maniacEndingHandleKey(e.key);
+        return;
+    }
 
     if (gameState === 'MENU') {
         const secretKey = e.key.length === 1 ? e.key.toLowerCase() : e.key;
@@ -6305,6 +6309,10 @@ function gameLoop() {
                 break;
             case 'MANIAC_ROOM':
                 drawManiacRoom();
+                break;
+            case 'MANIAC_ENDING':
+                updateManiacEnding();
+                drawManiacEnding();
                 break;
             case 'MENU':
                 drawMainMenu();

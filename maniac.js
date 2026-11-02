@@ -2637,6 +2637,8 @@ const maniacActions = {
 
         room.state.consoleUsed = true;
 
+        maniacStartEnding();
+
         return '¡Has ensamblado todos los componentes! El sistema de reparación está listo.';
     },
 
@@ -2772,5 +2774,347 @@ function maniacRoomHandleKey(key) {
         );
 
         //console.log('Acción ejecutada:', verb, maniacNearbyObject.id);
+    }
+}
+
+// ============================================================
+// MANIAC MANSION - PANTALLA FINAL
+// ============================================================
+
+const MANIAC_ENDING_CORE_DURATION = 240;
+const MANIAC_ENDING_TOTAL_DURATION = 660;
+
+let maniacEndingFrame = 0;
+let maniacEndingFinished = false;
+
+
+// ------------------------------------------------------------
+// INICIALIZAR PANTALLA FINAL
+// ------------------------------------------------------------
+function maniacStartEnding() {
+
+    maniacEndingFrame = 0;
+    maniacEndingFinished = false;
+
+    gameState = 'MANIAC_ENDING';
+}
+
+
+// ------------------------------------------------------------
+// ACTUALIZAR ANIMACIÓN
+// ------------------------------------------------------------
+function updateManiacEnding() {
+
+    if (maniacEndingFinished) {
+        return;
+    }
+
+    maniacEndingFrame++;
+
+    if (maniacEndingFrame >= MANIAC_ENDING_TOTAL_DURATION) {
+        maniacEndingFinished = true;
+    }
+}
+
+
+// ------------------------------------------------------------
+// DIBUJAR PANTALLA FINAL
+// ------------------------------------------------------------
+function drawManiacEnding() {
+
+    const w = canvas.width;
+    const h = canvas.height;
+
+    ctx.fillStyle = '#000000';
+    ctx.fillRect(0, 0, w, h);
+
+    if (maniacEndingFrame < MANIAC_ENDING_CORE_DURATION) {
+        drawManiacEndingCore();
+    } else {
+        drawManiacEndingSpace();
+    }
+
+    if (maniacEndingFinished) {
+
+        ctx.fillStyle = '#000000';
+        ctx.fillRect(0, 535, w, 65);
+
+        text('PULSA ENTER PARA VOLVER AL MENÚ', w / 2, 565, 19, '#ffffff', true, 'center', 'monospace' );
+    }
+}
+
+
+// ------------------------------------------------------------
+// FASE 1: REACTIVACIÓN DEL NÚCLEO
+// ------------------------------------------------------------
+function drawManiacEndingCore() {
+
+    const w = canvas.width;
+    const h = canvas.height;
+
+    const progress = Math.min(
+        1,
+        maniacEndingFrame / MANIAC_ENDING_CORE_DURATION
+    );
+
+    const pulse = Math.sin(maniacEndingFrame * 0.12);
+
+    // Fondo oscuro de Ingeniería.
+    ctx.fillStyle = '#050b18';
+    ctx.fillRect(0, 0, w, h);
+
+    // Paneles laterales.
+    ctx.fillStyle = '#10243b';
+    ctx.fillRect(65, 75, 150, 370);
+    ctx.fillRect(809, 75, 150, 370);
+
+    // Líneas de los paneles.
+    ctx.fillStyle = '#28749b';
+
+    for (let i = 0; i < 8; i++) {
+        ctx.fillRect(85, 105 + i * 38, 110, 4);
+        ctx.fillRect(829, 105 + i * 38, 110, 4);
+    }
+
+    // Estructura del núcleo.
+    ctx.fillStyle = '#263e58';
+    ctx.fillRect(365, 105, 294, 300);
+
+    ctx.fillStyle = '#42617d';
+    ctx.fillRect(385, 125, 254, 260);
+
+    // Núcleo central.
+    const coreSize = 90 + progress * 35 + pulse * 5;
+
+    ctx.fillStyle = '#087caa';
+    ctx.fillRect(
+        w / 2 - coreSize / 2,
+        255 - coreSize / 2,
+        coreSize,
+        coreSize
+    );
+
+    ctx.fillStyle = '#00cfff';
+    ctx.fillRect(
+        w / 2 - coreSize / 2 + 12,
+        255 - coreSize / 2 + 12,
+        coreSize - 24,
+        coreSize - 24
+    );
+
+    ctx.fillStyle = '#ffffff';
+    ctx.fillRect(
+        w / 2 - 12,
+        243,
+        24,
+        24
+    );
+
+    // Cuatro conductos que se iluminan progresivamente.
+    const components = [
+        { x: 310, y: 180 },
+        { x: 680, y: 180 },
+        { x: 310, y: 325 },
+        { x: 680, y: 325 }
+    ];
+
+    components.forEach((component, index) => {
+
+        const active = progress >= (index + 1) * 0.18;
+
+        ctx.fillStyle = active ? '#00eaff' : '#263e58';
+
+        ctx.fillRect(component.x, component.y, 34, 34);
+
+        ctx.fillStyle = active ? '#ffffff' : '#42617d';
+
+        ctx.fillRect(
+            component.x + 9,
+            component.y + 9,
+            16,
+            16
+        );
+    });
+
+    // Destellos alrededor del núcleo.
+    if (progress > 0.65) {
+
+        ctx.fillStyle = '#ffffff';
+
+        for (let i = 0; i < 12; i++) {
+
+            const angle = i * Math.PI / 6;
+            const distance = 115 + pulse * 12;
+
+            const x = w / 2 + Math.cos(angle) * distance;
+            const y = 255 + Math.sin(angle) * distance;
+
+            ctx.fillRect(x, y, 5, 5);
+        }
+    }
+
+    // Mensaje de reactivación.
+    text('REACTIVANDO SISTEMA DE ENERGÍA', w / 2, 475, 22, '#00eaff', true, 'center', 'monospace');
+
+    // Mensaje final de esta fase.
+    if (progress > 0.88) {
+        text('SISTEMA DE ENERGÍA RESTAURADO', w / 2, 515, 21, '#ffff00', true, 'center', 'monospace' );
+    }
+}
+
+
+// ------------------------------------------------------------
+// FASE 2: LA ENTERPRISE CRUZA EL ESPACIO
+// ------------------------------------------------------------
+function drawManiacEndingSpace() {
+
+    const w = canvas.width;
+    const h = canvas.height;
+
+    const spaceFrame =
+        maniacEndingFrame - MANIAC_ENDING_CORE_DURATION;
+
+    // Fondo espacial.
+    ctx.fillStyle = '#000008';
+    ctx.fillRect(0, 0, w, h);
+
+    // Estrellas en movimiento.
+    for (let i = 0; i < 100; i++) {
+
+        const speed = 1 + (i % 4);
+
+        const x = (
+            (i * 137 + 31 - spaceFrame * speed) % w + w
+        ) % w;
+
+        const y = (i * 83 + 19) % h;
+
+        ctx.fillStyle = i % 5 === 0
+            ? '#ffffaa'
+            : '#ffffff';
+
+        ctx.fillRect(x, y, i % 5 === 0 ? 3 : 2, 2);
+    }
+
+    // Posición de la Enterprise.
+    const shipX =
+        -250 + (spaceFrame / 420) * (w + 500);
+
+    const shipY = 260;
+
+    drawManiacEndingEnterprise(shipX, shipY);
+
+    // Textos finales.
+    if (spaceFrame > 100) {
+        text('USS ENTERPRISE', w / 2, 455, 34, '#ffff00', true, 'center', 'monospace');
+    }
+
+    if (spaceFrame > 180) {
+
+        text('SISTEMAS OPERATIVOS', w / 2, 490, 22, '#ffffff', true, 'center', 'monospace' );
+    }
+
+    if (spaceFrame > 260) {
+
+        text(
+            'MISIÓN CUMPLIDA',
+            w / 2,
+            525,
+            28,
+            '#00eaff',
+            true,
+            'center',
+            'monospace'
+        );
+    }
+}
+
+
+// ------------------------------------------------------------
+// DIBUJAR ENTERPRISE EN PIXEL ART
+// ------------------------------------------------------------
+function drawManiacEndingEnterprise(x, y) {
+
+    ctx.save();
+
+    ctx.translate(x * 2 + 280, 0);
+    ctx.scale(-1, 1);
+    x = 0;
+
+    // Sombra inferior del casco.
+    ctx.fillStyle = '#52677e';
+    ctx.fillRect(x + 45, y + 35, 170, 16);
+
+    // Disco principal.
+    ctx.fillStyle = '#bfcbd6';
+    ctx.fillRect(x + 35, y, 125, 58);
+    ctx.fillRect(x + 55, y - 10, 85, 78);
+
+    // Parte superior del disco.
+    ctx.fillStyle = '#ffffff';
+    ctx.fillRect(x + 60, y - 8, 75, 15);
+
+    // Centro del disco.
+    ctx.fillStyle = '#8b9daf';
+    ctx.fillRect(x + 85, y + 15, 38, 20);
+
+    // Cuello de unión.
+    ctx.fillStyle = '#bfcbd6';
+    ctx.fillRect(x + 145, y + 25, 75, 14);
+
+    // Casco secundario.
+    ctx.fillStyle = '#aab9c9';
+    ctx.fillRect(x + 190, y + 18, 55, 28);
+
+    // Motor izquierdo.
+    ctx.fillStyle = '#71869c';
+    ctx.fillRect(x + 105, y + 65, 125, 15);
+    ctx.fillRect(x + 125, y + 78, 90, 10);
+
+    // Góndolas.
+    ctx.fillStyle = '#9baec1';
+    ctx.fillRect(x + 190, y - 5, 90, 16);
+    ctx.fillRect(x + 190, y + 75, 90, 16);
+
+    // Luces de los motores.
+    ctx.fillStyle = '#00eaff';
+    ctx.fillRect(x + 270, y - 3, 12, 12);
+    ctx.fillRect(x + 270, y + 77, 12, 12);
+
+    // Ventanas.
+    ctx.fillStyle = '#ffffaa';
+
+    for (let i = 0; i < 7; i++) {
+        ctx.fillRect(x + 65 + i * 12, y + 22, 4, 3);
+    }
+
+    // Nombre de la nave.
+    ctx.fillStyle = '#ffffff';
+    ctx.fillRect(x + 95, y + 40, 32, 2);
+
+    // Destellos de los motores.
+    ctx.fillStyle = '#00aaff';
+    ctx.fillRect(x + 282, y - 2, 22, 8);
+    ctx.fillRect(x + 282, y + 78, 22, 8);
+
+    ctx.restore();
+}
+
+
+// ------------------------------------------------------------
+// CONTROL DE TECLADO DE LA PANTALLA FINAL
+// ------------------------------------------------------------
+function maniacEndingHandleKey(key) {
+
+    if (!maniacEndingFinished) {
+        return;
+    }
+
+    if (
+        key === 'Enter' ||
+        key === ' ' ||
+        key === 'Escape'
+    ) {
+        gameState = 'MENU';
     }
 }
