@@ -1,5 +1,9 @@
 # 🚀 Star Trek: Expulsando el Núcleo
 
+<p align="center">
+  <img src="portada.jpg" alt="Star Trek: Expulsando el Núcleo" width="800">
+</p>
+
 ¡Bienvenido a _**Star Trek: Expulsando el Núcleo**_, un juego arcade de lucha y aventura en 2D inspirado en el universo de Star Trek! Combina combates estelares, duelos clásicos uno contra uno, misiones de historia ramificadas y minijuegos retro basados en la serie.
 
 ---
@@ -124,7 +128,11 @@ Si estás interesado en monetizar el juego, utilizarlo en un proyecto comercial 
 La autorización estará sujeta a los derechos que correspondan sobre el código, los recursos originales y los materiales de terceros incluidos en el juego.  
 
 ### ¡Gracias por jugar, colaborar y ayudar a que este proyecto siga creciendo!
+
 ---
 
-# *¡Que la fuerza del núcleo os acompañe, cadetes!* 🖖
+<h1 align="center"><em>
+¡Que la fuerza del núcleo os acompañe, cadetes! 🖖
+</em>
+
 ---
