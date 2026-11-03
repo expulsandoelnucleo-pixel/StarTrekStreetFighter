@@ -65,7 +65,7 @@ soundQ.volume = 0.6;
 const soundQAllGoodThings = new Audio('assets/audios/q_allgoodthings.mp3');
 soundQAllGoodThings.volume = 0.6;
 // Easter egg EEN
-const soundEen = new Audio('assets/audios/een.mp3');
+const soundEen = new Audio('assets/audios/een.m4a');
 soundEen.volume = 0.6;
 // Easter egg DS9
 const soundDs9 = new Audio('assets/audios/ds9.mp3');
@@ -74,7 +74,7 @@ soundDs9.volume = 0.6;
 const soundHomenaje = new Audio('assets/audios/homenaje.mp3');
 soundHomenaje.volume = 0.6;
 // Easter Egg Maniac Mansion
-const soundManiac = new Audio('assets/audios/maniac_mansion.m4a');
+const soundManiac = new Audio('assets/audios/maniac_mansion.mp3');
 soundManiac.volume = 0.6;
 
 
