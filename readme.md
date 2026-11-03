@@ -58,7 +58,10 @@ Al tratarse de un juego web desarrollado en JavaScript nativo con HTML5 Canvas:
 
 Por toda la aventura hay algún que otro Easter Egg escondido para los jugadores más observadores. 👀  
 Explora, prueba cosas, presta atención a los detalles y no des nada por sentado.  
-Puede que encuentres alguna sorpresa que no esperabas…
+Puede que encuentres alguna sorpresa que no esperabas…  
+Entre los Easter Eggs encontrarás un pequeño homenaje a un videojuego mítico de los años 80.  
+Una aventura que dejó huella en toda una generación…  
+¿Serás capaz de descubrir cuál es? 👀  
 
 ¿Serás capaz de descubrirlos todos? 🖖
 
